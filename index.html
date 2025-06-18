@@ -383,6 +383,18 @@
             }, 300);
         }
 
+        // UPDATED: Smart scroll handler based on header collision
+        function handleSmartScroll(messageWrapper, container, headerElement) {
+            const messageRect = messageWrapper.getBoundingClientRect();
+            const headerRect = headerElement.getBoundingClientRect();
+            
+            // Check if the top of the message is at or above the bottom of the header
+            if (messageRect.top <= headerRect.bottom) {
+                // Scroll to align the top of the message with the bottom of the header
+                container.scrollTop += messageRect.top - headerRect.bottom;
+            }
+        }
+
         function addMessageToReference(role, text) {
              const messageWrapper = document.createElement('div');
             if (role === 'ai') {
@@ -398,7 +410,6 @@
                 const contentElem = messageWrapper.querySelector('.message-content');
                 contentElem.innerHTML = DOMPurify.sanitize(marked.parse(text));
                 referenceContent.appendChild(messageWrapper);
-                messageWrapper.scrollIntoView({ behavior: "smooth", block: "center" });
                 return { messageWrapper, contentElem };
             } else {
                 messageWrapper.className = 'flex justify-end';
@@ -423,12 +434,13 @@
             referenceHistory.push({ role: 'user', parts: [{ text: promptText }] });
             try {
                 const result = await referenceChat.sendMessageStream(promptText);
-                const { contentElem } = addMessageToReference('ai', '...');
+                const { messageWrapper, contentElem } = addMessageToReference('ai', '...');
                 contentElem.innerHTML = '';
                 let fullResponseText = "";
                 for await (const chunk of result.stream) {
                     fullResponseText += chunk.text();
                     contentElem.innerHTML = DOMPurify.sanitize(marked.parse(fullResponseText));
+                    handleSmartScroll(messageWrapper, referenceContent, referenceHeader);
                 }
                 referenceHistory.push({ role: 'model', parts: [{ text: fullResponseText }] });
             } catch (error) {
@@ -447,12 +459,13 @@
             try {
                 addMessageToReference('user', promptText);
                 const result = await tempChat.sendMessageStream(promptText);
-                const { contentElem } = addMessageToReference('ai', '...');
+                const { messageWrapper, contentElem } = addMessageToReference('ai', '...');
                 contentElem.innerHTML = '';
                 let fullResponseText = "";
                 for await (const chunk of result.stream) {
                     fullResponseText += chunk.text();
                     contentElem.innerHTML = DOMPurify.sanitize(marked.parse(fullResponseText));
+                    handleSmartScroll(messageWrapper, referenceContent, referenceHeader);
                 }
             } catch (error) {
                 addMessageToReference('ai', `**Đã xảy ra lỗi:** ${error.message}`);
@@ -494,12 +507,19 @@
                     chat = model.startChat({ history: localHistory });
                     chatContainer.innerHTML = '';
                     clearSuggestions();
+                    // Scroll to bottom after loading old messages
+                    let firstMessage = true;
                     localHistory.forEach(msg => {
                         if (msg.role === 'user' && msg.parts[0].text.includes("**Chỉ thị hệ thống:**")) return;
                         if (msg.role === 'model' && msg.parts[0].text.startsWith("Đã hiểu!")) return;
                         const role = msg.role === 'model' ? 'ai' : 'user';
-                        addMessage(role, msg.parts[0].text);
+                        const { messageWrapper } = addMessage(role, msg.parts[0].text, false); // Pass false to prevent scrolling
+                        if(firstMessage) {
+                           // Specific logic for first message if needed
+                           firstMessage = false;
+                        }
                     });
+                    chatContainer.scrollTop = chatContainer.scrollHeight;
                     savedChatsModal.classList.add('hidden');
                 } else {
                      addMessage('ai', '**Lỗi:** Không tìm thấy cuộc trò chuyện.');
@@ -510,7 +530,7 @@
             }
         }
 
-        function addMessage(role, text) {
+        function addMessage(role, text, shouldScroll = true) {
             const messageWrapper = document.createElement('div');
             if (role === 'ai') {
                 messageWrapper.className = 'w-full space-y-2';
@@ -525,8 +545,9 @@
                 const contentElem = messageWrapper.querySelector('.message-content');
                 contentElem.innerHTML = DOMPurify.sanitize(marked.parse(text));
                 chatContainer.appendChild(messageWrapper);
-                 // One-time scroll to bring the message into view
-                messageWrapper.scrollIntoView({ behavior: "smooth", block: "center" });
+                if (shouldScroll) {
+                    messageWrapper.scrollIntoView({ behavior: "smooth", block: "end" });
+                }
                 return { messageWrapper, contentElem };
             } else {
                 messageWrapper.className = 'flex justify-end';
@@ -534,7 +555,9 @@
                 const contentElem = messageWrapper.querySelector('.message-content');
                 contentElem.innerHTML = DOMPurify.sanitize(marked.parse(text));
                 chatContainer.appendChild(messageWrapper);
-                messageWrapper.scrollIntoView({ behavior: "smooth", block: "end" });
+                if(shouldScroll) {
+                    messageWrapper.scrollIntoView({ behavior: "smooth", block: "end" });
+                }
                 return { messageWrapper, contentElem };
             }
         }
@@ -551,13 +574,13 @@
             try {
                 const result = await chat.sendMessageStream(promptText);
                 if (typingIndicator?.parentNode) chatContainer.removeChild(typingIndicator);
-                const { contentElem } = addMessage('ai', '...');
+                const { messageWrapper, contentElem } = addMessage('ai', '...');
                 contentElem.innerHTML = '';
                 let fullResponseText = "";
                 for await (const chunk of result.stream) {
                     fullResponseText += chunk.text();
                     contentElem.innerHTML = DOMPurify.sanitize(marked.parse(fullResponseText));
-                    // No more scrolling inside the loop
+                    handleSmartScroll(messageWrapper, chatContainer, mainHeader);
                 }
                 localHistory.push({ role: 'model', parts: [{ text: fullResponseText }] });
                 await updateConversationInDb();
