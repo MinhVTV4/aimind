@@ -20,6 +20,7 @@
             --button-hover-bg: #185abc;
             --record-btn-color: #5f6368;
             --record-btn-recording-color: #d93025;
+            --modal-overlay-bg: rgba(0, 0, 0, 0.5);
         }
 
         html, body {
@@ -30,11 +31,61 @@
             color: var(--text-color);
         }
 
-        body {
+        .hidden { display: none !important; }
+
+        /* Auth Container Styles */
+        #auth-container {
             display: flex;
-            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+        }
+        .auth-form {
+            background: white;
+            padding: 30px 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            width: 90%;
+            max-width: 400px;
+        }
+        .auth-form h2 { text-align: center; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: 500;}
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            box-sizing: border-box;
+        }
+        .auth-btn {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            background-color: var(--button-bg);
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        .auth-btn:hover { background-color: var(--button-hover-bg); }
+        .google-btn { background-color: #4285F4; margin-top: 15px; }
+        .google-btn:hover { background-color: #357ae8; }
+        #auth-error { color: #d93025; text-align: center; margin-top: 10px; min-height: 1.2em; }
+        .toggle-form {
+            text-align: center;
+            margin-top: 20px;
+            cursor: pointer;
+            color: var(--button-bg);
         }
 
+        /* App Container Styles */
+        #app-container {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
         .header {
             background-color: var(--header-bg);
             padding: 10px 15px;
@@ -44,265 +95,378 @@
             align-items: center;
             flex-shrink: 0;
         }
+        #user-info { font-size: 0.8rem; text-align: right; }
+        .header-actions { display: flex; align-items: center; gap: 5px; }
+        #logout-btn { background: none; border: 1px solid #d93025; color: #d93025; padding: 5px 10px; border-radius: 8px; cursor: pointer; margin-left: 10px; }
+
+        #chat-container { flex-grow: 1; overflow-y: auto; padding: 20px 10px; display: flex; flex-direction: column; gap: 15px; }
+        .message { display: flex; align-items: flex-start; gap: 10px; max-width: 90%; line-height: 1.6; }
+        .message.user { align-self: flex-end; flex-direction: row-reverse; }
+        .avatar { width: 32px; height: 32px; border-radius: 50%; background-color: var(--border-color); display: flex; justify-content: center; align-items: center; flex-shrink: 0; font-size: 14px; }
+        .message-content { background-color: var(--chat-bg); padding: 10px 15px; border-radius: 18px; }
+        .message.user .message-content { background-color: var(--user-msg-bg); }
+        .message.ai .message-content { background-color: var(--ai-msg-bg); }
+        .message-content > *:first-child { margin-top: 0; } .message-content > *:last-child { margin-bottom: 0; }
+        .message-content pre { background-color: #202124; color: #e8eaed; padding: 12px; border-radius: 8px; white-space: pre-wrap; word-wrap: break-word; }
         
-        .header h1 {
-            font-size: 1.2rem;
-            margin: 0;
-        }
-
-        #new-chat-btn {
-            background: none;
-            border: 1px solid var(--border-color);
-            padding: 8px 12px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 500;
-        }
-
-        #chat-container {
-            flex-grow: 1;
-            overflow-y: auto;
-            padding: 20px 10px;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-
-        .message {
-            display: flex;
-            align-items: flex-start;
-            gap: 10px;
-            max-width: 90%;
-            line-height: 1.6;
-        }
-
-        .message.user {
-            align-self: flex-end;
-            flex-direction: row-reverse;
-        }
-
-        .avatar {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            background-color: var(--border-color);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            flex-shrink: 0;
-            font-size: 14px;
-        }
-
-        .message-content {
-            background-color: var(--chat-bg);
-            padding: 10px 15px;
-            border-radius: 18px;
-        }
-
-        .message.user .message-content {
-            background-color: var(--user-msg-bg);
-            border-radius: 18px;
-        }
-        
-        .message.ai .message-content {
-            background-color: var(--ai-msg-bg);
-        }
-        
-        /* Markdown styling */
-        .message-content > *:first-child { margin-top: 0; }
-        .message-content > *:last-child { margin-bottom: 0; }
-        .message-content pre {
-            background-color: #202124; color: #e8eaed;
-            padding: 12px; border-radius: 8px;
-            white-space: pre-wrap; word-wrap: break-word;
-        }
-        .message-content code { font-family: "Courier New", monospace; }
-
-        .typing-indicator {
-            align-self: flex-start;
-            margin-left: 42px; /* avatar width + gap */
-        }
-        .typing-indicator span {
-            display: inline-block;
-            width: 8px; height: 8px;
-            border-radius: 50%;
-            background-color: #999;
-            animation: bounce 1.4s infinite ease-in-out both;
-        }
+        .typing-indicator { align-self: flex-start; margin-left: 42px; }
+        .typing-indicator span { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background-color: #999; animation: bounce 1.4s infinite ease-in-out both; }
         .typing-indicator span:nth-child(1) { animation-delay: -0.32s; }
         .typing-indicator span:nth-child(2) { animation-delay: -0.16s; }
-        @keyframes bounce {
-            0%, 80%, 100% { transform: scale(0); }
-            40% { transform: scale(1.0); }
-        }
+        @keyframes bounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1.0); } }
 
-        #input-area {
-            display: flex;
-            align-items: center;
-            padding: 10px;
-            background-color: var(--input-bg);
-            border-top: 1px solid var(--border-color);
-            flex-shrink: 0;
-            gap: 10px;
-        }
-
-        #prompt-input {
-            flex-grow: 1;
-            border: 1px solid var(--border-color);
-            border-radius: 18px;
-            padding: 10px 15px;
-            font-size: 16px;
-            resize: none;
-            max-height: 150px;
-            overflow-y: auto;
-            line-height: 1.4;
-        }
-
-        .icon-btn {
-            background-color: transparent;
-            color: var(--record-btn-color);
-            border: none;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            cursor: pointer;
-            flex-shrink: 0;
-            transition: background-color 0.2s, color 0.2s;
-        }
-        .icon-btn:hover { background-color: #f1f3f4; }
-        
-        #record-btn.recording {
-            color: white;
-            background-color: var(--record-btn-recording-color);
-        }
-
-        #send-btn {
-            background-color: var(--button-bg);
-            color: white;
-        }
-        #send-btn:hover { background-color: var(--button-hover-bg); }
+        #input-area { display: flex; align-items: center; padding: 10px; background-color: var(--input-bg); border-top: 1px solid var(--border-color); flex-shrink: 0; gap: 10px; }
+        #prompt-input { flex-grow: 1; border: 1px solid var(--border-color); border-radius: 18px; padding: 10px 15px; font-size: 16px; resize: none; max-height: 150px; overflow-y: auto; }
+        .icon-btn { background-color: transparent; color: var(--record-btn-color); border: none; width: 40px; height: 40px; border-radius: 50%; display: flex; justify-content: center; align-items: center; cursor: pointer; flex-shrink: 0; }
+        #record-btn.recording { color: white; background-color: var(--record-btn-recording-color); }
+        #send-btn { background-color: var(--button-bg); color: white; }
         #send-btn:disabled { background-color: #a0c3e6; cursor: not-allowed; }
-        .icon-btn svg { width: 24px; height: 24px; }
-        
-        .hidden { display: none; }
 
+        /* Modal for Saved Chats */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: var(--modal-overlay-bg); display: flex; justify-content: center; align-items: center; z-index: 1000; }
+        .modal-content { background-color: white; padding: 20px; border-radius: 8px; width: 90%; max-width: 500px; max-height: 80vh; display: flex; flex-direction: column; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; margin-bottom: 15px; }
+        #close-modal-btn { background: none; border: none; font-size: 1.5rem; cursor: pointer; }
+        #saved-chats-list { list-style: none; padding: 0; margin: 0; overflow-y: auto; }
+        #saved-chats-list li { padding: 12px 5px; border-bottom: 1px solid #eee; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+        .delete-chat-btn { color: #d93025; background: none; border: none; cursor: pointer; padding: 5px; }
     </style>
 </head>
 <body>
-
-    <header class="header">
-        <h1>Gemini Chat</h1>
-        <button id="new-chat-btn">Cuộc trò chuyện mới</button>
-    </header>
-
-    <div id="chat-container">
-        <!-- Messages will be appended here -->
+    <!-- Authentication UI -->
+    <div id="auth-container">
+        <div class="auth-form">
+            <div id="login-view">
+                <h2>Đăng nhập</h2>
+                <form id="login-form">
+                    <div class="form-group">
+                        <label for="login-email">Email</label>
+                        <input type="email" id="login-email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="login-password">Mật khẩu</label>
+                        <input type="password" id="login-password" required>
+                    </div>
+                    <button type="submit" class="auth-btn">Đăng nhập</button>
+                </form>
+                <button id="google-login-btn" class="auth-btn google-btn">Đăng nhập với Google</button>
+                <p class="toggle-form" id="show-register">Chưa có tài khoản? Đăng ký ngay</p>
+            </div>
+            <div id="register-view" class="hidden">
+                <h2>Đăng ký</h2>
+                <form id="register-form">
+                    <div class="form-group">
+                        <label for="register-email">Email</label>
+                        <input type="email" id="register-email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="register-password">Mật khẩu</label>
+                        <input type="password" id="register-password" required>
+                    </div>
+                    <button type="submit" class="auth-btn">Đăng ký</button>
+                </form>
+                <p class="toggle-form" id="show-login">Đã có tài khoản? Đăng nhập</p>
+            </div>
+            <p id="auth-error"></p>
+        </div>
     </div>
 
-    <div id="input-area">
-        <textarea id="prompt-input" rows="1" placeholder="Nhập câu hỏi..."></textarea>
-        <button id="record-btn" class="icon-btn">
-             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg>
-        </button>
-        <button id="send-btn" class="icon-btn">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2 .01 7z"/>
-            </svg>
-        </button>
+    <!-- Main App UI (hidden by default) -->
+    <div id="app-container" class="hidden">
+        <header class="header">
+            <div id="user-info"></div>
+            <div class="header-actions">
+                <button id="save-chat-btn" class="icon-btn" title="Lưu cuộc trò chuyện">
+                    <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="currentColor"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z"/></svg>
+                </button>
+                <button id="view-chats-btn" class="icon-btn" title="Xem cuộc trò chuyện đã lưu">
+                    <svg xmlns="http://www.w3.org/2000/svg" enable-background="new 0 0 24 24" height="24px" viewBox="0 0 24 24" width="24px" fill="currentColor"><g><rect fill="none" height="24" width="24"/></g><g><path d="M3,5v14h18V5H3z M7,7v2H5V7H7z M5,13v-2h2v2H5z M5,15h2v2H5V15z M19,17H9v-2h10V17z M19,13H9v-2h10V13z M19,9H9V7h10V9z"/></g></svg>
+                </button>
+                <button id="new-chat-btn">Trò chuyện mới</button>
+                <button id="logout-btn">Đăng xuất</button>
+            </div>
+        </header>
+        <div id="chat-container"></div>
+        <div id="saved-chats-modal" class="modal-overlay hidden">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Cuộc trò chuyện đã lưu</h2>
+                    <button id="close-modal-btn">&times;</button>
+                </div>
+                <ul id="saved-chats-list"></ul>
+            </div>
+        </div>
+        <div id="input-area">
+            <textarea id="prompt-input" rows="1" placeholder="Nhập câu hỏi..."></textarea>
+            <button id="record-btn" class="icon-btn" title="Ghi âm">
+                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg>
+            </button>
+            <button id="send-btn" class="icon-btn" title="Gửi">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2 .01 7z"/></svg>
+            </button>
+        </div>
     </div>
 
     <script type="module">
+        // Import Firebase modules
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
+        import { 
+            getAuth, 
+            onAuthStateChanged,
+            createUserWithEmailAndPassword,
+            signInWithEmailAndPassword,
+            GoogleAuthProvider,
+            signInWithPopup,
+            signOut
+        } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
         import { getAI, getGenerativeModel } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-ai.js";
+        import { 
+            getFirestore,
+            collection,
+            doc,
+            addDoc,
+            setDoc,
+            getDocs,
+            deleteDoc,
+            serverTimestamp,
+            query,
+            orderBy
+        } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
 
+        // Your Firebase configuration
         const firebaseConfig = {
-            apiKey: "AIzaSyBDUBufnsk1PQZTLYCJDqASMX8hEVHqkDc",
-            authDomain: "aimind-2362a.firebaseapp.com",
-            projectId: "aimind-2362a",
-            storageBucket: "aimind-2362a.firebasestorage.app",
-            messagingSenderId: "377635504319",
-            appId: "1:377635504319:web:7c6dd3cf0c52dd302d860a"
+             apiKey: "AIzaSyBDUBufnsk1PQZTLYCJDqASMX8hEVHqkDc",
+             authDomain: "aimind-2362a.firebaseapp.com",
+             projectId: "aimind-2362a",
+             storageBucket: "aimind-2362a.firebasestorage.app",
+             messagingSenderId: "377635504319",
+             appId: "1:377635504319:web:7c6dd3cf0c52dd302d860a"
         };
 
+        // Initialize Firebase services
         const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
         const ai = getAI(app);
         const model = getGenerativeModel(ai, { model: "gemini-1.5-flash-latest" });
 
+        // --- GLOBAL STATE ---
+        let currentUserId = null;
+        let currentChatId = null;
+        let chat;
+        let isRecording = false;
+
+        // --- AUTH UI DOM ELEMENTS ---
+        const authContainer = document.getElementById('auth-container');
+        const loginView = document.getElementById('login-view');
+        const registerView = document.getElementById('register-view');
+        const loginForm = document.getElementById('login-form');
+        const registerForm = document.getElementById('register-form');
+        const googleLoginBtn = document.getElementById('google-login-btn');
+        const showRegisterBtn = document.getElementById('show-register');
+        const showLoginBtn = document.getElementById('show-login');
+        const authError = document.getElementById('auth-error');
+        
+        // --- APP UI DOM ELEMENTS ---
+        const appContainer = document.getElementById('app-container');
+        const userInfo = document.getElementById('user-info');
+        const logoutBtn = document.getElementById('logout-btn');
         const chatContainer = document.getElementById('chat-container');
         const promptInput = document.getElementById('prompt-input');
         const sendBtn = document.getElementById('send-btn');
-        const newChatBtn = document.getElementById('new-chat-btn');
         const recordBtn = document.getElementById('record-btn');
+        const saveChatBtn = document.getElementById('save-chat-btn');
+        const viewChatsBtn = document.getElementById('view-chats-btn');
+        const newChatBtn = document.getElementById('new-chat-btn');
+        const savedChatsModal = document.getElementById('saved-chats-modal');
+        const closeModalBtn = document.getElementById('close-modal-btn');
+        const savedChatsList = document.getElementById('saved-chats-list');
 
-        let conversationHistory = [];
-        let chat;
-        
-        // Speech Recognition Setup
+        // --- AUTH STATE OBSERVER ---
+        onAuthStateChanged(auth, user => {
+            if (user) {
+                currentUserId = user.uid;
+                userInfo.textContent = `Chào, ${user.email}`;
+                authContainer.classList.add('hidden');
+                appContainer.classList.remove('hidden');
+                startNewChat(); 
+            } else {
+                currentUserId = null;
+                authContainer.classList.remove('hidden');
+                appContainer.classList.add('hidden');
+            }
+        });
+
+        // --- AUTHENTICATION LOGIC ---
+        loginForm.addEventListener('submit', async e => { e.preventDefault(); try { await signInWithEmailAndPassword(auth, loginForm['login-email'].value, loginForm['login-password'].value); authError.textContent = ''; } catch (error) { authError.textContent = "Email hoặc mật khẩu không đúng."; } });
+        registerForm.addEventListener('submit', async e => { e.preventDefault(); try { await createUserWithEmailAndPassword(auth, registerForm['register-email'].value, registerForm['register-password'].value); authError.textContent = ''; } catch (error) { authError.textContent = "Không thể tạo tài khoản. Vui lòng thử lại."; } });
+        googleLoginBtn.addEventListener('click', async () => { try { await signInWithPopup(auth, new GoogleAuthProvider()); authError.textContent = ''; } catch (error) { authError.textContent = "Đăng nhập Google thất bại."; } });
+        logoutBtn.addEventListener('click', () => signOut(auth));
+        showRegisterBtn.addEventListener('click', () => { loginView.classList.add('hidden'); registerView.classList.remove('hidden'); authError.textContent = ''; });
+        showLoginBtn.addEventListener('click', () => { registerView.classList.add('hidden'); loginView.classList.remove('hidden'); authError.textContent = ''; });
+
+        // --- SPEECH RECOGNITION ---
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         let recognition;
-        let isRecording = false;
-
-        if (SpeechRecognition) {
+        if(SpeechRecognition) {
             recognition = new SpeechRecognition();
-            recognition.continuous = false;
-            recognition.lang = 'vi-VN';
-            recognition.interimResults = false;
-
-            recognition.onstart = () => {
-                isRecording = true;
-                recordBtn.classList.add('recording');
-                promptInput.placeholder = 'Đang lắng nghe...';
-            };
-
-            recognition.onend = () => {
-                isRecording = false;
-                recordBtn.classList.remove('recording');
-                 promptInput.placeholder = 'Nhập câu hỏi...';
-            };
-
-            recognition.onresult = (event) => {
-                const transcript = event.results[event.results.length - 1][0].transcript.trim();
-                promptInput.value = transcript;
-                adjustInputHeight();
-            };
-
-            recognition.onerror = (event) => {
-                console.error('Lỗi nhận dạng giọng nói:', event.error);
-                addMessage('ai', `**Lỗi ghi âm:** ${event.error}. Vui lòng thử lại.`);
-            };
-
-        } else {
-            console.warn("Trình duyệt không hỗ trợ Web Speech API.");
-            recordBtn.classList.add('hidden');
-        }
-
+            recognition.continuous = false; recognition.lang = 'vi-VN'; recognition.interimResults = false;
+            recognition.onstart = () => { isRecording = true; recordBtn.classList.add('recording'); promptInput.placeholder = 'Đang lắng nghe...'; };
+            recognition.onend = () => { isRecording = false; recordBtn.classList.remove('recording'); promptInput.placeholder = 'Nhập câu hỏi...'; };
+            recognition.onresult = (event) => { promptInput.value = event.results[event.results.length - 1][0].transcript.trim(); adjustInputHeight(); };
+            recognition.onerror = (event) => { addMessage('ai', `**Lỗi ghi âm:** ${event.error}. Vui lòng thử lại.`); };
+        } else { recordBtn.classList.add('hidden'); }
+        
+        // --- CHAT LOGIC ---
         function startNewChat() {
-            conversationHistory = [];
-            chat = model.startChat({ history: conversationHistory });
+            currentChatId = null;
+            chat = model.startChat({ history: [] });
             chatContainer.innerHTML = '';
             addMessage('ai', 'Xin chào! Tôi có thể giúp gì cho bạn?');
+        }
+        
+        async function loadChat(chatId) {
+            if (!currentUserId) return;
+            try {
+                const chatsCollection = collection(db, 'chats', currentUserId, 'conversations');
+                const querySnapshot = await getDocs(chatsCollection);
+                const chatDoc = querySnapshot.docs.find(doc => doc.id === chatId);
+
+                if (chatDoc) {
+                    const chatToLoad = chatDoc.data();
+                    currentChatId = chatDoc.id;
+                    chat = model.startChat({ history: chatToLoad.history });
+                    
+                    chatContainer.innerHTML = '';
+                    chatToLoad.history.forEach(msg => {
+                        const role = msg.role === 'model' ? 'ai' : 'user';
+                        addMessage(role, msg.parts[0].text);
+                    });
+                    savedChatsModal.classList.add('hidden');
+                }
+            } catch (error) {
+                console.error("Error loading chat:", error);
+                addMessage('ai', '**Lỗi:** Không thể tải cuộc trò chuyện.');
+            }
         }
 
         function addMessage(role, text) {
             const messageElem = document.createElement('div');
             messageElem.className = `message ${role}`;
-
             const avatar = document.createElement('div');
             avatar.className = 'avatar';
             avatar.textContent = role === 'user' ? '🙂' : '🤖';
-
             const contentElem = document.createElement('div');
             contentElem.className = 'message-content';
             contentElem.innerHTML = DOMPurify.sanitize(marked.parse(text));
-            
             messageElem.appendChild(avatar);
             messageElem.appendChild(contentElem);
             chatContainer.appendChild(messageElem);
             scrollToBottom();
             return contentElem;
+        }
+
+        async function sendMessage() {
+            const promptText = promptInput.value.trim();
+            if (!promptText) return;
+
+            sendBtn.disabled = true; recordBtn.disabled = true;
+            promptInput.value = ''; adjustInputHeight();
+            addMessage('user', promptText);
+            
+            const typingIndicator = showTypingIndicator();
+
+            try {
+                const result = await chat.sendMessageStream(promptText);
+                
+                if (typingIndicator && typingIndicator.parentNode) {
+                    chatContainer.removeChild(typingIndicator);
+                }
+
+                const aiMessageContent = addMessage('ai', '...');
+                aiMessageContent.innerHTML = '';
+                
+                let fullResponseText = "";
+                for await (const chunk of result.stream) {
+                    fullResponseText += chunk.text();
+                    aiMessageContent.innerHTML = DOMPurify.sanitize(marked.parse(fullResponseText));
+                    scrollToBottom();
+                }
+            } catch (error) {
+                if (typingIndicator && typingIndicator.parentNode) {
+                    chatContainer.removeChild(typingIndicator);
+                }
+                addMessage('ai', `**Đã xảy ra lỗi:** ${error.message}`);
+            } finally {
+                sendBtn.disabled = false; recordBtn.disabled = false;
+                promptInput.focus();
+            }
+        }
+
+        // --- FIRESTORE & HELPER FUNCTIONS ---
+        async function saveCurrentChat() {
+            if (!currentUserId || !chat) return;
+            const history = await chat.getHistory();
+            if (history.length < 2) {
+                alert("Cuộc trò chuyện quá ngắn để lưu.");
+                return;
+            }
+
+            const title = prompt("Nhập tiêu đề cho cuộc trò chuyện:", history[0].parts[0].text.substring(0, 40)) || 'Cuộc trò chuyện mới';
+            const chatData = { title, history, createdAt: serverTimestamp() };
+
+            try {
+                const chatsCollection = collection(db, 'chats', currentUserId, 'conversations');
+                if (currentChatId) {
+                    const docRef = doc(db, 'chats', currentUserId, 'conversations', currentChatId);
+                    await setDoc(docRef, chatData, { merge: true });
+                } else {
+                    const docRef = await addDoc(chatsCollection, chatData);
+                    currentChatId = docRef.id;
+                }
+                alert("Đã lưu cuộc trò chuyện!");
+            } catch (error) {
+                console.error("Error saving chat: ", error);
+                alert("Lưu thất bại!");
+            }
+        }
+
+        async function renderSavedChats() {
+            if (!currentUserId) return;
+            const chatsCollection = collection(db, 'chats', currentUserId, 'conversations');
+            const q = query(chatsCollection, orderBy('createdAt', 'desc'));
+            const querySnapshot = await getDocs(q);
+            
+            savedChatsList.innerHTML = '';
+            if (querySnapshot.empty) {
+                savedChatsList.innerHTML = '<li>Chưa có cuộc trò chuyện nào được lưu.</li>';
+                return;
+            }
+            querySnapshot.forEach(doc => {
+                const chatItem = doc.data();
+                const li = document.createElement('li');
+                li.textContent = chatItem.title;
+                li.onclick = () => loadChat(doc.id);
+
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = 'delete-chat-btn';
+                deleteBtn.innerHTML = '&times;';
+                deleteBtn.onclick = async (e) => { e.stopPropagation(); await deleteChat(doc.id); };
+                
+                li.appendChild(deleteBtn);
+                savedChatsList.appendChild(li);
+            });
+        }
+        
+        async function deleteChat(chatId) {
+            if (!currentUserId || !confirm("Bạn có chắc chắn muốn xóa?")) return;
+            try {
+                await deleteDoc(doc(db, 'chats', currentUserId, 'conversations', chatId));
+                renderSavedChats();
+                if(chatId === currentChatId) startNewChat();
+            } catch (error) {
+                console.error("Error deleting chat:", error);
+            }
         }
 
         function showTypingIndicator() {
@@ -318,80 +482,21 @@
             scrollToBottom();
             return indicator;
         }
-        
-        function scrollToBottom() {
-            chatContainer.scrollTop = chatContainer.scrollHeight;
-        }
 
-        async function sendMessage() {
-            const promptText = promptInput.value.trim();
-            if (!promptText) return;
+        function scrollToBottom() { chatContainer.scrollTop = chatContainer.scrollHeight; }
+        function adjustInputHeight() { promptInput.style.height = 'auto'; promptInput.style.height = (promptInput.scrollHeight) + 'px'; }
+        function toggleRecording() { if (!recognition) return; isRecording ? recognition.stop() : recognition.start(); }
 
-            sendBtn.disabled = true;
-            recordBtn.disabled = true;
-            promptInput.value = '';
-            adjustInputHeight();
-            addMessage('user', promptText);
-            
-            const typingIndicator = showTypingIndicator();
-
-            try {
-                const result = await chat.sendMessageStream(promptText);
-                
-                chatContainer.removeChild(typingIndicator);
-                const aiMessageContent = addMessage('ai', '...');
-                aiMessageContent.innerHTML = ''; // Clear the placeholder '...'
-                
-                let fullResponseText = "";
-                for await (const chunk of result.stream) {
-                    const chunkText = chunk.text();
-                    fullResponseText += chunkText;
-                    aiMessageContent.innerHTML = DOMPurify.sanitize(marked.parse(fullResponseText));
-                    scrollToBottom();
-                }
-                
-                conversationHistory.push({role: 'user', parts: [{text: promptText}]});
-                conversationHistory.push({role: 'model', parts: [{text: fullResponseText}]});
-
-            } catch (error) {
-                chatContainer.removeChild(typingIndicator);
-                addMessage('ai', `**Đã xảy ra lỗi:** ${error.message}`);
-                console.error("Lỗi khi gửi tin nhắn:", error);
-            } finally {
-                sendBtn.disabled = false;
-                recordBtn.disabled = false;
-                promptInput.focus();
-            }
-        }
-        
-        function adjustInputHeight() {
-            promptInput.style.height = 'auto';
-            promptInput.style.height = (promptInput.scrollHeight) + 'px';
-        }
-        
-        function toggleRecording() {
-            if (!recognition) return;
-            
-            if (isRecording) {
-                recognition.stop();
-            } else {
-                recognition.start();
-            }
-        }
-
+        // --- EVENT LISTENERS ---
+        newChatBtn.addEventListener('click', startNewChat);
         sendBtn.addEventListener('click', sendMessage);
         recordBtn.addEventListener('click', toggleRecording);
-        
-        promptInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                sendMessage();
-            }
-        });
+        promptInput.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } });
         promptInput.addEventListener('input', adjustInputHeight);
-        newChatBtn.addEventListener('click', startNewChat);
-
-        startNewChat();
+        saveChatBtn.addEventListener('click', saveCurrentChat);
+        viewChatsBtn.addEventListener('click', () => { renderSavedChats(); savedChatsModal.classList.remove('hidden'); });
+        closeModalBtn.addEventListener('click', () => savedChatsModal.classList.add('hidden'));
+        savedChatsModal.addEventListener('click', e => { if (e.target === savedChatsModal) savedChatsModal.classList.add('hidden'); });
     </script>
 </body>
 </html>
