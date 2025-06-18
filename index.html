@@ -200,11 +200,8 @@
         <header class="header">
             <div id="user-info"></div>
             <div class="header-actions">
-                <button id="save-chat-btn" class="icon-btn" title="Lưu cuộc trò chuyện">
-                    <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="currentColor"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z"/></svg>
-                </button>
-                <button id="view-chats-btn" class="icon-btn" title="Xem cuộc trò chuyện đã lưu">
-                    <svg xmlns="http://www.w3.org/2000/svg" enable-background="new 0 0 24 24" height="24px" viewBox="0 0 24 24" width="24px" fill="currentColor"><g><rect fill="none" height="24" width="24"/></g><g><path d="M3,5v14h18V5H3z M7,7v2H5V7H7z M5,13v-2h2v2H5z M5,15h2v2H5V15z M19,17H9v-2h10V17z M19,13H9v-2h10V13z M19,9H9V7h10V9z"/></g></svg>
+                <button id="view-chats-btn" class="icon-btn" title="Lịch sử trò chuyện">
+                    <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="currentColor"><path d="M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42C8.27 19.99 10.51 21 13 21c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-1 5v5l4.25 2.52.77-1.28-3.52-2.09V8H12z"/></svg>
                 </button>
                 <button id="new-chat-btn">Trò chuyện mới</button>
                 <button id="logout-btn">Đăng xuất</button>
@@ -215,7 +212,7 @@
         <div id="saved-chats-modal" class="modal-overlay hidden">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h2>Cuộc trò chuyện đã lưu</h2>
+                    <h2>Lịch sử trò chuyện</h2>
                     <button id="close-modal-btn">&times;</button>
                 </div>
                 <ul id="saved-chats-list"></ul>
@@ -250,7 +247,7 @@
             collection,
             doc,
             addDoc,
-            setDoc,
+            updateDoc,
             getDoc,
             getDocs,
             deleteDoc,
@@ -280,6 +277,7 @@
         let currentUserId = null;
         let currentChatId = null;
         let chat;
+        let localHistory = []; // <<<<< THAY ĐỔI: Tự quản lý lịch sử ở đây
         let isRecording = false;
 
         // --- DOM ELEMENTS ---
@@ -300,7 +298,6 @@
         const promptInput = document.getElementById('prompt-input');
         const sendBtn = document.getElementById('send-btn');
         const recordBtn = document.getElementById('record-btn');
-        const saveChatBtn = document.getElementById('save-chat-btn');
         const viewChatsBtn = document.getElementById('view-chats-btn');
         const newChatBtn = document.getElementById('new-chat-btn');
         const savedChatsModal = document.getElementById('saved-chats-modal');
@@ -349,6 +346,7 @@
 
         function startNewChat() {
             currentChatId = null;
+            localHistory = []; // Reset local history
             chat = model.startChat({ history: [] });
             chatContainer.innerHTML = '';
             clearSuggestions();
@@ -364,28 +362,19 @@
                 if (chatDoc.exists()) {
                     const chatToLoad = chatDoc.data();
                     
-                    // SỬA LỖI: Tạo một bản sao an toàn của lịch sử để hiển thị
-                    const historyForRendering = JSON.parse(JSON.stringify(chatToLoad.history || []));
-                    
+                    localHistory = chatToLoad.history || []; // Load history into our local state
                     currentChatId = chatDoc.id;
-                    // Khởi tạo phiên chat với dữ liệu gốc
-                    chat = model.startChat({ history: chatToLoad.history });
+                    chat = model.startChat({ history: localHistory });
                     
                     chatContainer.innerHTML = '';
                     clearSuggestions();
                     
-                    // Sử dụng bản sao an toàn để lặp và hiển thị lại giao diện
-                    historyForRendering.forEach(msg => {
-                        if (msg && msg.role && msg.parts && Array.isArray(msg.parts) && msg.parts.length > 0 && typeof msg.parts[0].text === 'string') {
-                            const role = msg.role === 'model' ? 'ai' : 'user';
-                            addMessage(role, msg.parts[0].text);
-                        } else {
-                            console.warn("Bỏ qua mục lịch sử không hợp lệ:", msg);
-                        }
+                    localHistory.forEach(msg => {
+                        const role = msg.role === 'model' ? 'ai' : 'user';
+                        addMessage(role, msg.parts[0].text);
                     });
                     savedChatsModal.classList.add('hidden');
                 } else {
-                     console.error("Không có tài liệu nào với ID:", chatId);
                      addMessage('ai', '**Lỗi:** Không tìm thấy cuộc trò chuyện.');
                 }
             } catch (error) {
@@ -399,7 +388,7 @@
             messageElem.className = `message ${role}`;
             const avatar = document.createElement('div');
             avatar.className = 'avatar';
-            avatar.textContent = role === 'user' ? '🙂' : '🤖';
+            avatar.textContent = role === 'user' ? '🙂' : '�';
             const contentElem = document.createElement('div');
             contentElem.className = 'message-content';
             contentElem.innerHTML = DOMPurify.sanitize(marked.parse(text));
@@ -417,16 +406,16 @@
             sendBtn.disabled = true; recordBtn.disabled = true;
             promptInput.value = ''; adjustInputHeight();
             clearSuggestions();
-            addMessage('user', promptText);
             
+            // Add user message to UI and local history
+            addMessage('user', promptText);
+            localHistory.push({ role: 'user', parts: [{ text: promptText }] });
+
             const typingIndicator = showTypingIndicator();
 
             try {
                 const result = await chat.sendMessageStream(promptText);
-                
-                if (typingIndicator && typingIndicator.parentNode) {
-                    chatContainer.removeChild(typingIndicator);
-                }
+                if (typingIndicator?.parentNode) chatContainer.removeChild(typingIndicator);
 
                 const aiMessageContent = addMessage('ai', '...');
                 aiMessageContent.innerHTML = '';
@@ -438,14 +427,17 @@
                     scrollToBottom();
                 }
 
-                // After response is complete, get suggestions
+                // Add AI response to local history
+                localHistory.push({ role: 'model', parts: [{ text: fullResponseText }] });
+                
+                await updateConversationInDb();
                 getFollowUpSuggestions(fullResponseText);
 
             } catch (error) {
-                if (typingIndicator && typingIndicator.parentNode) {
-                    chatContainer.removeChild(typingIndicator);
-                }
+                if (typingIndicator?.parentNode) chatContainer.removeChild(typingIndicator);
                 addMessage('ai', `**Đã xảy ra lỗi:** ${error.message}`);
+                // Remove the last user message from history if AI fails
+                localHistory.pop();
             } finally {
                 sendBtn.disabled = false; recordBtn.disabled = false;
                 promptInput.focus();
@@ -455,7 +447,7 @@
         async function getFollowUpSuggestions(lastResponse) {
             try {
                 const suggestionPrompt = `Dựa vào câu trả lời sau: "${lastResponse.substring(0, 500)}". Hãy đề xuất 3 câu hỏi tiếp theo ngắn gọn và thú vị mà người dùng có thể hỏi. QUAN TRỌNG: Chỉ trả về 3 câu hỏi, mỗi câu trên một dòng. Không đánh số, không dùng gạch đầu dòng, không thêm bất kỳ văn bản nào khác.`;
-                const suggestionModel = getGenerativeModel(ai, { model: "gemini-1.5-flash-latest" }); // Use a fresh instance for this
+                const suggestionModel = getGenerativeModel(ai, { model: "gemini-1.5-flash-latest" });
                 const result = await suggestionModel.generateContent(suggestionPrompt);
                 const responseText = result.response.text();
                 const suggestions = responseText.split('\n').filter(s => s.trim() !== '');
@@ -471,52 +463,45 @@
                 const chip = document.createElement('button');
                 chip.className = 'suggestion-chip';
                 chip.textContent = suggestionText;
-                chip.onclick = () => {
-                    promptInput.value = suggestionText;
-                    sendMessage();
-                };
+                chip.onclick = () => { promptInput.value = suggestionText; sendMessage(); };
                 suggestionsContainer.appendChild(chip);
             });
             scrollToBottom();
         }
 
         // --- FIRESTORE & HELPER FUNCTIONS ---
-        async function saveCurrentChat() {
-            if (!currentUserId || !chat) return;
-            const history = await chat.getHistory();
-            if (history.length <= 1) { // User only prompted, AI hasn't answered
-                alert("Cuộc trò chuyện quá ngắn để lưu.");
-                return;
-            }
-
-            const title = prompt("Nhập tiêu đề cho cuộc trò chuyện:", history[0].parts[0].text.substring(0, 40)) || 'Cuộc trò chuyện mới';
-            const chatData = { title, history, createdAt: serverTimestamp() };
+        async function updateConversationInDb() {
+            if (!currentUserId || localHistory.length < 2) return; 
+            
+            // This localHistory is guaranteed to be a clean, standard array
+            const chatData = { history: localHistory, updatedAt: serverTimestamp() };
 
             try {
-                const chatsCollection = collection(db, 'chats', currentUserId, 'conversations');
                 if (currentChatId) {
                     const docRef = doc(db, 'chats', currentUserId, 'conversations', currentChatId);
-                    await setDoc(docRef, chatData, { merge: true });
+                    await updateDoc(docRef, chatData);
                 } else {
+                    chatData.title = localHistory[0].parts[0].text.substring(0, 40) || "Cuộc trò chuyện mới";
+                    chatData.createdAt = serverTimestamp();
+                    const chatsCollection = collection(db, 'chats', currentUserId, 'conversations');
                     const docRef = await addDoc(chatsCollection, chatData);
-                    currentChatId = docRef.id;
+                    currentChatId = docRef.id; 
                 }
-                alert("Đã lưu cuộc trò chuyện!");
             } catch (error) {
-                console.error("Error saving chat: ", error);
-                alert("Lưu thất bại!");
+                console.error("Lỗi khi cập nhật cuộc trò chuyện:", error);
             }
         }
+
 
         async function renderSavedChats() {
             if (!currentUserId) return;
             const chatsCollection = collection(db, 'chats', currentUserId, 'conversations');
-            const q = query(chatsCollection, orderBy('createdAt', 'desc'));
+            const q = query(chatsCollection, orderBy('updatedAt', 'desc')); 
             const querySnapshot = await getDocs(q);
             
             savedChatsList.innerHTML = '';
             if (querySnapshot.empty) {
-                savedChatsList.innerHTML = '<li>Chưa có cuộc trò chuyện nào được lưu.</li>';
+                savedChatsList.innerHTML = '<li>Chưa có cuộc trò chuyện nào.</li>';
                 return;
             }
             querySnapshot.forEach(doc => {
@@ -571,10 +556,10 @@
         recordBtn.addEventListener('click', toggleRecording);
         promptInput.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } });
         promptInput.addEventListener('input', adjustInputHeight);
-        saveChatBtn.addEventListener('click', saveCurrentChat);
         viewChatsBtn.addEventListener('click', () => { renderSavedChats(); savedChatsModal.classList.remove('hidden'); });
         closeModalBtn.addEventListener('click', () => savedChatsModal.classList.add('hidden'));
         savedChatsModal.addEventListener('click', e => { if (e.target === savedChatsModal) savedChatsModal.classList.add('hidden'); });
     </script>
 </body>
 </html>
+�
