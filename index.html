@@ -21,6 +21,8 @@
             --record-btn-color: #5f6368;
             --record-btn-recording-color: #d93025;
             --modal-overlay-bg: rgba(0, 0, 0, 0.5);
+            --suggestion-bg: #e8f0fe;
+            --suggestion-text: #1967d2;
         }
 
         html, body {
@@ -115,6 +117,27 @@
         .typing-indicator span:nth-child(2) { animation-delay: -0.16s; }
         @keyframes bounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1.0); } }
 
+        #suggestions-container {
+            padding: 0 10px 10px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+        .suggestion-chip {
+            background-color: var(--suggestion-bg);
+            color: var(--suggestion-text);
+            border: 1px solid var(--border-color);
+            border-radius: 18px;
+            padding: 8px 12px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .suggestion-chip:hover {
+            background-color: #d2e3fc;
+        }
+
         #input-area { display: flex; align-items: center; padding: 10px; background-color: var(--input-bg); border-top: 1px solid var(--border-color); flex-shrink: 0; gap: 10px; }
         #prompt-input { flex-grow: 1; border: 1px solid var(--border-color); border-radius: 18px; padding: 10px 15px; font-size: 16px; resize: none; max-height: 150px; overflow-y: auto; }
         .icon-btn { background-color: transparent; color: var(--record-btn-color); border: none; width: 40px; height: 40px; border-radius: 50%; display: flex; justify-content: center; align-items: center; cursor: pointer; flex-shrink: 0; }
@@ -135,6 +158,7 @@
 <body>
     <!-- Authentication UI -->
     <div id="auth-container">
+        <!-- Auth HTML remains the same -->
         <div class="auth-form">
             <div id="login-view">
                 <h2>Đăng nhập</h2>
@@ -187,6 +211,7 @@
             </div>
         </header>
         <div id="chat-container"></div>
+        <div id="suggestions-container"></div>
         <div id="saved-chats-modal" class="modal-overlay hidden">
             <div class="modal-content">
                 <div class="modal-header">
@@ -233,7 +258,7 @@
             orderBy
         } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
 
-        // Your Firebase configuration
+        // Firebase configuration
         const firebaseConfig = {
              apiKey: "AIzaSyBDUBufnsk1PQZTLYCJDqASMX8hEVHqkDc",
              authDomain: "aimind-2362a.firebaseapp.com",
@@ -256,8 +281,9 @@
         let chat;
         let isRecording = false;
 
-        // --- AUTH UI DOM ELEMENTS ---
+        // --- DOM ELEMENTS ---
         const authContainer = document.getElementById('auth-container');
+        const appContainer = document.getElementById('app-container');
         const loginView = document.getElementById('login-view');
         const registerView = document.getElementById('register-view');
         const loginForm = document.getElementById('login-form');
@@ -266,12 +292,10 @@
         const showRegisterBtn = document.getElementById('show-register');
         const showLoginBtn = document.getElementById('show-login');
         const authError = document.getElementById('auth-error');
-        
-        // --- APP UI DOM ELEMENTS ---
-        const appContainer = document.getElementById('app-container');
         const userInfo = document.getElementById('user-info');
         const logoutBtn = document.getElementById('logout-btn');
         const chatContainer = document.getElementById('chat-container');
+        const suggestionsContainer = document.getElementById('suggestions-container');
         const promptInput = document.getElementById('prompt-input');
         const sendBtn = document.getElementById('send-btn');
         const recordBtn = document.getElementById('record-btn');
@@ -318,10 +342,15 @@
         } else { recordBtn.classList.add('hidden'); }
         
         // --- CHAT LOGIC ---
+        function clearSuggestions() {
+            suggestionsContainer.innerHTML = '';
+        }
+
         function startNewChat() {
             currentChatId = null;
             chat = model.startChat({ history: [] });
             chatContainer.innerHTML = '';
+            clearSuggestions();
             addMessage('ai', 'Xin chào! Tôi có thể giúp gì cho bạn?');
         }
         
@@ -338,6 +367,7 @@
                     chat = model.startChat({ history: chatToLoad.history });
                     
                     chatContainer.innerHTML = '';
+                    clearSuggestions();
                     chatToLoad.history.forEach(msg => {
                         const role = msg.role === 'model' ? 'ai' : 'user';
                         addMessage(role, msg.parts[0].text);
@@ -372,6 +402,7 @@
 
             sendBtn.disabled = true; recordBtn.disabled = true;
             promptInput.value = ''; adjustInputHeight();
+            clearSuggestions();
             addMessage('user', promptText);
             
             const typingIndicator = showTypingIndicator();
@@ -392,6 +423,10 @@
                     aiMessageContent.innerHTML = DOMPurify.sanitize(marked.parse(fullResponseText));
                     scrollToBottom();
                 }
+
+                // After response is complete, get suggestions
+                getFollowUpSuggestions(fullResponseText);
+
             } catch (error) {
                 if (typingIndicator && typingIndicator.parentNode) {
                     chatContainer.removeChild(typingIndicator);
@@ -401,6 +436,34 @@
                 sendBtn.disabled = false; recordBtn.disabled = false;
                 promptInput.focus();
             }
+        }
+
+        async function getFollowUpSuggestions(lastResponse) {
+            try {
+                const suggestionPrompt = `Dựa vào câu trả lời sau: "${lastResponse.substring(0, 500)}". Hãy đề xuất 3 câu hỏi tiếp theo ngắn gọn và thú vị mà người dùng có thể hỏi. QUAN TRỌNG: Chỉ trả về 3 câu hỏi, mỗi câu trên một dòng. Không đánh số, không dùng gạch đầu dòng, không thêm bất kỳ văn bản nào khác.`;
+                const suggestionModel = getGenerativeModel(ai, { model: "gemini-1.5-flash-latest" }); // Use a fresh instance for this
+                const result = await suggestionModel.generateContent(suggestionPrompt);
+                const responseText = result.response.text();
+                const suggestions = responseText.split('\n').filter(s => s.trim() !== '');
+                displaySuggestions(suggestions);
+            } catch (error) {
+                console.error("Error getting suggestions:", error);
+            }
+        }
+        
+        function displaySuggestions(suggestions) {
+            clearSuggestions();
+            suggestions.forEach(suggestionText => {
+                const chip = document.createElement('button');
+                chip.className = 'suggestion-chip';
+                chip.textContent = suggestionText;
+                chip.onclick = () => {
+                    promptInput.value = suggestionText;
+                    sendMessage();
+                };
+                suggestionsContainer.appendChild(chip);
+            });
+            scrollToBottom();
         }
 
         // --- FIRESTORE & HELPER FUNCTIONS ---
@@ -472,18 +535,20 @@
         function showTypingIndicator() {
             const indicator = document.createElement('div');
             indicator.className = 'message ai typing-indicator';
-            indicator.innerHTML = `
-                <div class="avatar">🤖</div>
-                <div class="message-content">
-                    <span></span><span></span><span></span>
-                </div>
-            `;
+            indicator.innerHTML = `<div class="avatar">🤖</div><div class="message-content"><span></span><span></span><span></span></div>`;
             chatContainer.appendChild(indicator);
             scrollToBottom();
             return indicator;
         }
 
-        function scrollToBottom() { chatContainer.scrollTop = chatContainer.scrollHeight; }
+        function scrollToBottom() {
+             const scrollHeight = chatContainer.scrollHeight;
+             const clientHeight = chatContainer.clientHeight;
+             // Only scroll if near the bottom, to avoid interrupting user scrolling up
+             if (scrollHeight - chatContainer.scrollTop - clientHeight < 200) {
+                 chatContainer.scrollTop = scrollHeight;
+             }
+        }
         function adjustInputHeight() { promptInput.style.height = 'auto'; promptInput.style.height = (promptInput.scrollHeight) + 'px'; }
         function toggleRecording() { if (!recognition) return; isRecording ? recognition.stop() : recognition.start(); }
 
