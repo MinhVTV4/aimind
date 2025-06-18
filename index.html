@@ -107,8 +107,14 @@
         
         <div id="chat-container" class="flex-1 p-4 space-y-6 overflow-y-auto"></div>
         
-        <div id="suggestions-container" class="px-4 pb-2 flex flex-wrap gap-2"></div>
-        
+        <div id="suggestion-area" class="px-4 pb-2">
+            <button id="toggle-suggestions-btn" class="hidden w-full text-left text-sm text-blue-600 font-semibold p-2 rounded-lg hover:bg-blue-50 flex items-center gap-2">
+                <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" enable-background="new 0 0 24 24" height="24px" viewBox="0 0 24 24" width="24px" fill="currentColor"><g><rect fill="none" height="24" width="24"/></g><g><g><path d="M4,18h11c0.55,0,1-0.45,1-1v-2c0-0.55-0.45-1-1-1H4c-0.55,0-1,0.45-1,1v2C3,17.55,3.45,18,4,18z M3,7c0,0.55,0.45,1,1,1 h11c0.55,0,1-0.45,1-1V5c0-0.55-0.45-1-1-1H4C3.45,4,3,4.45,3,5V7z M4,13h11c0.55,0,1-0.45,1-1v-2c0-0.55-0.45-1-1-1H4 c-0.55,0-1,0.45-1,1v2C3,12.55,3.45,13,4,13z M19.5,4.5L19.5,4.5c0.47,0.47,0.47,1.23,0,1.7l-4.08,4.08 c-0.47,0.47-1.23,0.47-1.7,0l0,0c-0.47-0.47-0.47-1.23,0-1.7l4.08-4.08C18.27,4.03,19.03,4.03,19.5,4.5z M19.5,17.82 c0.47-0.47,1.23-0.47,1.7,0l0,0c0.47,0.47,0.47,1.23,0,1.7l-4.08,4.08c-0.47,0.47-1.23,0.47-1.7,0l0,0c-0.47-0.47-0.47-1.23,0-1.7 L19.5,17.82z"/></g></g></svg>
+                Xem gợi ý
+            </button>
+            <div id="suggestions-container" class="hidden mt-2 flex flex-wrap gap-2"></div>
+        </div>
+
         <div id="saved-chats-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
             <div class="bg-white p-6 rounded-lg shadow-xl w-full max-w-lg max-h-[80vh] flex flex-col">
                 <div class="flex justify-between items-center pb-3 border-b">
@@ -198,6 +204,7 @@
         const logoutBtn = document.getElementById('logout-btn');
         const chatContainer = document.getElementById('chat-container');
         const suggestionsContainer = document.getElementById('suggestions-container');
+        const toggleSuggestionsBtn = document.getElementById('toggle-suggestions-btn');
         const promptInput = document.getElementById('prompt-input');
         const sendBtn = document.getElementById('send-btn');
         const recordBtn = document.getElementById('record-btn');
@@ -245,6 +252,8 @@
         // --- CHAT LOGIC ---
         function clearSuggestions() {
             suggestionsContainer.innerHTML = '';
+            suggestionsContainer.classList.add('hidden');
+            toggleSuggestionsBtn.classList.add('hidden');
         }
 
         function startNewChat() {
@@ -373,14 +382,19 @@
         }
         
         function displaySuggestions(suggestions) {
-            clearSuggestions();
-            suggestions.forEach(suggestionText => {
-                const chip = document.createElement('button');
-                chip.className = 'suggestion-chip';
-                chip.textContent = suggestionText;
-                chip.onclick = () => { promptInput.value = suggestionText; sendMessage(); };
-                suggestionsContainer.appendChild(chip);
-            });
+            suggestionsContainer.innerHTML = '';
+            if(suggestions.length > 0) {
+                toggleSuggestionsBtn.classList.remove('hidden');
+                suggestions.forEach(suggestionText => {
+                    const chip = document.createElement('button');
+                    chip.className = 'suggestion-chip border border-blue-200 bg-blue-50 text-blue-700 rounded-full px-3 py-1 text-sm hover:bg-blue-100';
+                    chip.textContent = suggestionText;
+                    chip.onclick = () => { promptInput.value = suggestionText; sendMessage(); };
+                    suggestionsContainer.appendChild(chip);
+                });
+            } else {
+                 toggleSuggestionsBtn.classList.add('hidden');
+            }
             scrollToBottom();
         }
 
@@ -472,8 +486,18 @@
         promptInput.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } });
         promptInput.addEventListener('input', adjustInputHeight);
         viewChatsBtn.addEventListener('click', () => { renderSavedChats(); savedChatsModal.classList.remove('hidden'); });
-        closeModalBtn.addEventListener('click', () => savedChatsModal.classList.add('hidden'));
-        savedChatsModal.addEventListener('click', e => { if (e.target === savedChatsModal) savedChatsModal.classList.add('hidden'); });
+        // SỬA LỖI: Thêm dấu ngoặc nhọn {} cho hàm xử lý sự kiện
+        closeModalBtn.addEventListener('click', () => {
+            savedChatsModal.classList.add('hidden');
+        });
+        savedChatsModal.addEventListener('click', e => { 
+            if (e.target === savedChatsModal) {
+                savedChatsModal.classList.add('hidden');
+            }
+        });
+        toggleSuggestionsBtn.addEventListener('click', () => {
+            suggestionsContainer.classList.toggle('hidden');
+        });
     </script>
 </body>
 </html>
