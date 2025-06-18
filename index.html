@@ -112,7 +112,7 @@
             </div>
         </header>
         
-        <div id="chat-container" class="flex-1 p-4 space-y-6 overflow-y-auto"></div>
+        <div id="chat-container" class="flex-1 p-2 sm:p-4 space-y-6 overflow-y-auto"></div>
         
         <div id="suggestion-area" class="px-4 pb-2">
             <button id="toggle-suggestions-btn" class="hidden w-full text-left text-sm text-blue-600 font-semibold p-2 rounded-lg hover:bg-blue-50 flex items-center gap-2">
@@ -315,7 +315,7 @@
 
             const avatar = document.createElement('div');
             avatar.className = 'w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center text-sm flex-shrink-0';
-            avatar.textContent = role === 'user' ? '🙂' : '🤖';
+            avatar.textContent = role === 'user' ? '🙂' : '�';
 
             const contentElem = document.createElement('div');
             contentElem.className = 'message-content px-4 py-2 rounded-lg max-w-xs lg:max-w-xl xl:max-w-2xl';
@@ -513,3 +513,4 @@
     </script>
 </body>
 </html>
+�
