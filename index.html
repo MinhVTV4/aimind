@@ -140,9 +140,26 @@
 
         #input-area { display: flex; align-items: center; padding: 10px; background-color: var(--input-bg); border-top: 1px solid var(--border-color); flex-shrink: 0; gap: 10px; }
         #prompt-input { flex-grow: 1; border: 1px solid var(--border-color); border-radius: 18px; padding: 10px 15px; font-size: 16px; resize: none; max-height: 150px; overflow-y: auto; }
-        .icon-btn { background-color: transparent; color: var(--record-btn-color); border: none; width: 40px; height: 40px; border-radius: 50%; display: flex; justify-content: center; align-items: center; cursor: pointer; flex-shrink: 0; }
-        #record-btn.recording { color: white; background-color: var(--record-btn-recording-color); }
-        #send-btn { background-color: var(--button-bg); color: white; }
+        .icon-btn { background-color: transparent; border: none; width: 40px; height: 40px; border-radius: 50%; display: flex; justify-content: center; align-items: center; cursor: pointer; flex-shrink: 0; transition: background-color 0.2s; }
+        .icon-btn:hover { background-color: #f1f3f4; }
+        .icon-btn svg { width: 24px; height: 24px; }
+
+        #record-btn.recording {
+            background-color: var(--record-btn-recording-color);
+        }
+        #record-btn.recording svg {
+            fill: white;
+        }
+        #record-btn svg {
+            fill: var(--record-btn-color);
+        }
+
+        #send-btn {
+            background-color: var(--button-bg);
+        }
+        #send-btn svg {
+            fill: white;
+        }
         #send-btn:disabled { background-color: #a0c3e6; cursor: not-allowed; }
 
         /* Modal for Saved Chats */
@@ -201,7 +218,7 @@
             <div id="user-info"></div>
             <div class="header-actions">
                 <button id="view-chats-btn" class="icon-btn" title="Lịch sử trò chuyện">
-                    <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="currentColor"><path d="M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42C8.27 19.99 10.51 21 13 21c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-1 5v5l4.25 2.52.77-1.28-3.52-2.09V8H12z"/></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px"><path d="M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42C8.27 19.99 10.51 21 13 21c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-1 5v5l4.25 2.52.77-1.28-3.52-2.09V8H12z"/></svg>
                 </button>
                 <button id="new-chat-btn">Trò chuyện mới</button>
                 <button id="logout-btn">Đăng xuất</button>
@@ -221,10 +238,10 @@
         <div id="input-area">
             <textarea id="prompt-input" rows="1" placeholder="Nhập câu hỏi..."></textarea>
             <button id="record-btn" class="icon-btn" title="Ghi âm">
-                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg>
+                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg>
             </button>
             <button id="send-btn" class="icon-btn" title="Gửi">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2 .01 7z"/></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2 .01 7z"/></svg>
             </button>
         </div>
     </div>
@@ -271,13 +288,14 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
         const ai = getAI(app);
-        const model = getGenerativeModel(ai, { model: "gemini-1.5-flash-latest" });
+        // THAY ĐỔI: Chuyển sang model Gemini 2.5 Flash
+        const model = getGenerativeModel(ai, { model: "gemini-2.5-flash" });
 
         // --- GLOBAL STATE ---
         let currentUserId = null;
         let currentChatId = null;
         let chat;
-        let localHistory = []; // <<<<< THAY ĐỔI: Tự quản lý lịch sử ở đây
+        let localHistory = [];
         let isRecording = false;
 
         // --- DOM ELEMENTS ---
@@ -346,7 +364,7 @@
 
         function startNewChat() {
             currentChatId = null;
-            localHistory = []; // Reset local history
+            localHistory = []; 
             chat = model.startChat({ history: [] });
             chatContainer.innerHTML = '';
             clearSuggestions();
@@ -362,7 +380,7 @@
                 if (chatDoc.exists()) {
                     const chatToLoad = chatDoc.data();
                     
-                    localHistory = chatToLoad.history || []; // Load history into our local state
+                    localHistory = chatToLoad.history || [];
                     currentChatId = chatDoc.id;
                     chat = model.startChat({ history: localHistory });
                     
@@ -388,7 +406,7 @@
             messageElem.className = `message ${role}`;
             const avatar = document.createElement('div');
             avatar.className = 'avatar';
-            avatar.textContent = role === 'user' ? '🙂' : '�';
+            avatar.textContent = role === 'user' ? '🙂' : '🤖';
             const contentElem = document.createElement('div');
             contentElem.className = 'message-content';
             contentElem.innerHTML = DOMPurify.sanitize(marked.parse(text));
@@ -407,7 +425,6 @@
             promptInput.value = ''; adjustInputHeight();
             clearSuggestions();
             
-            // Add user message to UI and local history
             addMessage('user', promptText);
             localHistory.push({ role: 'user', parts: [{ text: promptText }] });
 
@@ -427,7 +444,6 @@
                     scrollToBottom();
                 }
 
-                // Add AI response to local history
                 localHistory.push({ role: 'model', parts: [{ text: fullResponseText }] });
                 
                 await updateConversationInDb();
@@ -436,7 +452,6 @@
             } catch (error) {
                 if (typingIndicator?.parentNode) chatContainer.removeChild(typingIndicator);
                 addMessage('ai', `**Đã xảy ra lỗi:** ${error.message}`);
-                // Remove the last user message from history if AI fails
                 localHistory.pop();
             } finally {
                 sendBtn.disabled = false; recordBtn.disabled = false;
@@ -447,7 +462,8 @@
         async function getFollowUpSuggestions(lastResponse) {
             try {
                 const suggestionPrompt = `Dựa vào câu trả lời sau: "${lastResponse.substring(0, 500)}". Hãy đề xuất 3 câu hỏi tiếp theo ngắn gọn và thú vị mà người dùng có thể hỏi. QUAN TRỌNG: Chỉ trả về 3 câu hỏi, mỗi câu trên một dòng. Không đánh số, không dùng gạch đầu dòng, không thêm bất kỳ văn bản nào khác.`;
-                const suggestionModel = getGenerativeModel(ai, { model: "gemini-1.5-flash-latest" });
+                // THAY ĐỔI: Chuyển sang model Gemini 2.5 Flash
+                const suggestionModel = getGenerativeModel(ai, { model: "gemini-2.5-flash" });
                 const result = await suggestionModel.generateContent(suggestionPrompt);
                 const responseText = result.response.text();
                 const suggestions = responseText.split('\n').filter(s => s.trim() !== '');
@@ -473,7 +489,6 @@
         async function updateConversationInDb() {
             if (!currentUserId || localHistory.length < 2) return; 
             
-            // This localHistory is guaranteed to be a clean, standard array
             const chatData = { history: localHistory, updatedAt: serverTimestamp() };
 
             try {
@@ -562,4 +577,3 @@
     </script>
 </body>
 </html>
-�
