@@ -4,245 +4,131 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gemini Chat</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/dompurify@2.3.6/dist/purify.min.js"></script>
     <style>
-        :root {
-            --body-bg: #f4f6f8;
-            --chat-bg: #ffffff;
-            --user-msg-bg: #e0f0ff;
-            --ai-msg-bg: #f1f3f4;
-            --input-bg: #ffffff;
-            --text-color: #202124;
-            --border-color: #e0e0e0;
-            --header-bg: #ffffff;
-            --button-bg: #1a73e8;
-            --button-hover-bg: #185abc;
-            --record-btn-color: #5f6368;
-            --record-btn-recording-color: #d93025;
-            --modal-overlay-bg: rgba(0, 0, 0, 0.5);
-            --suggestion-bg: #e8f0fe;
-            --suggestion-text: #1967d2;
+        /* Custom scrollbar for a cleaner look */
+        #chat-container::-webkit-scrollbar {
+            width: 6px;
         }
-
-        html, body {
-            height: 100%;
+        #chat-container::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        #chat-container::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 6px;
+        }
+        #chat-container::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+        /* Style for markdown code blocks */
+        .message-content pre {
+            background-color: #1e293b;
+            color: #e2e8f0;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            overflow-x: auto;
+            font-family: 'Courier New', Courier, monospace;
+        }
+        .message-content code:not(pre > code) {
+            background-color: #e2e8f0;
+            padding: 0.2em 0.4em;
             margin: 0;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--body-bg);
-            color: var(--text-color);
+            font-size: 85%;
+            border-radius: 3px;
         }
-
-        .hidden { display: none !important; }
-
-        /* Auth Container Styles */
-        #auth-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100%;
-        }
-        .auth-form {
-            background: white;
-            padding: 30px 40px;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-            width: 90%;
-            max-width: 400px;
-        }
-        .auth-form h2 { text-align: center; }
-        .form-group { margin-bottom: 15px; }
-        .form-group label { display: block; margin-bottom: 5px; font-weight: 500;}
-        .form-group input {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            box-sizing: border-box;
-        }
-        .auth-btn {
-            width: 100%;
-            padding: 12px;
-            border: none;
-            border-radius: 8px;
-            background-color: var(--button-bg);
-            color: white;
-            font-size: 16px;
-            cursor: pointer;
-            margin-top: 10px;
-        }
-        .auth-btn:hover { background-color: var(--button-hover-bg); }
-        .google-btn { background-color: #4285F4; margin-top: 15px; }
-        .google-btn:hover { background-color: #357ae8; }
-        #auth-error { color: #d93025; text-align: center; margin-top: 10px; min-height: 1.2em; }
-        .toggle-form {
-            text-align: center;
-            margin-top: 20px;
-            cursor: pointer;
-            color: var(--button-bg);
-        }
-
-        /* App Container Styles */
-        #app-container {
-            display: flex;
-            flex-direction: column;
-            height: 100%;
-        }
-        .header {
-            background-color: var(--header-bg);
-            padding: 10px 15px;
-            border-bottom: 1px solid var(--border-color);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-shrink: 0;
-        }
-        #user-info { font-size: 0.8rem; text-align: right; }
-        .header-actions { display: flex; align-items: center; gap: 5px; }
-        #logout-btn { background: none; border: 1px solid #d93025; color: #d93025; padding: 5px 10px; border-radius: 8px; cursor: pointer; margin-left: 10px; }
-
-        #chat-container { flex-grow: 1; overflow-y: auto; padding: 20px 10px; display: flex; flex-direction: column; gap: 15px; }
-        .message { display: flex; align-items: flex-start; gap: 10px; max-width: 90%; line-height: 1.6; }
-        .message.user { align-self: flex-end; flex-direction: row-reverse; }
-        .avatar { width: 32px; height: 32px; border-radius: 50%; background-color: var(--border-color); display: flex; justify-content: center; align-items: center; flex-shrink: 0; font-size: 14px; }
-        .message-content { background-color: var(--chat-bg); padding: 10px 15px; border-radius: 18px; }
-        .message.user .message-content { background-color: var(--user-msg-bg); }
-        .message.ai .message-content { background-color: var(--ai-msg-bg); }
-        .message-content > *:first-child { margin-top: 0; } .message-content > *:last-child { margin-bottom: 0; }
-        .message-content pre { background-color: #202124; color: #e8eaed; padding: 12px; border-radius: 8px; white-space: pre-wrap; word-wrap: break-word; }
-        
-        .typing-indicator { align-self: flex-start; margin-left: 42px; }
-        .typing-indicator span { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background-color: #999; animation: bounce 1.4s infinite ease-in-out both; }
-        .typing-indicator span:nth-child(1) { animation-delay: -0.32s; }
-        .typing-indicator span:nth-child(2) { animation-delay: -0.16s; }
-        @keyframes bounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1.0); } }
-
-        #suggestions-container {
-            padding: 0 10px 10px;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            flex-shrink: 0;
-        }
-        .suggestion-chip {
-            background-color: var(--suggestion-bg);
-            color: var(--suggestion-text);
-            border: 1px solid var(--border-color);
-            border-radius: 18px;
-            padding: 8px 12px;
-            font-size: 0.9rem;
-            cursor: pointer;
-            transition: background-color 0.2s;
-        }
-        .suggestion-chip:hover {
-            background-color: #d2e3fc;
-        }
-
-        #input-area { display: flex; align-items: center; padding: 10px; background-color: var(--input-bg); border-top: 1px solid var(--border-color); flex-shrink: 0; gap: 10px; }
-        #prompt-input { flex-grow: 1; border: 1px solid var(--border-color); border-radius: 18px; padding: 10px 15px; font-size: 16px; resize: none; max-height: 150px; overflow-y: auto; }
-        .icon-btn { background-color: transparent; border: none; width: 40px; height: 40px; border-radius: 50%; display: flex; justify-content: center; align-items: center; cursor: pointer; flex-shrink: 0; transition: background-color 0.2s; }
-        .icon-btn:hover { background-color: #f1f3f4; }
-        .icon-btn svg { width: 24px; height: 24px; }
-
-        #record-btn.recording {
-            background-color: var(--record-btn-recording-color);
-        }
-        #record-btn.recording svg {
-            fill: white;
-        }
-        #record-btn svg {
-            fill: var(--record-btn-color);
-        }
-
-        #send-btn {
-            background-color: var(--button-bg);
-        }
-        #send-btn svg {
-            fill: white;
-        }
-        #send-btn:disabled { background-color: #a0c3e6; cursor: not-allowed; }
-
-        /* Modal for Saved Chats */
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: var(--modal-overlay-bg); display: flex; justify-content: center; align-items: center; z-index: 1000; }
-        .modal-content { background-color: white; padding: 20px; border-radius: 8px; width: 90%; max-width: 500px; max-height: 80vh; display: flex; flex-direction: column; }
-        .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; margin-bottom: 15px; }
-        #close-modal-btn { background: none; border: none; font-size: 1.5rem; cursor: pointer; }
-        #saved-chats-list { list-style: none; padding: 0; margin: 0; overflow-y: auto; }
-        #saved-chats-list li { padding: 12px 5px; border-bottom: 1px solid #eee; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
-        .delete-chat-btn { color: #d93025; background: none; border: none; cursor: pointer; padding: 5px; }
     </style>
 </head>
-<body>
+<body class="bg-gray-100 font-sans">
+
     <!-- Authentication UI -->
-    <div id="auth-container">
-        <!-- Auth HTML remains the same -->
-        <div class="auth-form">
+    <div id="auth-container" class="flex items-center justify-center h-screen">
+        <div class="bg-white p-8 rounded-xl shadow-lg w-full max-w-md m-4">
             <div id="login-view">
-                <h2>Đăng nhập</h2>
+                <h2 class="text-2xl font-bold text-center text-gray-800 mb-6">Đăng nhập</h2>
                 <form id="login-form">
-                    <div class="form-group">
-                        <label for="login-email">Email</label>
-                        <input type="email" id="login-email" required>
+                    <div class="mb-4">
+                        <label for="login-email" class="block text-gray-700 text-sm font-bold mb-2">Email</label>
+                        <input type="email" id="login-email" required class="shadow-sm appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500">
                     </div>
-                    <div class="form-group">
-                        <label for="login-password">Mật khẩu</label>
-                        <input type="password" id="login-password" required>
+                    <div class="mb-6">
+                        <label for="login-password" class="block text-gray-700 text-sm font-bold mb-2">Mật khẩu</label>
+                        <input type="password" id="login-password" required class="shadow-sm appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500">
                     </div>
-                    <button type="submit" class="auth-btn">Đăng nhập</button>
+                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg focus:outline-none focus:shadow-outline transition-colors duration-200">Đăng nhập</button>
                 </form>
-                <button id="google-login-btn" class="auth-btn google-btn">Đăng nhập với Google</button>
-                <p class="toggle-form" id="show-register">Chưa có tài khoản? Đăng ký ngay</p>
+                <div class="my-4 flex items-center">
+                    <div class="flex-grow border-t border-gray-300"></div>
+                    <span class="flex-shrink mx-4 text-gray-400">hoặc</span>
+                    <div class="flex-grow border-t border-gray-300"></div>
+                </div>
+                <button id="google-login-btn" class="w-full bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-bold py-3 px-4 rounded-lg focus:outline-none focus:shadow-outline transition-colors duration-200 flex items-center justify-center">
+                    <svg class="w-5 h-5 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48"><path fill="#4285F4" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l8.1 6.28C12.09 13.42 17.63 9.5 24 9.5z"/><path fill="#34A853" d="M46.98 24.55c0-1.57-.15-3.09-.42-4.55H24v8.51h12.8c-.57 3.02-2.31 5.47-4.91 7.28l7.81 6.04C44.29 36.29 46.98 30.95 46.98 24.55z"/><path fill="#FBBC05" d="M10.66 28.14c-.58-1.74-.91-3.58-.91-5.48s.33-3.74.91-5.48l-8.1-6.28C.92 14.16 0 18.91 0 24s.92 9.84 2.56 13.22l8.1-6.08z"/><path fill="#EA4335" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.81-6.04c-2.18 1.47-4.96 2.34-8.08 2.34-6.37 0-11.91-3.92-13.84-9.3l-8.1 6.28C6.51 42.62 14.62 48 24 48z"/><path fill="none" d="M0 0h48v48H0z"/></svg>
+                    Đăng nhập với Google
+                </button>
+                <p class="text-center mt-6 text-sm">
+                    <a href="#" class="font-medium text-blue-600 hover:text-blue-500" id="show-register">Chưa có tài khoản? Đăng ký ngay</a>
+                </p>
             </div>
             <div id="register-view" class="hidden">
-                <h2>Đăng ký</h2>
+                 <h2 class="text-2xl font-bold text-center text-gray-800 mb-6">Tạo tài khoản</h2>
                 <form id="register-form">
-                    <div class="form-group">
-                        <label for="register-email">Email</label>
-                        <input type="email" id="register-email" required>
+                    <div class="mb-4">
+                        <label for="register-email" class="block text-gray-700 text-sm font-bold mb-2">Email</label>
+                        <input type="email" id="register-email" required class="shadow-sm appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500">
                     </div>
-                    <div class="form-group">
-                        <label for="register-password">Mật khẩu</label>
-                        <input type="password" id="register-password" required>
+                    <div class="mb-6">
+                        <label for="register-password" class="block text-gray-700 text-sm font-bold mb-2">Mật khẩu</label>
+                        <input type="password" id="register-password" required class="shadow-sm appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500">
                     </div>
-                    <button type="submit" class="auth-btn">Đăng ký</button>
+                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg focus:outline-none focus:shadow-outline transition-colors duration-200">Đăng ký</button>
                 </form>
-                <p class="toggle-form" id="show-login">Đã có tài khoản? Đăng nhập</p>
+                <p class="text-center mt-6 text-sm">
+                    <a href="#" class="font-medium text-blue-600 hover:text-blue-500" id="show-login">Đã có tài khoản? Đăng nhập</a>
+                </p>
             </div>
-            <p id="auth-error"></p>
+            <p id="auth-error" class="text-red-500 text-center mt-4 min-h-[1.2em]"></p>
         </div>
     </div>
 
     <!-- Main App UI (hidden by default) -->
-    <div id="app-container" class="hidden">
-        <header class="header">
-            <div id="user-info"></div>
-            <div class="header-actions">
-                <button id="view-chats-btn" class="icon-btn" title="Lịch sử trò chuyện">
-                    <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px"><path d="M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42C8.27 19.99 10.51 21 13 21c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-1 5v5l4.25 2.52.77-1.28-3.52-2.09V8H12z"/></svg>
+    <div id="app-container" class="hidden flex flex-col h-screen bg-gray-50">
+        <header class="flex-shrink-0 flex justify-between items-center p-4 bg-white border-b border-gray-200">
+            <div id="user-info" class="text-sm text-gray-600"></div>
+            <div class="flex items-center gap-2">
+                <button id="view-chats-btn" class="p-2 rounded-full hover:bg-gray-100 transition-colors" title="Lịch sử trò chuyện">
+                    <svg class="w-6 h-6 text-gray-600" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="currentColor"><path d="M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42C8.27 19.99 10.51 21 13 21c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-1 5v5l4.25 2.52.77-1.28-3.52-2.09V8H12z"/></svg>
                 </button>
-                <button id="new-chat-btn">Trò chuyện mới</button>
-                <button id="logout-btn">Đăng xuất</button>
+                <button id="new-chat-btn" class="px-4 py-2 bg-blue-500 text-white rounded-lg text-sm font-semibold hover:bg-blue-600 transition-colors">Trò chuyện mới</button>
+                <button id="logout-btn" class="px-4 py-2 border border-red-500 text-red-500 rounded-lg text-sm font-semibold hover:bg-red-50 hover:text-red-600 transition-colors">Đăng xuất</button>
             </div>
         </header>
-        <div id="chat-container"></div>
-        <div id="suggestions-container"></div>
-        <div id="saved-chats-modal" class="modal-overlay hidden">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h2>Lịch sử trò chuyện</h2>
-                    <button id="close-modal-btn">&times;</button>
+        
+        <div id="chat-container" class="flex-1 p-4 space-y-6 overflow-y-auto"></div>
+        
+        <div id="suggestions-container" class="px-4 pb-2 flex flex-wrap gap-2"></div>
+        
+        <div id="saved-chats-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+            <div class="bg-white p-6 rounded-lg shadow-xl w-full max-w-lg max-h-[80vh] flex flex-col">
+                <div class="flex justify-between items-center pb-3 border-b">
+                    <h2 class="text-xl font-semibold">Lịch sử trò chuyện</h2>
+                    <button id="close-modal-btn" class="text-2xl text-gray-500 hover:text-gray-800">&times;</button>
                 </div>
-                <ul id="saved-chats-list"></ul>
+                <ul id="saved-chats-list" class="mt-4 flex-1 overflow-y-auto"></ul>
             </div>
         </div>
-        <div id="input-area">
-            <textarea id="prompt-input" rows="1" placeholder="Nhập câu hỏi..."></textarea>
-            <button id="record-btn" class="icon-btn" title="Ghi âm">
-                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg>
-            </button>
-            <button id="send-btn" class="icon-btn" title="Gửi">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2 .01 7z"/></svg>
-            </button>
+        
+        <div class="p-4 bg-white border-t border-gray-200">
+            <div id="input-area" class="flex items-center gap-3 bg-gray-100 rounded-full p-2">
+                <textarea id="prompt-input" rows="1" placeholder="Nhập câu hỏi..." class="flex-1 bg-transparent px-3 py-2 resize-none focus:outline-none"></textarea>
+                <button id="record-btn" class="p-2 rounded-full hover:bg-gray-200 transition-colors" title="Ghi âm">
+                     <svg class="w-6 h-6 text-gray-600" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg>
+                </button>
+                <button id="send-btn" class="w-10 h-10 flex items-center justify-center bg-blue-600 rounded-full text-white hover:bg-blue-700 transition-colors disabled:bg-blue-300 disabled:cursor-not-allowed" title="Gửi">
+                    <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2 .01 7z"/></svg>
+                </button>
+            </div>
         </div>
     </div>
 
@@ -288,8 +174,7 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
         const ai = getAI(app);
-        // THAY ĐỔI: Chuyển sang model Gemini 2.5 Flash
-        const model = getGenerativeModel(ai, { model: "gemini-2.5-flash" });
+        const model = getGenerativeModel(ai, { model: "gemini-1.5-flash-latest" });
 
         // --- GLOBAL STATE ---
         let currentUserId = null;
@@ -326,7 +211,7 @@
         onAuthStateChanged(auth, user => {
             if (user) {
                 currentUserId = user.uid;
-                userInfo.textContent = `Chào, ${user.email}`;
+                userInfo.textContent = `Chào, ${user.displayName || user.email}`;
                 authContainer.classList.add('hidden');
                 appContainer.classList.remove('hidden');
                 startNewChat(); 
@@ -403,15 +288,30 @@
 
         function addMessage(role, text) {
             const messageElem = document.createElement('div');
-            messageElem.className = `message ${role}`;
+            messageElem.className = 'message flex items-end gap-2';
+            if(role === 'user') messageElem.classList.add('justify-end');
+
             const avatar = document.createElement('div');
-            avatar.className = 'avatar';
+            avatar.className = 'w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center text-sm flex-shrink-0';
             avatar.textContent = role === 'user' ? '🙂' : '🤖';
+
             const contentElem = document.createElement('div');
-            contentElem.className = 'message-content';
+            contentElem.className = 'message-content px-4 py-2 rounded-lg max-w-xs lg:max-w-xl xl:max-w-2xl';
+            if(role === 'user') {
+                contentElem.classList.add('bg-blue-600', 'text-white', 'rounded-br-none');
+            } else {
+                contentElem.classList.add('bg-white', 'text-gray-800', 'rounded-bl-none', 'shadow-sm');
+            }
             contentElem.innerHTML = DOMPurify.sanitize(marked.parse(text));
-            messageElem.appendChild(avatar);
-            messageElem.appendChild(contentElem);
+            
+            if(role === 'user'){
+                messageElem.appendChild(contentElem);
+                messageElem.appendChild(avatar);
+            } else {
+                messageElem.appendChild(avatar);
+                messageElem.appendChild(contentElem);
+            }
+            
             chatContainer.appendChild(messageElem);
             scrollToBottom();
             return contentElem;
@@ -462,8 +362,7 @@
         async function getFollowUpSuggestions(lastResponse) {
             try {
                 const suggestionPrompt = `Dựa vào câu trả lời sau: "${lastResponse.substring(0, 500)}". Hãy đề xuất 3 câu hỏi tiếp theo ngắn gọn và thú vị mà người dùng có thể hỏi. QUAN TRỌNG: Chỉ trả về 3 câu hỏi, mỗi câu trên một dòng. Không đánh số, không dùng gạch đầu dòng, không thêm bất kỳ văn bản nào khác.`;
-                // THAY ĐỔI: Chuyển sang model Gemini 2.5 Flash
-                const suggestionModel = getGenerativeModel(ai, { model: "gemini-2.5-flash" });
+                const suggestionModel = getGenerativeModel(ai, { model: "gemini-1.5-flash-latest" });
                 const result = await suggestionModel.generateContent(suggestionPrompt);
                 const responseText = result.response.text();
                 const suggestions = responseText.split('\n').filter(s => s.trim() !== '');
@@ -522,11 +421,12 @@
             querySnapshot.forEach(doc => {
                 const chatItem = doc.data();
                 const li = document.createElement('li');
+                li.className = "p-3 hover:bg-gray-100 cursor-pointer flex justify-between items-center";
                 li.textContent = chatItem.title;
                 li.onclick = () => loadChat(doc.id);
 
                 const deleteBtn = document.createElement('button');
-                deleteBtn.className = 'delete-chat-btn';
+                deleteBtn.className = 'p-1 text-red-500 hover:text-red-700';
                 deleteBtn.innerHTML = '&times;';
                 deleteBtn.onclick = async (e) => { e.stopPropagation(); await deleteChat(doc.id); };
                 
@@ -548,21 +448,21 @@
 
         function showTypingIndicator() {
             const indicator = document.createElement('div');
-            indicator.className = 'message ai typing-indicator';
-            indicator.innerHTML = `<div class="avatar">🤖</div><div class="message-content"><span></span><span></span><span></span></div>`;
+            indicator.className = 'message flex items-end gap-2';
+            indicator.innerHTML = `<div class="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center text-sm flex-shrink-0">🤖</div><div class="px-4 py-2 rounded-lg bg-white shadow-sm"><div class="flex items-center gap-1"><span class="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></span><span class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0.1s;"></span><span class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0.2s;"></span></div></div>`;
             chatContainer.appendChild(indicator);
             scrollToBottom();
             return indicator;
         }
 
         function scrollToBottom() {
-             const scrollHeight = chatContainer.scrollHeight;
-             const clientHeight = chatContainer.clientHeight;
-             if (scrollHeight - chatContainer.scrollTop - clientHeight < 200) {
-                 chatContainer.scrollTop = scrollHeight;
-             }
+             chatContainer.scrollTop = chatContainer.scrollHeight;
         }
-        function adjustInputHeight() { promptInput.style.height = 'auto'; promptInput.style.height = (promptInput.scrollHeight) + 'px'; }
+        function adjustInputHeight() {
+            promptInput.style.height = 'auto';
+            const scrollHeight = promptInput.scrollHeight;
+            promptInput.style.height = scrollHeight + 'px';
+        }
         function toggleRecording() { if (!recognition) return; isRecording ? recognition.stop() : recognition.start(); }
 
         // --- EVENT LISTENERS ---
