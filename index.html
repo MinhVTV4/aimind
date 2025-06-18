@@ -383,14 +383,6 @@
             }, 300);
         }
 
-        // NEW: Smart scroll handler
-        function handleStreamingScroll(messageWrapper, container) {
-            const isScrolledToBottom = container.scrollHeight - container.clientHeight <= container.scrollTop + 20; // +20 for tolerance
-            if (isScrolledToBottom) {
-                messageWrapper.scrollIntoView({ behavior: "smooth", block: "end" });
-            }
-        }
-
         function addMessageToReference(role, text) {
              const messageWrapper = document.createElement('div');
             if (role === 'ai') {
@@ -406,6 +398,7 @@
                 const contentElem = messageWrapper.querySelector('.message-content');
                 contentElem.innerHTML = DOMPurify.sanitize(marked.parse(text));
                 referenceContent.appendChild(messageWrapper);
+                messageWrapper.scrollIntoView({ behavior: "smooth", block: "center" });
                 return { messageWrapper, contentElem };
             } else {
                 messageWrapper.className = 'flex justify-end';
@@ -430,13 +423,12 @@
             referenceHistory.push({ role: 'user', parts: [{ text: promptText }] });
             try {
                 const result = await referenceChat.sendMessageStream(promptText);
-                const { messageWrapper, contentElem } = addMessageToReference('ai', '...');
+                const { contentElem } = addMessageToReference('ai', '...');
                 contentElem.innerHTML = '';
                 let fullResponseText = "";
                 for await (const chunk of result.stream) {
                     fullResponseText += chunk.text();
                     contentElem.innerHTML = DOMPurify.sanitize(marked.parse(fullResponseText));
-                    handleStreamingScroll(messageWrapper, referenceContent);
                 }
                 referenceHistory.push({ role: 'model', parts: [{ text: fullResponseText }] });
             } catch (error) {
@@ -455,13 +447,12 @@
             try {
                 addMessageToReference('user', promptText);
                 const result = await tempChat.sendMessageStream(promptText);
-                const { messageWrapper, contentElem } = addMessageToReference('ai', '...');
+                const { contentElem } = addMessageToReference('ai', '...');
                 contentElem.innerHTML = '';
                 let fullResponseText = "";
                 for await (const chunk of result.stream) {
                     fullResponseText += chunk.text();
                     contentElem.innerHTML = DOMPurify.sanitize(marked.parse(fullResponseText));
-                    handleStreamingScroll(messageWrapper, referenceContent);
                 }
             } catch (error) {
                 addMessageToReference('ai', `**Đã xảy ra lỗi:** ${error.message}`);
@@ -534,6 +525,8 @@
                 const contentElem = messageWrapper.querySelector('.message-content');
                 contentElem.innerHTML = DOMPurify.sanitize(marked.parse(text));
                 chatContainer.appendChild(messageWrapper);
+                 // One-time scroll to bring the message into view
+                messageWrapper.scrollIntoView({ behavior: "smooth", block: "center" });
                 return { messageWrapper, contentElem };
             } else {
                 messageWrapper.className = 'flex justify-end';
@@ -558,13 +551,13 @@
             try {
                 const result = await chat.sendMessageStream(promptText);
                 if (typingIndicator?.parentNode) chatContainer.removeChild(typingIndicator);
-                const { messageWrapper, contentElem } = addMessage('ai', '...');
+                const { contentElem } = addMessage('ai', '...');
                 contentElem.innerHTML = '';
                 let fullResponseText = "";
                 for await (const chunk of result.stream) {
                     fullResponseText += chunk.text();
                     contentElem.innerHTML = DOMPurify.sanitize(marked.parse(fullResponseText));
-                    handleStreamingScroll(messageWrapper, chatContainer);
+                    // No more scrolling inside the loop
                 }
                 localHistory.push({ role: 'model', parts: [{ text: fullResponseText }] });
                 await updateConversationInDb();
