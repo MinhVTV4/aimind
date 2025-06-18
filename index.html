@@ -359,14 +359,13 @@
             }, 300);
         }
 
-        function handleSmartScroll(messageWrapper) {
-            // Chỉ cuộn nếu người dùng đang ở gần cuối
-            if (chatContainer.scrollHeight - chatContainer.scrollTop - chatContainer.clientHeight < 200) {
+        function handleSmartScroll(messageWrapper, container) {
+            if (container.scrollHeight - container.scrollTop - container.clientHeight < 200) {
                  messageWrapper.scrollIntoView({ behavior: "smooth", block: "end" });
             }
         }
 
-        function addMessageToReference(role, text) {
+        function addMessageToReference(role, text, shouldScroll = true) {
              const messageWrapper = document.createElement('div');
             if (role === 'ai') {
                 messageWrapper.className = 'w-full space-y-2';
@@ -381,6 +380,9 @@
                 const contentElem = messageWrapper.querySelector('.message-content');
                 contentElem.innerHTML = DOMPurify.sanitize(marked.parse(text));
                 referenceContent.appendChild(messageWrapper);
+                 if (shouldScroll) {
+                    messageWrapper.scrollIntoView({ behavior: "smooth", block: "end" });
+                }
                 return { messageWrapper, contentElem };
             } else {
                 messageWrapper.className = 'flex justify-end';
@@ -388,7 +390,9 @@
                 const contentElem = messageWrapper.querySelector('.message-content');
                 contentElem.innerHTML = DOMPurify.sanitize(marked.parse(text));
                 referenceContent.appendChild(messageWrapper);
-                messageWrapper.scrollIntoView({ behavior: "smooth", block: "end" });
+                if(shouldScroll) {
+                    messageWrapper.scrollIntoView({ behavior: "smooth", block: "end" });
+                }
                 return { messageWrapper, contentElem };
             }
         }
@@ -403,18 +407,27 @@
                  promptText = formattingInstruction + '\n\n' + promptText;
             }
             referenceHistory.push({ role: 'user', parts: [{ text: promptText }] });
+            
+            const { messageWrapper, contentElem } = addMessageToReference('ai', '<span class="blinking-cursor"></span>');
+
             try {
                 const result = await referenceChat.sendMessageStream(promptText);
-                const { messageWrapper, contentElem } = addMessageToReference('ai', '...');
                 contentElem.innerHTML = '';
                 let fullResponseText = "";
                 for await (const chunk of result.stream) {
                     fullResponseText += chunk.text();
-                    contentElem.innerHTML = DOMPurify.sanitize(marked.parse(fullResponseText));
-                    handleSmartScroll(messageWrapper);
+                    contentElem.innerHTML = DOMPurify.sanitize(marked.parse(fullResponseText)) + '<span class="blinking-cursor"></span>';
+                    handleSmartScroll(messageWrapper, referenceContent);
                 }
+
+                contentElem.innerHTML = DOMPurify.sanitize(marked.parse(fullResponseText));
+                const headerHeight = referenceHeader.offsetHeight;
+                const scrollTop = messageWrapper.offsetTop - headerHeight - 16;
+                referenceContent.scrollTo({ top: scrollTop, behavior: 'smooth' });
+
                 referenceHistory.push({ role: 'model', parts: [{ text: fullResponseText }] });
             } catch (error) {
+                 if (messageWrapper.parentNode) referenceContent.removeChild(messageWrapper);
                 addMessageToReference('ai', `**Đã xảy ra lỗi:** ${error.message}`);
                 referenceHistory.pop();
             } finally {
@@ -427,18 +440,27 @@
             showReferenceModal('Gợi ý', false); 
             referenceContent.innerHTML = '';
             const tempChat = model.startChat({ history: localHistory });
+
+            const { messageWrapper, contentElem } = addMessageToReference('ai', '<span class="blinking-cursor"></span>');
+
             try {
                 addMessageToReference('user', promptText);
                 const result = await tempChat.sendMessageStream(promptText);
-                const { messageWrapper, contentElem } = addMessageToReference('ai', '...');
+                
                 contentElem.innerHTML = '';
                 let fullResponseText = "";
                 for await (const chunk of result.stream) {
                     fullResponseText += chunk.text();
-                    contentElem.innerHTML = DOMPurify.sanitize(marked.parse(fullResponseText));
-                    handleSmartScroll(messageWrapper);
+                    contentElem.innerHTML = DOMPurify.sanitize(marked.parse(fullResponseText)) + '<span class="blinking-cursor"></span>';
+                    handleSmartScroll(messageWrapper, referenceContent);
                 }
+                contentElem.innerHTML = DOMPurify.sanitize(marked.parse(fullResponseText));
+                const headerHeight = referenceHeader.offsetHeight;
+                const scrollTop = messageWrapper.offsetTop - headerHeight - 16;
+                referenceContent.scrollTo({ top: scrollTop, behavior: 'smooth' });
+
             } catch (error) {
+                 if (messageWrapper.parentNode) referenceContent.removeChild(messageWrapper);
                 addMessageToReference('ai', `**Đã xảy ra lỗi:** ${error.message}`);
             }
         }
@@ -543,32 +565,29 @@
             addMessage('user', promptText);
             localHistory.push({ role: 'user', parts: [{ text: promptText }] });
             
-            // Cập nhật: Sử dụng con trỏ nhấp nháy thay vì skeleton
             const { messageWrapper, contentElem } = addMessage('ai', '<span class="blinking-cursor"></span>');
             
             try {
                 const result = await chat.sendMessageStream(promptText);
                 
-                contentElem.innerHTML = ''; // Xóa con trỏ ban đầu
+                contentElem.innerHTML = '';
                 let fullResponseText = "";
                 
                 for await (const chunk of result.stream) {
                     fullResponseText += chunk.text();
                     contentElem.innerHTML = DOMPurify.sanitize(marked.parse(fullResponseText)) + '<span class="blinking-cursor"></span>';
-                    handleSmartScroll(messageWrapper);
+                    handleSmartScroll(messageWrapper, chatContainer);
                 }
 
-                // Cập nhật: Xóa con trỏ khi xong và cuộn lên đầu tin nhắn
                 contentElem.innerHTML = DOMPurify.sanitize(marked.parse(fullResponseText));
                 const headerHeight = mainHeader.offsetHeight;
-                const scrollTop = messageWrapper.offsetTop - headerHeight - 16; // 16px padding
+                const scrollTop = messageWrapper.offsetTop - headerHeight - 16;
                 chatContainer.scrollTo({ top: scrollTop, behavior: 'smooth' });
 
                 localHistory.push({ role: 'model', parts: [{ text: fullResponseText }] });
                 await updateConversationInDb();
                 getFollowUpSuggestions(fullResponseText);
             } catch (error) {
-                // Xóa tin nhắn AI nếu có lỗi
                 if (messageWrapper.parentNode) chatContainer.removeChild(messageWrapper);
                 addMessage('ai', `**Đã xảy ra lỗi:** ${error.message}`);
                 localHistory.pop();
