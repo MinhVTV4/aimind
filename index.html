@@ -251,6 +251,7 @@
             doc,
             addDoc,
             setDoc,
+            getDoc,
             getDocs,
             deleteDoc,
             serverTimestamp,
@@ -357,25 +358,38 @@
         async function loadChat(chatId) {
             if (!currentUserId) return;
             try {
-                const chatsCollection = collection(db, 'chats', currentUserId, 'conversations');
-                const querySnapshot = await getDocs(chatsCollection);
-                const chatDoc = querySnapshot.docs.find(doc => doc.id === chatId);
+                const docRef = doc(db, 'chats', currentUserId, 'conversations', chatId);
+                const chatDoc = await getDoc(docRef);
 
-                if (chatDoc) {
+                if (chatDoc.exists()) {
                     const chatToLoad = chatDoc.data();
+                    
+                    // SỬA LỖI: Tạo một bản sao an toàn của lịch sử để hiển thị
+                    const historyForRendering = JSON.parse(JSON.stringify(chatToLoad.history || []));
+                    
                     currentChatId = chatDoc.id;
+                    // Khởi tạo phiên chat với dữ liệu gốc
                     chat = model.startChat({ history: chatToLoad.history });
                     
                     chatContainer.innerHTML = '';
                     clearSuggestions();
-                    chatToLoad.history.forEach(msg => {
-                        const role = msg.role === 'model' ? 'ai' : 'user';
-                        addMessage(role, msg.parts[0].text);
+                    
+                    // Sử dụng bản sao an toàn để lặp và hiển thị lại giao diện
+                    historyForRendering.forEach(msg => {
+                        if (msg && msg.role && msg.parts && Array.isArray(msg.parts) && msg.parts.length > 0 && typeof msg.parts[0].text === 'string') {
+                            const role = msg.role === 'model' ? 'ai' : 'user';
+                            addMessage(role, msg.parts[0].text);
+                        } else {
+                            console.warn("Bỏ qua mục lịch sử không hợp lệ:", msg);
+                        }
                     });
                     savedChatsModal.classList.add('hidden');
+                } else {
+                     console.error("Không có tài liệu nào với ID:", chatId);
+                     addMessage('ai', '**Lỗi:** Không tìm thấy cuộc trò chuyện.');
                 }
             } catch (error) {
-                console.error("Error loading chat:", error);
+                console.error("Lỗi khi tải cuộc trò chuyện:", error);
                 addMessage('ai', '**Lỗi:** Không thể tải cuộc trò chuyện.');
             }
         }
@@ -470,7 +484,7 @@
         async function saveCurrentChat() {
             if (!currentUserId || !chat) return;
             const history = await chat.getHistory();
-            if (history.length < 2) {
+            if (history.length <= 1) { // User only prompted, AI hasn't answered
                 alert("Cuộc trò chuyện quá ngắn để lưu.");
                 return;
             }
@@ -544,7 +558,6 @@
         function scrollToBottom() {
              const scrollHeight = chatContainer.scrollHeight;
              const clientHeight = chatContainer.clientHeight;
-             // Only scroll if near the bottom, to avoid interrupting user scrolling up
              if (scrollHeight - chatContainer.scrollTop - clientHeight < 200) {
                  chatContainer.scrollTop = scrollHeight;
              }
