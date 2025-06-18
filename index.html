@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gemini Chat</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@2.3.6/dist/purify.min.js"></script>
+    <style>
+        /* Custom scrollbar for a cleaner look */
+        #chat-container::-webkit-scrollbar {
+            width: 6px;
+        }
+        #chat-container::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        #chat-container::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 6px;
+        }
+        #chat-container::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+        /* Style for markdown code blocks */
+        .message-content pre {
+            background-color: #1e293b;
+            color: #e2e8f0;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            overflow-x: auto;
+            font-family: 'Courier New', Courier, monospace;
+        }
+        .message-content code:not(pre > code) {
+            background-color: #e2e8f0;
+            padding: 0.2em 0.4em;
+            margin: 0;
+            font-size: 85%;
+            border-radius: 3px;
+        }
+    </style>
+
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#2563eb">
+<link rel="icon" href="icon-192.png">
+
+</head>
+<body class="bg-gray-100 font-sans">
+
+    <!-- Authentication UI -->
+    <div id="auth-container" class="flex items-center justify-center h-screen">
+        <div class="bg-white p-8 rounded-xl shadow-lg w-full max-w-md m-4">
+            <div id="login-view">
+                <h2 class="text-2xl font-bold text-center text-gray-800 mb-6">Đăng nhập</h2>
+                <form id="login-form">
+                    <div class="mb-4">
+                        <label for="login-email" class="block text-gray-700 text-sm font-bold mb-2">Email</label>
+                        <input type="email" id="login-email" required class="shadow-sm appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div class="mb-6">
+                        <label for="login-password" class="block text-gray-700 text-sm font-bold mb-2">Mật khẩu</label>
+                        <input type="password" id="login-password" required class="shadow-sm appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg focus:outline-none focus:shadow-outline transition-colors duration-200">Đăng nhập</button>
+                </form>
+                <div class="my-4 flex items-center">
+                    <div class="flex-grow border-t border-gray-300"></div>
+                    <span class="flex-shrink mx-4 text-gray-400">hoặc</span>
+                    <div class="flex-grow border-t border-gray-300"></div>
+                </div>
+                <button id="google-login-btn" class="w-full bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-bold py-3 px-4 rounded-lg focus:outline-none focus:shadow-outline transition-colors duration-200 flex items-center justify-center">
+                    <svg class="w-5 h-5 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48"><path fill="#4285F4" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l8.1 6.28C12.09 13.42 17.63 9.5 24 9.5z"/><path fill="#34A853" d="M46.98 24.55c0-1.57-.15-3.09-.42-4.55H24v8.51h12.8c-.57 3.02-2.31 5.47-4.91 7.28l7.81 6.04C44.29 36.29 46.98 30.95 46.98 24.55z"/><path fill="#FBBC05" d="M10.66 28.14c-.58-1.74-.91-3.58-.91-5.48s.33-3.74.91-5.48l-8.1-6.28C.92 14.16 0 18.91 0 24s.92 9.84 2.56 13.22l8.1-6.08z"/><path fill="#EA4335" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.81-6.04c-2.18 1.47-4.96 2.34-8.08 2.34-6.37 0-11.91-3.92-13.84-9.3l-8.1 6.28C6.51 42.62 14.62 48 24 48z"/><path fill="none" d="M0 0h48v48H0z"/></svg>
+                    Đăng nhập với Google
+                </button>
+                <p class="text-center mt-6 text-sm">
+                    <a href="#" class="font-medium text-blue-600 hover:text-blue-500" id="show-register">Chưa có tài khoản? Đăng ký ngay</a>
+                </p>
+            </div>
+            <div id="register-view" class="hidden">
+                 <h2 class="text-2xl font-bold text-center text-gray-800 mb-6">Tạo tài khoản</h2>
+                <form id="register-form">
+                    <div class="mb-4">
+                        <label for="register-email" class="block text-gray-700 text-sm font-bold mb-2">Email</label>
+                        <input type="email" id="register-email" required class="shadow-sm appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div class="mb-6">
+                        <label for="register-password" class="block text-gray-700 text-sm font-bold mb-2">Mật khẩu</label>
+                        <input type="password" id="register-password" required class="shadow-sm appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg focus:outline-none focus:shadow-outline transition-colors duration-200">Đăng ký</button>
+                </form>
+                <p class="text-center mt-6 text-sm">
+                    <a href="#" class="font-medium text-blue-600 hover:text-blue-500" id="show-login">Đã có tài khoản? Đăng nhập</a>
+                </p>
+            </div>
+            <p id="auth-error" class="text-red-500 text-center mt-4 min-h-[1.2em]"></p>
+        </div>
+    </div>
+
+    <!-- Main App UI (hidden by default) -->
+    <div id="app-container" class="hidden flex flex-col h-screen bg-gray-50">
+        <header class="flex-shrink-0 flex justify-between items-center p-3 sm:p-4 bg-white border-b border-gray-200">
+            <div id="user-info" class="flex items-center gap-3">
+                 <span id="user-avatar" class="w-9 h-9 rounded-full bg-blue-500 text-white flex items-center justify-center text-sm font-bold uppercase"></span>
+                 <span id="user-name" class="text-sm font-medium text-gray-700 hidden sm:block"></span>
+            </div>
+            <div class="flex items-center gap-1 sm:gap-2">
+                <button id="new-chat-btn" class="p-2 rounded-full hover:bg-gray-100 transition-colors" title="Trò chuyện mới">
+                    <svg class="w-6 h-6 text-gray-600" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="currentColor"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M14.06 9.02l.92.92L5.92 19H5v-.92l9.06-9.06M17.66 3c-.25 0-.51.1-.7.29l-1.83 1.83 3.75 3.75 1.83-1.83c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.2-.2-.45-.29-.71-.29zm-3.6 3.19L3 17.25V21h3.75L17.81 9.94l-3.75-3.75z"/></svg>
+                </button>
+                <button id="view-chats-btn" class="p-2 rounded-full hover:bg-gray-100 transition-colors" title="Lịch sử trò chuyện">
+                    <svg class="w-6 h-6 text-gray-600" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="currentColor"><path d="M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42C8.27 19.99 10.51 21 13 21c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-1 5v5l4.25 2.52.77-1.28-3.52-2.09V8H12z"/></svg>
+                </button>
+                <button id="logout-btn" class="p-2 rounded-full hover:bg-red-50 transition-colors" title="Đăng xuất">
+                    <svg class="w-6 h-6 text-red-500" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="currentColor"><path d="M0 0h24v24H0V0z" fill="none" opacity=".87"/><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5-5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg>
+                </button>
+            </div>
+        </header>
+        
+        <div id="chat-container" class="flex-1 px-4 pt-4 space-y-4 overflow-y-auto"></div>
+        
+        <div id="suggestion-area" class="px-4 pb-2">
+            <button id="toggle-suggestions-btn" class="hidden w-full text-left text-sm text-blue-600 font-semibold p-2 rounded-lg hover:bg-blue-50 flex items-center gap-2">
+                <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" enable-background="new 0 0 24 24" height="24px" viewBox="0 0 24 24" width="24px" fill="currentColor"><g><rect fill="none" height="24" width="24"/></g><g><g><path d="M4,18h11c0.55,0,1-0.45,1-1v-2c0-0.55-0.45-1-1-1H4c-0.55,0-1,0.45-1,1v2C3,17.55,3.45,18,4,18z M3,7c0,0.55,0.45,1,1,1 h11c0.55,0,1-0.45,1-1V5c0-0.55-0.45-1-1-1H4C3.45,4,3,4.45,3,5V7z M4,13h11c0.55,0,1-0.45,1-1v-2c0-0.55-0.45-1-1-1H4 c-0.55,0-1,0.45-1,1v2C3,12.55,3.45,13,4,13z M19.5,4.5L19.5,4.5c0.47,0.47,0.47,1.23,0,1.7l-4.08,4.08 c-0.47,0.47-1.23,0.47-1.7,0l0,0c-0.47-0.47-0.47-1.23,0-1.7l4.08-4.08C18.27,4.03,19.03,4.03,19.5,4.5z M19.5,17.82 c0.47-0.47,1.23-0.47,1.7,0l0,0c0.47,0.47,0.47,1.23,0,1.7l-4.08,4.08c-0.47,0.47-1.23,0.47-1.7,0l0,0c-0.47-0.47-0.47-1.23,0-1.7 L19.5,17.82z"/></g></g></svg>
+                Xem gợi ý
+            </button>
+            <div id="suggestions-container" class="hidden mt-2 flex flex-wrap gap-2"></div>
+        </div>
+
+        <div id="saved-chats-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+            <div class="bg-white p-6 rounded-lg shadow-xl w-full max-w-lg max-h-[80vh] flex flex-col">
+                <div class="flex justify-between items-center pb-3 border-b">
+                    <h2 class="text-xl font-semibold">Lịch sử trò chuyện</h2>
+                    <button id="close-modal-btn" class="text-2xl text-gray-500 hover:text-gray-800">&times;</button>
+                </div>
+                <ul id="saved-chats-list" class="mt-4 flex-1 overflow-y-auto"></ul>
+            </div>
+        </div>
+        
+        <div class="p-4 bg-white border-t border-gray-200">
+            <div id="input-area" class="flex items-center gap-3 bg-gray-100 rounded-full p-2">
+                <textarea id="prompt-input" rows="1" placeholder="Nhập câu hỏi..." class="flex-1 bg-transparent px-3 py-2 resize-none focus:outline-none"></textarea>
+                <button id="record-btn" class="p-2 rounded-full hover:bg-gray-200 transition-colors" title="Ghi âm">
+                     <svg class="w-6 h-6 text-gray-600" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg>
+                </button>
+                <button id="send-btn" class="w-10 h-10 flex items-center justify-center bg-blue-600 rounded-full text-white hover:bg-blue-700 transition-colors disabled:bg-blue-300 disabled:cursor-not-allowed" title="Gửi">
+                    <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2 .01 7z"/></svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        // Import Firebase modules
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
+        import { 
+            getAuth, 
+            onAuthStateChanged,
+            createUserWithEmailAndPassword,
+            signInWithEmailAndPassword,
+            GoogleAuthProvider,
+            signInWithPopup,
+            signOut
+        } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
+        import { getAI, getGenerativeModel } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-ai.js";
+        import { 
+            getFirestore,
+            collection,
+            doc,
+            addDoc,
+            updateDoc,
+            getDoc,
+            getDocs,
+            deleteDoc,
+            serverTimestamp,
+            query,
+            orderBy
+        } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
+
+        // Firebase configuration
+        const firebaseConfig = {
+             apiKey: "AIzaSyBDUBufnsk1PQZTLYCJDqASMX8hEVHqkDc",
+             authDomain: "aimind-2362a.firebaseapp.com",
+             projectId: "aimind-2362a",
+             storageBucket: "aimind-2362a.firebasestorage.app",
+             messagingSenderId: "377635504319",
+             appId: "1:377635504319:web:7c6dd3cf0c52dd302d860a"
+        };
+
+        // Initialize Firebase services
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const ai = getAI(app);
+        const model = getGenerativeModel(ai, { model: "gemini-1.5-flash-latest" });
+
+        // --- GLOBAL STATE ---
+        let currentUserId = null;
+        let currentChatId = null;
+        let chat;
+        let localHistory = [];
+        let isRecording = false;
+
+        // --- DOM ELEMENTS ---
+        const authContainer = document.getElementById('auth-container');
+        const appContainer = document.getElementById('app-container');
+        const loginView = document.getElementById('login-view');
+        const registerView = document.getElementById('register-view');
+        const loginForm = document.getElementById('login-form');
+        const registerForm = document.getElementById('register-form');
+        const googleLoginBtn = document.getElementById('google-login-btn');
+        const showRegisterBtn = document.getElementById('show-register');
+        const showLoginBtn = document.getElementById('show-login');
+        const authError = document.getElementById('auth-error');
+        const userInfo = document.getElementById('user-info');
+        const userAvatar = document.getElementById('user-avatar');
+        const userName = document.getElementById('user-name');
+        const logoutBtn = document.getElementById('logout-btn');
+        const chatContainer = document.getElementById('chat-container');
+        const suggestionsContainer = document.getElementById('suggestions-container');
+        const toggleSuggestionsBtn = document.getElementById('toggle-suggestions-btn');
+        const promptInput = document.getElementById('prompt-input');
+        const sendBtn = document.getElementById('send-btn');
+        const recordBtn = document.getElementById('record-btn');
+        const viewChatsBtn = document.getElementById('view-chats-btn');
+        const newChatBtn = document.getElementById('new-chat-btn');
+        const savedChatsModal = document.getElementById('saved-chats-modal');
+        const closeModalBtn = document.getElementById('close-modal-btn');
+        const savedChatsList = document.getElementById('saved-chats-list');
+
+        // --- AUTH STATE OBSERVER ---
+        onAuthStateChanged(auth, user => {
+            if (user) {
+                currentUserId = user.uid;
+                const email = user.email || '';
+                const displayName = user.displayName || email.split('@')[0];
+                userName.textContent = `Chào, ${displayName}`;
+                userAvatar.textContent = displayName.charAt(0);
+                
+                authContainer.classList.add('hidden');
+                appContainer.classList.remove('hidden');
+                startNewChat(); 
+            } else {
+                currentUserId = null;
+                authContainer.classList.remove('hidden');
+                appContainer.classList.add('hidden');
+            }
+        });
+
+        // --- AUTHENTICATION LOGIC ---
+        loginForm.addEventListener('submit', async e => { e.preventDefault(); try { await signInWithEmailAndPassword(auth, loginForm['login-email'].value, loginForm['login-password'].value); authError.textContent = ''; } catch (error) { authError.textContent = "Email hoặc mật khẩu không đúng."; } });
+        registerForm.addEventListener('submit', async e => { e.preventDefault(); try { await createUserWithEmailAndPassword(auth, registerForm['register-email'].value, registerForm['register-password'].value); authError.textContent = ''; } catch (error) { authError.textContent = "Không thể tạo tài khoản. Vui lòng thử lại."; } });
+        googleLoginBtn.addEventListener('click', async () => { try { await signInWithPopup(auth, new GoogleAuthProvider()); authError.textContent = ''; } catch (error) { authError.textContent = "Đăng nhập Google thất bại."; } });
+        logoutBtn.addEventListener('click', () => signOut(auth));
+        showRegisterBtn.addEventListener('click', () => { loginView.classList.add('hidden'); registerView.classList.remove('hidden'); authError.textContent = ''; });
+        showLoginBtn.addEventListener('click', () => { registerView.classList.add('hidden'); loginView.classList.remove('hidden'); authError.textContent = ''; });
+
+        // --- SPEECH RECOGNITION ---
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        let recognition;
+        if(SpeechRecognition) {
+            recognition = new SpeechRecognition();
+            recognition.continuous = false; recognition.lang = 'vi-VN'; recognition.interimResults = false;
+            recognition.onstart = () => { isRecording = true; recordBtn.classList.add('recording'); promptInput.placeholder = 'Đang lắng nghe...'; };
+            recognition.onend = () => { isRecording = false; recordBtn.classList.remove('recording'); promptInput.placeholder = 'Nhập câu hỏi...'; };
+            recognition.onresult = (event) => { promptInput.value = event.results[event.results.length - 1][0].transcript.trim(); adjustInputHeight(); };
+            recognition.onerror = (event) => { addMessage('ai', `**Lỗi ghi âm:** ${event.error}. Vui lòng thử lại.`); };
+        } else { recordBtn.classList.add('hidden'); }
+        
+        // --- CHAT LOGIC ---
+        function clearSuggestions() {
+            suggestionsContainer.innerHTML = '';
+            suggestionsContainer.classList.add('hidden');
+            toggleSuggestionsBtn.classList.add('hidden');
+        }
+
+        function startNewChat() {
+            currentChatId = null;
+            localHistory = []; 
+            chat = model.startChat({ history: [] });
+            chatContainer.innerHTML = '';
+            clearSuggestions();
+            addMessage('ai', 'Xin chào! Tôi có thể giúp gì cho bạn?');
+        }
+        
+        async function loadChat(chatId) {
+            if (!currentUserId) return;
+            try {
+                const docRef = doc(db, 'chats', currentUserId, 'conversations', chatId);
+                const chatDoc = await getDoc(docRef);
+
+                if (chatDoc.exists()) {
+                    const chatToLoad = chatDoc.data();
+                    
+                    localHistory = chatToLoad.history || [];
+                    currentChatId = chatDoc.id;
+                    chat = model.startChat({ history: localHistory });
+                    
+                    chatContainer.innerHTML = '';
+                    clearSuggestions();
+                    
+                    localHistory.forEach(msg => {
+                        const role = msg.role === 'model' ? 'ai' : 'user';
+                        addMessage(role, msg.parts[0].text);
+                    });
+                    savedChatsModal.classList.add('hidden');
+                } else {
+                     addMessage('ai', '**Lỗi:** Không tìm thấy cuộc trò chuyện.');
+                }
+            } catch (error) {
+                console.error("Lỗi khi tải cuộc trò chuyện:", error);
+                addMessage('ai', '**Lỗi:** Không thể tải cuộc trò chuyện.');
+            }
+        }
+
+        function addMessage(role, text) {
+            const messageWrapper = document.createElement('div');
+            
+            if (role === 'ai') {
+                messageWrapper.className = 'w-full space-y-2';
+
+                const headerDiv = document.createElement('div');
+                headerDiv.className = 'flex items-center gap-2';
+                
+                const avatar = document.createElement('div');
+                avatar.className = 'w-7 h-7 rounded-full flex-shrink-0 bg-gradient-to-tr from-purple-400 to-indigo-500 flex items-center justify-center';
+                avatar.innerHTML = `<svg class="w-4 h-4 text-white" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="currentColor"><path d="M12 6c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6 2.69-6 6-6m0-2c-4.42 0-8 3.58-8 8s3.58 8 8 8 8-3.58 8-8-3.58-8-8-8z"/><path d="M12 10c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>`;
+
+                const nameSpan = document.createElement('span');
+                nameSpan.className = 'font-semibold text-gray-800';
+                nameSpan.textContent = 'Gemini';
+                
+                headerDiv.appendChild(avatar);
+                headerDiv.appendChild(nameSpan);
+
+                const contentElem = document.createElement('div');
+                contentElem.className = 'message-content text-gray-800'; 
+                contentElem.innerHTML = DOMPurify.sanitize(marked.parse(text));
+                
+                messageWrapper.appendChild(headerDiv);
+                messageWrapper.appendChild(contentElem);
+
+                chatContainer.appendChild(messageWrapper);
+                scrollToBottom();
+                return contentElem;
+            } else { // role === 'user'
+                messageWrapper.className = 'flex justify-end';
+                
+                const contentElem = document.createElement('div');
+                contentElem.className = 'message-content px-4 py-2 rounded-2xl bg-blue-600 text-white max-w-xs sm:max-w-md lg:max-w-2xl';
+                contentElem.innerHTML = DOMPurify.sanitize(marked.parse(text));
+                
+                messageWrapper.appendChild(contentElem);
+                chatContainer.appendChild(messageWrapper);
+                scrollToBottom();
+                return contentElem; 
+            }
+        }
+
+        async function sendMessage() {
+            const promptText = promptInput.value.trim();
+            if (!promptText) return;
+
+            sendBtn.disabled = true; recordBtn.disabled = true;
+            promptInput.value = ''; adjustInputHeight();
+            clearSuggestions();
+            
+            addMessage('user', promptText);
+            localHistory.push({ role: 'user', parts: [{ text: promptText }] });
+
+            const typingIndicator = showTypingIndicator();
+
+            try {
+                const result = await chat.sendMessageStream(promptText);
+                if (typingIndicator?.parentNode) chatContainer.removeChild(typingIndicator);
+
+                const aiMessageContent = addMessage('ai', '...');
+                aiMessageContent.innerHTML = '';
+                
+                let fullResponseText = "";
+                for await (const chunk of result.stream) {
+                    fullResponseText += chunk.text();
+                    aiMessageContent.innerHTML = DOMPurify.sanitize(marked.parse(fullResponseText));
+                    scrollToBottom();
+                }
+
+                localHistory.push({ role: 'model', parts: [{ text: fullResponseText }] });
+                
+                await updateConversationInDb();
+                getFollowUpSuggestions(fullResponseText);
+
+            } catch (error) {
+                if (typingIndicator?.parentNode) chatContainer.removeChild(typingIndicator);
+                addMessage('ai', `**Đã xảy ra lỗi:** ${error.message}`);
+                localHistory.pop();
+            } finally {
+                sendBtn.disabled = false; recordBtn.disabled = false;
+                promptInput.focus();
+            }
+        }
+
+        async function getFollowUpSuggestions(lastResponse) {
+            try {
+                const suggestionPrompt = `Dựa vào câu trả lời sau: "${lastResponse.substring(0, 500)}". Hãy đề xuất 3 câu hỏi tiếp theo ngắn gọn và thú vị mà người dùng có thể hỏi. QUAN TRỌNG: Chỉ trả về 3 câu hỏi, mỗi câu trên một dòng. Không đánh số, không dùng gạch đầu dòng, không thêm bất kỳ văn bản nào khác.`;
+                const suggestionModel = getGenerativeModel(ai, { model: "gemini-1.5-flash-latest" });
+                const result = await suggestionModel.generateContent(suggestionPrompt);
+                const responseText = result.response.text();
+                const suggestions = responseText.split('\n').filter(s => s.trim() !== '');
+                displaySuggestions(suggestions);
+            } catch (error) {
+                console.error("Error getting suggestions:", error);
+            }
+        }
+        
+        function displaySuggestions(suggestions) {
+            suggestionsContainer.innerHTML = '';
+            if(suggestions.length > 0) {
+                toggleSuggestionsBtn.classList.remove('hidden');
+                suggestions.forEach(suggestionText => {
+                    const chip = document.createElement('button');
+                    chip.className = 'suggestion-chip border border-blue-200 bg-blue-50 text-blue-700 rounded-full px-3 py-1 text-sm hover:bg-blue-100';
+                    chip.textContent = suggestionText;
+                    chip.onclick = () => { promptInput.value = suggestionText; sendMessage(); };
+                    suggestionsContainer.appendChild(chip);
+                });
+            } else {
+                 toggleSuggestionsBtn.classList.add('hidden');
+            }
+            scrollToBottom();
+        }
+
+        // --- FIRESTORE & HELPER FUNCTIONS ---
+        async function updateConversationInDb() {
+            if (!currentUserId || localHistory.length < 2) return; 
+            
+            const chatData = { history: localHistory, updatedAt: serverTimestamp() };
+
+            try {
+                if (currentChatId) {
+                    const docRef = doc(db, 'chats', currentUserId, 'conversations', currentChatId);
+                    await updateDoc(docRef, chatData);
+                } else {
+                    chatData.title = localHistory[0].parts[0].text.substring(0, 40) || "Cuộc trò chuyện mới";
+                    chatData.createdAt = serverTimestamp();
+                    const chatsCollection = collection(db, 'chats', currentUserId, 'conversations');
+                    const docRef = await addDoc(chatsCollection, chatData);
+                    currentChatId = docRef.id; 
+                }
+            } catch (error) {
+                console.error("Lỗi khi cập nhật cuộc trò chuyện:", error);
+            }
+        }
+
+
+        async function renderSavedChats() {
+            if (!currentUserId) return;
+            const chatsCollection = collection(db, 'chats', currentUserId, 'conversations');
+            const q = query(chatsCollection, orderBy('updatedAt', 'desc')); 
+            const querySnapshot = await getDocs(q);
+            
+            savedChatsList.innerHTML = '';
+            if (querySnapshot.empty) {
+                savedChatsList.innerHTML = '<li>Chưa có cuộc trò chuyện nào.</li>';
+                return;
+            }
+            querySnapshot.forEach(doc => {
+                const chatItem = doc.data();
+                const li = document.createElement('li');
+                li.className = "p-3 hover:bg-gray-100 cursor-pointer flex justify-between items-center";
+                li.textContent = chatItem.title;
+                li.onclick = () => loadChat(doc.id);
+
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = 'p-1 text-red-500 hover:text-red-700';
+                deleteBtn.innerHTML = '&times;';
+                deleteBtn.onclick = async (e) => { e.stopPropagation(); await deleteChat(doc.id); };
+                
+                li.appendChild(deleteBtn);
+                savedChatsList.appendChild(li);
+            });
+        }
+        
+        async function deleteChat(chatId) {
+            if (!currentUserId || !confirm("Bạn có chắc chắn muốn xóa?")) return;
+            try {
+                await deleteDoc(doc(db, 'chats', currentUserId, 'conversations', chatId));
+                renderSavedChats();
+                if(chatId === currentChatId) startNewChat();
+            } catch (error) {
+                console.error("Error deleting chat:", error);
+            }
+        }
+
+        function showTypingIndicator() {
+            const indicator = document.createElement('div');
+            indicator.className = 'w-full space-y-2';
+            indicator.innerHTML = `<div class="flex items-center gap-2"><div class="w-7 h-7 rounded-full flex-shrink-0 bg-gradient-to-tr from-purple-400 to-indigo-500 flex items-center justify-center"><svg class="w-4 h-4 text-white" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="currentColor"><path d="M12 6c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6 2.69-6 6-6m0-2c-4.42 0-8 3.58-8 8s3.58 8 8 8 8-3.58 8-8-3.58-8-8-8z"/><path d="M12 10c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg></div><span class="font-semibold text-gray-800">Gemini</span></div><div class="pl-9"><div class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 bg-gray-400 rounded-full animate-bounce"></span><span class="w-2.5 h-2.5 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0.1s;"></span><span class="w-2.5 h-2.5 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0.2s;"></span></div></div>`;
+            chatContainer.appendChild(indicator);
+            scrollToBottom();
+            return indicator;
+        }
+
+        function scrollToBottom() {
+             chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+        function adjustInputHeight() {
+            promptInput.style.height = 'auto';
+            const scrollHeight = promptInput.scrollHeight;
+            promptInput.style.height = scrollHeight + 'px';
+        }
+        function toggleRecording() { if (!recognition) return; isRecording ? recognition.stop() : recognition.start(); }
+
+        // --- EVENT LISTENERS ---
+        newChatBtn.addEventListener('click', startNewChat);
+        sendBtn.addEventListener('click', sendMessage);
+        recordBtn.addEventListener('click', toggleRecording);
+        promptInput.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } });
+        promptInput.addEventListener('input', adjustInputHeight);
+        viewChatsBtn.addEventListener('click', () => { renderSavedChats(); savedChatsModal.classList.remove('hidden'); });
+        closeModalBtn.addEventListener('click', () => {
+            savedChatsModal.classList.add('hidden');
+        });
+        savedChatsModal.addEventListener('click', e => { 
+            if (e.target === savedChatsModal) {
+                savedChatsModal.classList.add('hidden');
+            }
+        });
+        toggleSuggestionsBtn.addEventListener('click', () => {
+            suggestionsContainer.classList.toggle('hidden');
+        });
+    </script>
+
+<script>
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", function () {
+      navigator.serviceWorker.register("/service-worker.js")
+        .then(reg => console.log("SW registered:", reg.scope))
+        .catch(err => console.error("SW registration failed:", err));
+    });
+  }
+</script>
+
+</body>
+</html>
