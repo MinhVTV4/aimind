@@ -150,7 +150,7 @@
             <div id="input-area" class="flex items-center gap-3 bg-gray-100 rounded-full p-2">
                 <!-- NEW: Quick Reference Button -->
                 <button id="reference-btn" class="p-2 rounded-full hover:bg-gray-200 transition-colors" title="Trợ lý Phụ">
-                    <svg class="w-6 h-6 text-gray-600" xmlns="http://www.w3.org/2000/svg" enable-background="new 0 0 24 24" height="24px" viewBox="0 0 24 24" width="24px" fill="currentColor"><g><rect fill="none" height="24" width="24"/></g><g><g><path d="M12,2C6.48,2,2,6.48,2,12s4.48,10,10,10c5.52,0,10-4.48,10-10S17.52,2,12,2z M13,17h-2v-2h2V17z M13.82,12.72 c-0.27,0.34-0.64,0.61-1.11,0.78C12.23,13.7,12,14.07,12,14.5V15h-2v-0.5c0-0.83,0.34-1.58,0.88-2.12c0.47-0.47,1-0.8,1.38-1.23 C12.63,10.79,13,10.17,13,9.5C13,8.12,11.88,7,10.5,7S8,8.12,8,9.5H6c0-2.21,1.79-4,4.5-4s4.5,1.79,4.5,4 C15,10.8,14.4,11.91,13.82,12.72z" opacity=".3"/><path d="M12,22c5.52,0,10-4.48,10-10S17.52,2,12,2S2,6.48,2,12S6.48,22,12,22z M12,4c2.21,0,4,1.79,4,4c0,1.1-0.9,2-2,2 s-2-0.9-2-2S9.79,4,12,4z M14,14.5c0,0.55-0.45,1-1,1h-2v2h2c0.55,0,1,0.45,1,1s-0.45,1-1,1h-2c-1.1,0-2-0.9-2-2v-2.5 c0-0.83,0.67-1.5,1.5-1.5h0.5v-1H9.5C8.67,11,8,10.33,8,9.5S8.67,8,9.5,8h3c0.83,0,1.5,0.67,1.5,1.5S13.33,11,12.5,11H12v1.5h1 C13.55,12.5,14,13.45,14,14.5z"/><path d="M12,4c-2.21,0-4,1.79-4,4c0,1.1,0.9,2,2,2s2-0.9,2-2S14.21,4,12,4z" opacity=".3"/><path d="M9.5,8C8.67,8,8,8.67,8,9.5S8.67,11,9.5,11h3C13.33,11,14,10.33,14,9.5S13.33,8,12.5,8H9.5z M12,12.5h-1V11h-0.5 C9.17,11,8,11.67,8,12.5V15c0,1.1,0.9,2,2,2h2c0.55,0,1-0.45,1-1s-0.45-1-1-1h-2v-2h1c0.55,0,1-0.45,1-1S12.55,12.5,12,12.5z"/></g></g></svg>
+                     <svg class="w-6 h-6 text-gray-600" xmlns="http://www.w3.org/2000/svg" enable-background="new 0 0 24 24" height="24px" viewBox="0 0 24 24" width="24px" fill="currentColor"><g><path d="M0,0h24v24H0V0z" fill="none"/></g><g><g><path d="M11,7h2v2h-2V7z M11,11h2v6h-2V11z M12,2C6.48,2,2,6.48,2,12s4.48,10,10,10s10-4.48,10-10S17.52,2,12,2z M12,20 c-4.41,0-8-3.59-8-8s3.59-8,8-8s8,3.59,8,8S16.41,20,12,20z"/></g></g></svg>
                 </button>
                 <textarea id="prompt-input" rows="1" placeholder="Nhập câu hỏi..." class="flex-1 bg-transparent px-3 py-2 resize-none focus:outline-none"></textarea>
                 <button id="record-btn" class="p-2 rounded-full hover:bg-gray-200 transition-colors" title="Ghi âm">
@@ -165,7 +165,7 @@
 
     <!-- NEW: Reference Modal (Bottom Sheet) -->
     <div id="reference-modal-overlay" class="hidden fixed inset-0 bg-black bg-opacity-50 z-40 transition-opacity duration-300 ease-in-out"></div>
-    <div id="reference-modal" class="hidden fixed bottom-0 left-0 right-0 bg-white rounded-t-2xl shadow-2xl z-50 flex flex-col transform translate-y-full transition-transform duration-300 ease-in-out" style="max-height: 85vh;">
+    <div id="reference-modal" class="hidden fixed bottom-0 left-0 right-0 bg-white rounded-t-2xl shadow-2xl z-50 flex flex-col transform transition-transform duration-300 ease-in-out" style="max-height: 85vh;">
         <!-- Header -->
         <div id="reference-header" class="flex justify-between items-center p-4 border-b border-gray-200 flex-shrink-0">
             <h2 id="reference-title" class="text-lg font-semibold text-gray-800">Trợ lý Phụ</h2>
@@ -176,7 +176,7 @@
 
         <!-- Content Area -->
         <div id="reference-content" class="p-4 overflow-y-auto flex-1 space-y-4">
-            <!-- AI responses will be injected here, similar to the main chat -->
+            <!-- AI responses will be injected here -->
         </div>
 
         <!-- Input Area for Reference Modal -->
@@ -233,14 +233,16 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
         const ai = getAI(app);
-        const model = getGenerativeModel(ai, { model: "gemini-2.5-flash" });
+        const model = getGenerativeModel(ai, { model: "gemini-1.5-flash-latest" });
 
         // --- GLOBAL STATE ---
         let currentUserId = null;
         let currentChatId = null;
-        let chat;
-        let localHistory = [];
+        let chat; // Main chat instance
+        let localHistory = []; // Main chat history
         let isRecording = false;
+        let referenceChat; // Reference chat instance
+        let referenceHistory = []; // Reference chat history
 
         // --- DOM ELEMENTS ---
         const authContainer = document.getElementById('auth-container');
@@ -268,6 +270,18 @@
         const savedChatsModal = document.getElementById('saved-chats-modal');
         const closeModalBtn = document.getElementById('close-modal-btn');
         const savedChatsList = document.getElementById('saved-chats-list');
+        // New DOM elements for Reference Modal
+        const referenceBtn = document.getElementById('reference-btn');
+        const referenceModalOverlay = document.getElementById('reference-modal-overlay');
+        const referenceModal = document.getElementById('reference-modal');
+        const referenceHeader = document.getElementById('reference-header');
+        const referenceTitle = document.getElementById('reference-title');
+        const closeReferenceModalBtn = document.getElementById('close-reference-modal-btn');
+        const referenceContent = document.getElementById('reference-content');
+        const referenceInputArea = document.getElementById('reference-input-area');
+        const referencePromptInput = document.getElementById('reference-prompt-input');
+        const referenceSendBtn = document.getElementById('reference-send-btn');
+
 
         // --- AUTH STATE OBSERVER ---
         onAuthStateChanged(auth, user => {
@@ -308,7 +322,129 @@
             recognition.onerror = (event) => { addMessage('ai', `**Lỗi ghi âm:** ${event.error}. Vui lòng thử lại.`); };
         } else { recordBtn.classList.add('hidden'); }
         
-        // --- CHAT LOGIC ---
+        // --- REFERENCE MODAL LOGIC ---
+        function showReferenceModal(title, showInput) {
+            referenceTitle.textContent = title;
+            referenceInputArea.style.display = showInput ? 'block' : 'none';
+
+            referenceModalOverlay.classList.remove('hidden');
+            referenceModal.classList.remove('hidden');
+
+            requestAnimationFrame(() => {
+                referenceModalOverlay.classList.remove('overlay-exit', 'overlay-exit-active');
+                referenceModalOverlay.classList.add('overlay-enter', 'overlay-enter-active');
+                referenceModal.classList.remove('modal-exit', 'modal-exit-active');
+                referenceModal.classList.add('modal-enter', 'modal-enter-active');
+            });
+
+            if (showInput) {
+                // Start a new independent chat session if modal is for 'Trợ lý Phụ'
+                referenceHistory = [];
+                referenceChat = model.startChat({ history: [] });
+                referenceContent.innerHTML = ''; // Clear previous content
+                 addMessageToReference('ai', 'Đây là trợ lý phụ. Bạn cần tra cứu nhanh gì không?');
+            }
+        }
+
+        function closeReferenceModal() {
+            referenceModalOverlay.classList.remove('overlay-enter', 'overlay-enter-active');
+            referenceModalOverlay.classList.add('overlay-exit', 'overlay-exit-active');
+            referenceModal.classList.remove('modal-enter', 'modal-enter-active');
+            referenceModal.classList.add('modal-exit', 'modal-exit-active');
+
+            setTimeout(() => {
+                referenceModalOverlay.classList.add('hidden');
+                referenceModal.classList.add('hidden');
+            }, 300); // Match duration in CSS
+        }
+
+        function addMessageToReference(role, text) {
+             const messageWrapper = document.createElement('div');
+            
+            if (role === 'ai') {
+                messageWrapper.className = 'w-full space-y-2';
+                messageWrapper.innerHTML = `
+                    <div class="flex items-center gap-2">
+                        <div class="w-7 h-7 rounded-full flex-shrink-0 bg-gradient-to-tr from-green-400 to-cyan-500 flex items-center justify-center">
+                            <svg class="w-4 h-4 text-white" xmlns="http://www.w3.org/2000/svg" enable-background="new 0 0 24 24" height="24px" viewBox="0 0 24 24" width="24px" fill="currentColor"><g><rect fill="none" height="24" width="24"/></g><g><g><path d="M11,7h2v2h-2V7z M11,11h2v6h-2V11z M12,2C6.48,2,2,6.48,2,12s4.48,10,10,10s10-4.48,10-10S17.52,2,12,2z M12,20 c-4.41,0-8-3.59-8-8s3.59-8,8-8s8,3.59,8,8S16.41,20,12,20z"/></g></g></svg>
+                        </div>
+                        <span class="font-semibold text-gray-800">Trợ lý Phụ</span>
+                    </div>
+                    <div class="message-content text-gray-800 pl-9"></div>`;
+                const contentElem = messageWrapper.querySelector('.message-content');
+                contentElem.innerHTML = DOMPurify.sanitize(marked.parse(text));
+                referenceContent.appendChild(messageWrapper);
+                referenceContent.scrollTop = referenceContent.scrollHeight;
+                return contentElem;
+            } else { // role === 'user'
+                messageWrapper.className = 'flex justify-end';
+                messageWrapper.innerHTML = `<div class="message-content px-4 py-2 rounded-2xl bg-blue-600 text-white max-w-xs sm:max-w-md lg:max-w-2xl"></div>`;
+                const contentElem = messageWrapper.querySelector('.message-content');
+                contentElem.innerHTML = DOMPurify.sanitize(marked.parse(text));
+                referenceContent.appendChild(messageWrapper);
+                referenceContent.scrollTop = referenceContent.scrollHeight;
+                return contentElem;
+            }
+        }
+        
+        async function sendReferenceMessage() {
+            const promptText = referencePromptInput.value.trim();
+            if (!promptText) return;
+
+            referenceSendBtn.disabled = true;
+            referencePromptInput.value = '';
+            
+            addMessageToReference('user', promptText);
+            referenceHistory.push({ role: 'user', parts: [{ text: promptText }] });
+
+            try {
+                const result = await referenceChat.sendMessageStream(promptText);
+                const aiMessageContent = addMessageToReference('ai', '...');
+                aiMessageContent.innerHTML = '';
+                
+                let fullResponseText = "";
+                for await (const chunk of result.stream) {
+                    fullResponseText += chunk.text();
+                    aiMessageContent.innerHTML = DOMPurify.sanitize(marked.parse(fullResponseText));
+                    referenceContent.scrollTop = referenceContent.scrollHeight;
+                }
+                referenceHistory.push({ role: 'model', parts: [{ text: fullResponseText }] });
+            } catch (error) {
+                addMessageToReference('ai', `**Đã xảy ra lỗi:** ${error.message}`);
+                referenceHistory.pop();
+            } finally {
+                referenceSendBtn.disabled = false;
+                referencePromptInput.focus();
+            }
+        }
+        
+        async function getSuggestedAnswer(promptText) {
+            // This function gets an answer for a suggestion, using the MAIN chat's context.
+            showReferenceModal('Gợi ý', false); // Show modal, hide input
+            referenceContent.innerHTML = ''; // Clear previous content
+
+            const tempHistory = [...localHistory, { role: 'user', parts: [{ text: promptText }] }];
+            const tempChat = model.startChat({ history: localHistory });
+            
+            try {
+                addMessageToReference('user', promptText);
+                const result = await tempChat.sendMessageStream(promptText);
+                const aiMessageContent = addMessageToReference('ai', '...');
+                aiMessageContent.innerHTML = '';
+                
+                let fullResponseText = "";
+                for await (const chunk of result.stream) {
+                    fullResponseText += chunk.text();
+                    aiMessageContent.innerHTML = DOMPurify.sanitize(marked.parse(fullResponseText));
+                    referenceContent.scrollTop = referenceContent.scrollHeight;
+                }
+            } catch (error) {
+                addMessageToReference('ai', `**Đã xảy ra lỗi:** ${error.message}`);
+            }
+        }
+
+
+        // --- MAIN CHAT LOGIC ---
         function clearSuggestions() {
             suggestionsContainer.innerHTML = '';
             suggestionsContainer.classList.add('hidden');
@@ -318,6 +454,8 @@
         function startNewChat() {
             currentChatId = null;
             localHistory = []; 
+            referenceHistory = [];
+            referenceChat = null;
             chat = model.startChat({ history: [] });
             chatContainer.innerHTML = '';
             clearSuggestions();
@@ -375,14 +513,14 @@
                 headerDiv.appendChild(nameSpan);
 
                 const contentElem = document.createElement('div');
-                contentElem.className = 'message-content text-gray-800'; 
+                contentElem.className = 'message-content text-gray-800 pl-9'; 
                 contentElem.innerHTML = DOMPurify.sanitize(marked.parse(text));
                 
                 messageWrapper.appendChild(headerDiv);
                 messageWrapper.appendChild(contentElem);
 
                 chatContainer.appendChild(messageWrapper);
-                scrollToBottom();
+                scrollToBottom(chatContainer);
                 return contentElem;
             } else { // role === 'user'
                 messageWrapper.className = 'flex justify-end';
@@ -393,7 +531,7 @@
                 
                 messageWrapper.appendChild(contentElem);
                 chatContainer.appendChild(messageWrapper);
-                scrollToBottom();
+                scrollToBottom(chatContainer);
                 return contentElem; 
             }
         }
@@ -422,7 +560,7 @@
                 for await (const chunk of result.stream) {
                     fullResponseText += chunk.text();
                     aiMessageContent.innerHTML = DOMPurify.sanitize(marked.parse(fullResponseText));
-                    scrollToBottom();
+                    scrollToBottom(chatContainer);
                 }
 
                 localHistory.push({ role: 'model', parts: [{ text: fullResponseText }] });
@@ -459,15 +597,16 @@
                 toggleSuggestionsBtn.classList.remove('hidden');
                 suggestions.forEach(suggestionText => {
                     const chip = document.createElement('button');
-                    chip.className = 'suggestion-chip border border-blue-200 bg-blue-50 text-blue-700 rounded-full px-3 py-1 text-sm hover:bg-blue-100';
+                    chip.className = 'suggestion-chip border border-blue-200 bg-blue-50 text-blue-700 rounded-full px-3 py-1 text-sm hover:bg-blue-100 transition-colors';
                     chip.textContent = suggestionText;
-                    chip.onclick = () => { promptInput.value = suggestionText; sendMessage(); };
+                    // UPDATED: On click, use the reference modal with main chat context
+                    chip.onclick = () => { getSuggestedAnswer(suggestionText); };
                     suggestionsContainer.appendChild(chip);
                 });
             } else {
                  toggleSuggestionsBtn.classList.add('hidden');
             }
-            scrollToBottom();
+            scrollToBottom(chatContainer);
         }
 
         // --- FIRESTORE & HELPER FUNCTIONS ---
@@ -492,7 +631,6 @@
             }
         }
 
-
         async function renderSavedChats() {
             if (!currentUserId) return;
             const chatsCollection = collection(db, 'chats', currentUserId, 'conversations');
@@ -514,7 +652,12 @@
                 const deleteBtn = document.createElement('button');
                 deleteBtn.className = 'p-1 text-red-500 hover:text-red-700';
                 deleteBtn.innerHTML = '&times;';
-                deleteBtn.onclick = async (e) => { e.stopPropagation(); await deleteChat(doc.id); };
+                deleteBtn.onclick = async (e) => { 
+                    e.stopPropagation(); 
+                    if (confirm("Bạn có chắc chắn muốn xóa cuộc trò chuyện này?")) {
+                        await deleteChat(doc.id); 
+                    }
+                };
                 
                 li.appendChild(deleteBtn);
                 savedChatsList.appendChild(li);
@@ -522,7 +665,7 @@
         }
         
         async function deleteChat(chatId) {
-            if (!currentUserId || !confirm("Bạn có chắc chắn muốn xóa?")) return;
+            if (!currentUserId) return;
             try {
                 await deleteDoc(doc(db, 'chats', currentUserId, 'conversations', chatId));
                 renderSavedChats();
@@ -534,15 +677,15 @@
 
         function showTypingIndicator() {
             const indicator = document.createElement('div');
-            indicator.className = 'w-full space-y-2';
+            indicator.className = 'w-full space-y-2 typing-indicator';
             indicator.innerHTML = `<div class="flex items-center gap-2"><div class="w-7 h-7 rounded-full flex-shrink-0 bg-gradient-to-tr from-purple-400 to-indigo-500 flex items-center justify-center"><svg class="w-4 h-4 text-white" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="currentColor"><path d="M12 6c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6 2.69-6 6-6m0-2c-4.42 0-8 3.58-8 8s3.58 8 8 8 8-3.58 8-8-3.58-8-8-8z"/><path d="M12 10c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg></div><span class="font-semibold text-gray-800">Gemini</span></div><div class="pl-9"><div class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 bg-gray-400 rounded-full animate-bounce"></span><span class="w-2.5 h-2.5 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0.1s;"></span><span class="w-2.5 h-2.5 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0.2s;"></span></div></div>`;
             chatContainer.appendChild(indicator);
-            scrollToBottom();
+            scrollToBottom(chatContainer);
             return indicator;
         }
 
-        function scrollToBottom() {
-             chatContainer.scrollTop = chatContainer.scrollHeight;
+        function scrollToBottom(element) {
+             element.scrollTop = element.scrollHeight;
         }
         function adjustInputHeight() {
             promptInput.style.height = 'auto';
@@ -557,18 +700,26 @@
         recordBtn.addEventListener('click', toggleRecording);
         promptInput.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } });
         promptInput.addEventListener('input', adjustInputHeight);
+        
         viewChatsBtn.addEventListener('click', () => { renderSavedChats(); savedChatsModal.classList.remove('hidden'); });
-        closeModalBtn.addEventListener('click', () => {
-            savedChatsModal.classList.add('hidden');
-        });
+        closeModalBtn.addEventListener('click', () => { savedChatsModal.classList.add('hidden'); });
         savedChatsModal.addEventListener('click', e => { 
             if (e.target === savedChatsModal) {
                 savedChatsModal.classList.add('hidden');
             }
         });
+
         toggleSuggestionsBtn.addEventListener('click', () => {
             suggestionsContainer.classList.toggle('hidden');
         });
+        
+        // New Event Listeners for Reference Modal
+        referenceBtn.addEventListener('click', () => showReferenceModal('Trợ lý Phụ', true));
+        closeReferenceModalBtn.addEventListener('click', closeReferenceModal);
+        referenceModalOverlay.addEventListener('click', closeReferenceModal);
+        referenceSendBtn.addEventListener('click', sendReferenceMessage);
+        referencePromptInput.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendReferenceMessage(); } });
+
     </script>
 
 <script>
