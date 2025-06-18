@@ -3,167 +3,203 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Firebase AI Logic - Gemini API Streaming & Markdown</title>
-    <!-- Thư viện để chuyển đổi Markdown sang HTML -->
+    <title>Gemini Chat</title>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <!-- Thư viện để "làm sạch" HTML, chống lại các cuộc tấn công XSS khi dùng innerHTML -->
     <script src="https://cdn.jsdelivr.net/npm/dompurify@2.3.6/dist/purify.min.js"></script>
     <style>
-        body { 
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
-            margin: 0;
-            padding: 20px;
-            background-color: #f4f6f8; 
-            color: #333; 
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-height: 90vh;
+        :root {
+            --body-bg: #f4f6f8;
+            --chat-bg: #ffffff;
+            --user-msg-bg: #e0f0ff;
+            --ai-msg-bg: #f1f3f4;
+            --input-bg: #ffffff;
+            --text-color: #202124;
+            --border-color: #e0e0e0;
+            --header-bg: #ffffff;
+            --button-bg: #1a73e8;
+            --button-hover-bg: #185abc;
         }
-        .container {
-            width: 100%;
-            max-width: 700px;
-        }
-        h1, h2 { 
-            color: #1e3a8a; 
-            text-align: center;
-            margin-bottom: 20px;
-        }
-        #controls { 
-            margin-bottom: 20px; 
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            background-color: #fff;
-            padding: 25px;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-        }
-        textarea { 
-            width: 100%; 
-            padding: 12px; 
-            margin-bottom: 15px; 
-            border: 1px solid #ccc; 
-            border-radius: 8px; 
-            box-sizing: border-box; 
-            resize: vertical;
-            font-size: 16px;
-        }
-        button { 
-            padding: 12px 25px; 
-            background-color: #2563eb; 
-            color: white; 
-            border: none; 
-            border-radius: 8px; 
-            cursor: pointer; 
-            font-size: 17px;
-            transition: background-color 0.3s ease;
-            display: inline-flex; 
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            font-weight: 600;
-        }
-        button:hover { 
-            background-color: #1d4ed8; 
-        }
-        button:disabled {
-            background-color: #93c5fd;
-            cursor: not-allowed;
-        }
-        #responseContainer { 
-            margin-top: 20px; 
-            padding: 20px; 
-            border: 1px solid #e5e7eb; 
-            background-color: #fff; 
-            border-radius: 12px; 
-            min-height: 150px; 
-            white-space: pre-wrap; 
-            word-wrap: break-word; 
-            text-align: left;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-            transition: background-color 0.3s ease;
-        }
-        /* Styling cho nội dung Markdown */
-        #responseContainer h1, #responseContainer h2, #responseContainer h3 {
-            color: #1e3a8a;
-            border-bottom: 1px solid #eee;
-            padding-bottom: 5px;
-        }
-        #responseContainer code {
-            background-color: #f1f1f1;
-            padding: 2px 5px;
-            border-radius: 4px;
-            font-family: "Courier New", Courier, monospace;
-        }
-        #responseContainer pre {
-            background-color: #2d2d2d;
-            color: #f1f1f1;
-            padding: 15px;
-            border-radius: 8px;
-            overflow-x: auto;
-        }
-        #responseContainer blockquote {
-            border-left: 4px solid #ccc;
-            padding-left: 15px;
-            color: #666;
-            margin-left: 0;
-        }
-        .error { 
-            color: #dc2626; 
-            font-weight: bold; 
-        }
-        .status-message {
-            margin-top: 15px;
-            font-weight: bold;
-            font-size: 0.95rem;
-            color: #555;
-            text-align: center;
-        }
-        .status-message.error-text { color: #dc2626; }
-        .status-message.success-text { color: #16a34a; }
-        .status-message.info-text { color: #f59e0b; }
 
-        .spinner {
-            border: 3px solid rgba(255, 255, 255, 0.4);
-            border-left-color: #fff;
+        html, body {
+            height: 100%;
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--body-bg);
+            color: var(--text-color);
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background-color: var(--header-bg);
+            padding: 10px 15px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+        }
+        
+        .header h1 {
+            font-size: 1.2rem;
+            margin: 0;
+        }
+
+        #new-chat-btn {
+            background: none;
+            border: 1px solid var(--border-color);
+            padding: 8px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        #chat-container {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 20px 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .message {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            max-width: 90%;
+            line-height: 1.6;
+        }
+
+        .message.user {
+            align-self: flex-end;
+            flex-direction: row-reverse;
+        }
+
+        .avatar {
+            width: 32px;
+            height: 32px;
             border-radius: 50%;
-            width: 18px;
-            height: 18px;
-            animation: spin 1s linear infinite;
+            background-color: var(--border-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-shrink: 0;
+            font-size: 14px;
         }
-        .hidden { display: none; }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+
+        .message-content {
+            background-color: var(--chat-bg);
+            padding: 10px 15px;
+            border-radius: 18px;
         }
+
+        .message.user .message-content {
+            background-color: var(--user-msg-bg);
+            border-radius: 18px;
+        }
+        
+        .message.ai .message-content {
+            background-color: var(--ai-msg-bg);
+        }
+        
+        /* Markdown styling */
+        .message-content > *:first-child { margin-top: 0; }
+        .message-content > *:last-child { margin-bottom: 0; }
+        .message-content pre {
+            background-color: #202124; color: #e8eaed;
+            padding: 12px; border-radius: 8px;
+            white-space: pre-wrap; word-wrap: break-word;
+        }
+        .message-content code { font-family: "Courier New", monospace; }
+
+        .typing-indicator {
+            align-self: flex-start;
+            margin-left: 42px; /* avatar width + gap */
+        }
+        .typing-indicator span {
+            display: inline-block;
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            background-color: #999;
+            animation: bounce 1.4s infinite ease-in-out both;
+        }
+        .typing-indicator span:nth-child(1) { animation-delay: -0.32s; }
+        .typing-indicator span:nth-child(2) { animation-delay: -0.16s; }
+        @keyframes bounce {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1.0); }
+        }
+
+        #input-area {
+            display: flex;
+            align-items: flex-end;
+            padding: 10px;
+            background-color: var(--input-bg);
+            border-top: 1px solid var(--border-color);
+            flex-shrink: 0;
+        }
+
+        #prompt-input {
+            flex-grow: 1;
+            border: 1px solid var(--border-color);
+            border-radius: 18px;
+            padding: 10px 15px;
+            font-size: 16px;
+            resize: none;
+            max-height: 150px;
+            overflow-y: auto;
+            line-height: 1.4;
+        }
+
+        #send-btn {
+            background-color: var(--button-bg);
+            color: white;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            margin-left: 10px;
+            flex-shrink: 0;
+            transition: background-color 0.2s;
+        }
+        #send-btn:hover { background-color: var(--button-hover-bg); }
+        #send-btn:disabled { background-color: #a0c3e6; cursor: not-allowed; }
+        #send-btn svg { width: 24px; height: 24px; }
+
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Thử nghiệm Gemini API</h1>
-        <h2 style="font-size: 1rem; color: #555;">(Model: gemini-1.5-flash-latest | Streaming & Markdown)</h2>
 
-        <div id="controls">
-            <textarea id="promptInput" rows="4" placeholder="Nhập lời nhắc của bạn ở đây... ví dụ: Viết một bài thơ về lập trình."></textarea>
-            <button id="sendPromptButton">
-                <span id="buttonText">Gửi yêu cầu tới Gemini</span>
-                <div id="buttonSpinner" class="spinner hidden"></div>
-            </button>
-            <p id="statusMessage" class="status-message"></p>
-        </div>
-        
-        <h2>Phản hồi từ Gemini:</h2>
-        <div id="responseContainer">Chưa có phản hồi...</div>
+    <header class="header">
+        <h1>Gemini Chat</h1>
+        <button id="new-chat-btn">Cuộc trò chuyện mới</button>
+    </header>
+
+    <div id="chat-container">
+        <!-- Messages will be appended here -->
+    </div>
+
+    <div id="input-area">
+        <textarea id="prompt-input" rows="1" placeholder="Nhập câu hỏi..."></textarea>
+        <button id="send-btn">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2 .01 7z"/>
+            </svg>
+        </button>
     </div>
 
     <script type="module">
-        // Import các hàm từ SDK
-        // SDK đã được cập nhật lên phiên bản 11.9.1
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
         import { getAI, getGenerativeModel } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-ai.js";
 
-        // Cấu hình Firebase mới của bạn
         const firebaseConfig = {
             apiKey: "AIzaSyBDUBufnsk1PQZTLYCJDqASMX8hEVHqkDc",
             authDomain: "aimind-2362a.firebaseapp.com",
@@ -173,104 +209,120 @@
             appId: "1:377635504319:web:7c6dd3cf0c52dd302d860a"
         };
 
-        // Khởi tạo Firebase
         const app = initializeApp(firebaseConfig);
-        console.log("Firebase App initialized!");
-        
-        // Lấy các phần tử DOM
-        const promptInput = document.getElementById('promptInput');
-        const sendPromptButton = document.getElementById('sendPromptButton');
-        const buttonText = document.getElementById('buttonText');
-        const buttonSpinner = document.getElementById('buttonSpinner');
-        const responseContainer = document.getElementById('responseContainer');
-        const statusMessage = document.getElementById('statusMessage');
+        const ai = getAI(app);
+        const model = getGenerativeModel(ai, { model: "gemini-1.5-flash-latest" });
 
-        function updateStatus(type, message) {
-            statusMessage.className = `status-message ${type}`;
-            statusMessage.textContent = message;
+        const chatContainer = document.getElementById('chat-container');
+        const promptInput = document.getElementById('prompt-input');
+        const sendBtn = document.getElementById('send-btn');
+        const newChatBtn = document.getElementById('new-chat-btn');
+
+        let conversationHistory = [];
+        let chat;
+
+        function startNewChat() {
+            conversationHistory = [];
+            chat = model.startChat({ history: conversationHistory });
+            chatContainer.innerHTML = '';
+            addMessage('ai', 'Xin chào! Tôi có thể giúp gì cho bạn?');
         }
 
-        updateStatus('info-text', "Firebase App đã khởi tạo. Đang chờ khởi tạo AI Model...");
+        function addMessage(role, text) {
+            const messageElem = document.createElement('div');
+            messageElem.className = `message ${role}`;
 
-        let model;
-        try {
-            // Lưu ý: Không cần 'new GoogleAIBackend()' nữa với các phiên bản SDK mới
-            const ai = getAI(app); 
-            model = getGenerativeModel(ai, { model: "gemini-1.5-flash-latest" });
-            console.log("Generative Model instance created with model 'gemini-1.5-flash-latest'!");
-            updateStatus('success-text', "Model đã sẵn sàng. Hãy nhập yêu cầu của bạn.");
-        } catch (e) {
-            console.error("Lỗi khi khởi tạo AI Model:", e);
-            updateStatus('error-text', `Lỗi khởi tạo AI Model: ${e.message}.`);
+            const avatar = document.createElement('div');
+            avatar.className = 'avatar';
+            avatar.textContent = role === 'user' ? '🙂' : '🤖';
+
+            const contentElem = document.createElement('div');
+            contentElem.className = 'message-content';
+            contentElem.innerHTML = DOMPurify.sanitize(marked.parse(text));
+            
+            messageElem.appendChild(avatar);
+            messageElem.appendChild(contentElem);
+            chatContainer.appendChild(messageElem);
+            scrollToBottom();
+            return contentElem;
+        }
+
+        function showTypingIndicator() {
+            const indicator = document.createElement('div');
+            indicator.className = 'message ai typing-indicator';
+            indicator.innerHTML = `
+                <div class="avatar">🤖</div>
+                <div class="message-content">
+                    <span></span><span></span><span></span>
+                </div>
+            `;
+            chatContainer.appendChild(indicator);
+            scrollToBottom();
+            return indicator;
         }
         
-        // Hàm gọi API Gemini đã được cập nhật để sử dụng streaming
-        async function callGeminiAPI() {
-            if (!model) {
-                updateStatus('error-text', "Mô hình AI chưa được khởi tạo.");
-                return;
-            }
+        function scrollToBottom() {
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
 
+        async function sendMessage() {
             const promptText = promptInput.value.trim();
-            if (!promptText) {
-                updateStatus('error-text', "Vui lòng nhập lời nhắc!");
-                return;
-            }
+            if (!promptText) return;
 
-            updateStatus('info-text', "Đang gửi yêu cầu và nhận phản hồi...");
-            responseContainer.innerHTML = ''; // Xóa nội dung cũ
-
-            buttonText.textContent = 'Đang nhận...';
-            buttonSpinner.classList.remove('hidden');
-            sendPromptButton.disabled = true;
+            sendBtn.disabled = true;
+            promptInput.value = '';
+            adjustInputHeight();
+            addMessage('user', promptText);
+            
+            const typingIndicator = showTypingIndicator();
 
             try {
-                // SỬA LỖI:
-                // 1. Dùng 'await' để đợi promise từ 'generateContentStream' được giải quyết.
-                // 2. Vòng lặp sẽ duyệt qua 'result.stream' là một async iterable.
-                const result = await model.generateContentStream(promptText);
-                const stream = result.stream;
+                const result = await chat.sendMessageStream(promptText);
+                
+                chatContainer.removeChild(typingIndicator);
+                const aiMessageContent = addMessage('ai', '...');
+                aiMessageContent.innerHTML = ''; // Clear the placeholder '...'
+                
                 let fullResponseText = "";
-
-                // Lặp qua từng phần dữ liệu (chunk) nhận được từ stream
-                for await (const chunk of stream) {
-                    // SỬA LỖI: Lấy văn bản trực tiếp từ chunk.text()
+                for await (const chunk of result.stream) {
                     const chunkText = chunk.text();
                     fullResponseText += chunkText;
-                    
-                    // Chuyển đổi toàn bộ văn bản Markdown đã nhận sang HTML
-                    // và "làm sạch" nó bằng DOMPurify trước khi chèn vào trang
-                    responseContainer.innerHTML = DOMPurify.sanitize(marked.parse(fullResponseText));
+                    aiMessageContent.innerHTML = DOMPurify.sanitize(marked.parse(fullResponseText));
+                    scrollToBottom();
                 }
-
-                updateStatus('success-text', "Đã hoàn tất nhận phản hồi.");
-                console.log("Final Response:", fullResponseText);
+                
+                // Cập nhật lịch sử sau khi AI trả lời xong
+                conversationHistory.push({role: 'user', parts: [{text: promptText}]});
+                conversationHistory.push({role: 'model', parts: [{text: fullResponseText}]});
 
             } catch (error) {
-                console.error("Lỗi khi gọi Gemini API:", error);
-                // SỬA LỖI: Cung cấp thông báo lỗi rõ ràng hơn cho người dùng
-                let errorMessage = `<strong>Lỗi: ${error.message}</strong>`;
-                if (error.code === 'AI/api-not-enabled') {
-                    errorMessage += `<br><br>Có vẻ như bạn chưa bật 'Firebase AI API' ('firebasevertexai.googleapis.com') trong dự án Firebase của mình. Vui lòng truy cập Firebase Console để bật API và thử lại.`;
-                } else {
-                    errorMessage += `<br>Vui lòng kiểm tra Console (F12) để biết thêm chi tiết.`;
-                }
-                responseContainer.innerHTML = `<div class="error" style="padding: 10px;">${errorMessage}</div>`;
-                updateStatus('error-text', `Lỗi khi gọi Gemini API: ${error.message}.`);
+                chatContainer.removeChild(typingIndicator);
+                addMessage('ai', `**Đã xảy ra lỗi:** ${error.message}`);
+                console.error("Lỗi khi gửi tin nhắn:", error);
             } finally {
-                // Khôi phục lại trạng thái của nút
-                buttonText.textContent = 'Gửi yêu cầu tới Gemini';
-                buttonSpinner.classList.add('hidden');
-                sendPromptButton.disabled = false;
+                sendBtn.disabled = false;
+                promptInput.focus();
             }
         }
-
-        if (sendPromptButton) {
-            sendPromptButton.addEventListener("click", callGeminiAPI);
-        } else {
-            console.error("Không tìm thấy nút 'sendPromptButton'.");
-            updateStatus('error-text', "Lỗi giao diện: Không tìm thấy nút gửi.");
+        
+        function adjustInputHeight() {
+            promptInput.style.height = 'auto';
+            promptInput.style.height = (promptInput.scrollHeight) + 'px';
         }
+
+        sendBtn.addEventListener('click', sendMessage);
+        promptInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+        promptInput.addEventListener('input', adjustInputHeight);
+        newChatBtn.addEventListener('click', startNewChat);
+
+        // Bắt đầu cuộc trò chuyện mới khi tải trang
+        startNewChat();
     </script>
 </body>
 </html>
+
