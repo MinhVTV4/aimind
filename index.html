@@ -98,6 +98,11 @@
             color: #4b5563; /* gray-600 */
             font-style: italic;
         }
+        
+        /* Cập nhật: CSS cho Skeleton Loader */
+        .skeleton-box {
+            @apply bg-gray-200 rounded animate-pulse;
+        }
     </style>
 
 <link rel="manifest" href="manifest.json">
@@ -274,7 +279,9 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
         const ai = getAI(app);
-        const model = getGenerativeModel(ai, { model: "gemini-1.5-flash-latest" });
+        
+        // Cập nhật: Sử dụng model gemini-22.5-flash
+        const model = getGenerativeModel(ai, { model: "gemini-2.5-flash" });
 
         let currentUserId = null;
         let currentChatId = null;
@@ -383,14 +390,11 @@
             }, 300);
         }
 
-        // UPDATED: Smart scroll handler based on header collision
         function handleSmartScroll(messageWrapper, container, headerElement) {
             const messageRect = messageWrapper.getBoundingClientRect();
             const headerRect = headerElement.getBoundingClientRect();
             
-            // Check if the top of the message is at or above the bottom of the header
             if (messageRect.top <= headerRect.bottom) {
-                // Scroll to align the top of the message with the bottom of the header
                 container.scrollTop += messageRect.top - headerRect.bottom;
             }
         }
@@ -498,34 +502,40 @@
         
         async function loadChat(chatId) {
             if (!currentUserId) return;
+            
+            showHistorySkeleton(); // Cập nhật: Hiển thị skeleton loader
+            closeModalBtn.click(); // Tùy chọn: Đóng modal lịch sử
+
             try {
                 const docRef = doc(db, 'chats', currentUserId, 'conversations', chatId);
                 const chatDoc = await getDoc(docRef);
+
                 if (chatDoc.exists()) {
                     localHistory = chatDoc.data().history || [];
                     currentChatId = chatDoc.id;
                     chat = model.startChat({ history: localHistory });
-                    chatContainer.innerHTML = '';
+                    
+                    chatContainer.innerHTML = ''; // Cập nhật: Xóa skeleton
                     clearSuggestions();
-                    // Scroll to bottom after loading old messages
+                    
                     let firstMessage = true;
                     localHistory.forEach(msg => {
                         if (msg.role === 'user' && msg.parts[0].text.includes("**Chỉ thị hệ thống:**")) return;
                         if (msg.role === 'model' && msg.parts[0].text.startsWith("Đã hiểu!")) return;
                         const role = msg.role === 'model' ? 'ai' : 'user';
-                        const { messageWrapper } = addMessage(role, msg.parts[0].text, false); // Pass false to prevent scrolling
+                        addMessage(role, msg.parts[0].text, false); 
                         if(firstMessage) {
-                           // Specific logic for first message if needed
                            firstMessage = false;
                         }
                     });
-                    chatContainer.scrollTop = chatContainer.scrollHeight;
-                    savedChatsModal.classList.add('hidden');
+                    // Cuộn xuống cuối sau khi render xong
+                    setTimeout(() => chatContainer.scrollTop = chatContainer.scrollHeight, 0);
                 } else {
                      addMessage('ai', '**Lỗi:** Không tìm thấy cuộc trò chuyện.');
                 }
             } catch (error) {
                 console.error("Lỗi khi tải cuộc trò chuyện:", error);
+                chatContainer.innerHTML = ''; // Xóa skeleton nếu có lỗi
                 addMessage('ai', '**Lỗi:** Không thể tải cuộc trò chuyện.');
             }
         }
@@ -570,10 +580,14 @@
             clearSuggestions();
             addMessage('user', promptText);
             localHistory.push({ role: 'user', parts: [{ text: promptText }] });
-            const typingIndicator = showTypingIndicator();
+            
+            const skeletonLoader = showAiResponseSkeleton(); // Cập nhật: Sử dụng skeleton
+            
             try {
                 const result = await chat.sendMessageStream(promptText);
-                if (typingIndicator?.parentNode) chatContainer.removeChild(typingIndicator);
+                
+                if (skeletonLoader?.parentNode) chatContainer.removeChild(skeletonLoader); // Cập nhật: Xóa skeleton
+
                 const { messageWrapper, contentElem } = addMessage('ai', '...');
                 contentElem.innerHTML = '';
                 let fullResponseText = "";
@@ -586,7 +600,7 @@
                 await updateConversationInDb();
                 getFollowUpSuggestions(fullResponseText);
             } catch (error) {
-                if (typingIndicator?.parentNode) chatContainer.removeChild(typingIndicator);
+                if (skeletonLoader?.parentNode) chatContainer.removeChild(skeletonLoader); // Cập nhật: Xóa skeleton nếu có lỗi
                 addMessage('ai', `**Đã xảy ra lỗi:** ${error.message}`);
                 localHistory.pop();
             } finally {
@@ -598,7 +612,7 @@
         async function getFollowUpSuggestions(lastResponse) {
             try {
                 const suggestionPrompt = `Dựa vào câu trả lời sau: "${lastResponse.substring(0, 500)}". Hãy đề xuất 3 câu hỏi tiếp theo ngắn gọn và thú vị mà người dùng có thể hỏi. QUAN TRỌNG: Chỉ trả về 3 câu hỏi, mỗi câu trên một dòng. Không đánh số, không dùng gạch đầu dòng, không thêm bất kỳ văn bản nào khác.`;
-                const suggestionModel = getGenerativeModel(ai, { model: "gemini-1.5-flash-latest" });
+                const suggestionModel = getGenerativeModel(ai, { model: "gemini-2.5-flash" });
                 const result = await suggestionModel.generateContent(suggestionPrompt);
                 const responseText = result.response.text();
                 const suggestions = responseText.split('\n').filter(s => s.trim() !== '');
@@ -656,19 +670,25 @@
             querySnapshot.forEach(doc => {
                 const chatItem = doc.data();
                 const li = document.createElement('li');
-                li.className = "p-3 hover:bg-gray-100 cursor-pointer flex justify-between items-center";
-                li.textContent = chatItem.title;
-                li.onclick = () => loadChat(doc.id);
+                li.className = "p-3 hover:bg-gray-100 cursor-pointer flex justify-between items-center rounded-md";
+                
+                const titleSpan = document.createElement('span');
+                titleSpan.textContent = chatItem.title;
+                titleSpan.className = "flex-1 truncate pr-2";
+                li.appendChild(titleSpan);
+
                 const deleteBtn = document.createElement('button');
-                deleteBtn.className = 'p-1 text-red-500 hover:text-red-700';
-                deleteBtn.innerHTML = '&times;';
+                deleteBtn.className = 'p-1 text-gray-400 hover:text-red-600 rounded-full';
+                deleteBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" /></svg>';
                 deleteBtn.onclick = async (e) => { 
                     e.stopPropagation(); 
                     if (confirm("Bạn có chắc chắn muốn xóa cuộc trò chuyện này?")) {
                         await deleteChat(doc.id); 
                     }
                 };
+                
                 li.appendChild(deleteBtn);
+                li.onclick = () => loadChat(doc.id);
                 savedChatsList.appendChild(li);
             });
         }
@@ -684,13 +704,50 @@
             }
         }
 
-        function showTypingIndicator() {
-            const indicator = document.createElement('div');
-            indicator.className = 'w-full space-y-2 typing-indicator';
-            indicator.innerHTML = `<div class="flex items-center gap-2"><div class="w-7 h-7 rounded-full flex-shrink-0 bg-gradient-to-tr from-purple-400 to-indigo-500 flex items-center justify-center"><svg class="w-4 h-4 text-white" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="currentColor"><path d="M12 6c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6 2.69-6 6-6m0-2c-4.42 0-8 3.58-8 8s3.58 8 8 8 8-3.58 8-8-3.58-8-8-8z"/><path d="M12 10c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg></div><span class="font-semibold text-gray-800">Gemini</span></div><div class="pl-9"><div class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 bg-gray-400 rounded-full animate-bounce"></span><span class="w-2.5 h-2.5 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0.1s;"></span><span class="w-2.5 h-2.5 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0.2s;"></span></div></div>`;
-            chatContainer.appendChild(indicator);
-            indicator.scrollIntoView({ behavior: "smooth", block: "end" });
-            return indicator;
+        // Cập nhật: Hàm tạo skeleton cho phản hồi của AI
+        function showAiResponseSkeleton() {
+            const skeletonWrapper = document.createElement('div');
+            skeletonWrapper.className = 'w-full space-y-2 ai-skeleton';
+            skeletonWrapper.innerHTML = `
+                <div class="flex items-center gap-2">
+                    <div class="w-7 h-7 rounded-full skeleton-box"></div>
+                    <div class="w-20 h-4 skeleton-box"></div>
+                </div>
+                <div class="ml-9 space-y-2">
+                    <div class="w-11/12 h-4 skeleton-box"></div>
+                    <div class="w-9/12 h-4 skeleton-box"></div>
+                    <div class="w-10/12 h-4 skeleton-box"></div>
+                </div>
+            `;
+            chatContainer.appendChild(skeletonWrapper);
+            skeletonWrapper.scrollIntoView({ behavior: "smooth", block: "end" });
+            return skeletonWrapper;
+        }
+
+        // Cập nhật: Hàm tạo skeleton cho lịch sử chat
+        function showHistorySkeleton() {
+            chatContainer.innerHTML = '';
+            const skeletonHTML = `
+                <div class="w-full space-y-2">
+                    <div class="flex items-center gap-2">
+                        <div class="w-7 h-7 rounded-full skeleton-box"></div>
+                        <div class="w-20 h-4 skeleton-box"></div>
+                    </div>
+                    <div class="ml-9 space-y-2">
+                        <div class="w-10/12 h-4 skeleton-box"></div>
+                        <div class="w-8/12 h-4 skeleton-box"></div>
+                    </div>
+                </div>
+                <div class="flex justify-end">
+                    <div class="w-7/12">
+                        <div class="h-16 skeleton-box rounded-2xl"></div>
+                    </div>
+                </div>
+            `;
+            for (let i = 0; i < 3; i++) {
+                chatContainer.innerHTML += skeletonHTML;
+            }
+            chatContainer.scrollTop = chatContainer.scrollHeight;
         }
 
         function adjustInputHeight() {
