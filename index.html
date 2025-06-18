@@ -47,6 +47,57 @@
         .overlay-enter-active { opacity: 0.5; }
         .overlay-exit { opacity: 0.5; }
         .overlay-exit-active { opacity: 0; }
+
+        /* NEW: Styles for rich markdown content */
+        .message-content h1, .message-content h2, .message-content h3, .message-content h4 {
+            font-weight: 600;
+            margin-top: 1rem;
+            margin-bottom: 0.5rem;
+        }
+        .message-content h1 { font-size: 1.5em; }
+        .message-content h2 { font-size: 1.25em; }
+        .message-content h3 { font-size: 1.1em; }
+
+        .message-content p {
+            margin-bottom: 0.75rem;
+        }
+
+        .message-content ul, .message-content ol {
+            margin-left: 1.25rem; /* 20px */
+            margin-top: 0.5rem;
+            margin-bottom: 1rem;
+            display: block;
+        }
+
+        .message-content ul {
+            list-style-type: disc;
+        }
+
+        .message-content ol {
+            list-style-type: decimal;
+        }
+
+        .message-content li {
+            margin-bottom: 0.5rem;
+            padding-left: 0.5rem;
+        }
+
+        /* For nested lists */
+        .message-content ul ul, .message-content ol ul {
+            list-style-type: circle;
+            margin-top: 0.5rem;
+        }
+        .message-content ul ul ul, .message-content ol ul ul {
+            list-style-type: square;
+        }
+
+        .message-content blockquote {
+            border-left: 4px solid #d1d5db; /* gray-300 */
+            padding-left: 1rem;
+            margin: 1rem 0;
+            color: #4b5563; /* gray-600 */
+            font-style: italic;
+        }
     </style>
 
 <link rel="manifest" href="manifest.json">
@@ -243,6 +294,8 @@
         let isRecording = false;
         let referenceChat; // Reference chat instance
         let referenceHistory = []; // Reference chat history
+        const formattingInstruction = "Quan trọng: Vui lòng định dạng câu trả lời của bạn bằng Markdown. Sử dụng tiêu đề, danh sách, in đậm và các yếu tố khác để có câu trả lời rõ ràng, có cấu trúc tốt nhất có thể.";
+
 
         // --- DOM ELEMENTS ---
         const authContainer = document.getElementById('auth-container');
@@ -338,11 +391,10 @@
             });
 
             if (showInput) {
-                // Start a new independent chat session if modal is for 'Trợ lý Phụ'
                 referenceHistory = [];
                 referenceChat = model.startChat({ history: [] });
                 referenceContent.innerHTML = ''; // Clear previous content
-                 addMessageToReference('ai', 'Đây là trợ lý phụ. Bạn cần tra cứu nhanh gì không?');
+                addMessageToReference('ai', 'Đây là trợ lý phụ. Bạn cần tra cứu nhanh gì không?');
             }
         }
 
@@ -388,13 +440,19 @@
         }
         
         async function sendReferenceMessage() {
-            const promptText = referencePromptInput.value.trim();
+            let promptText = referencePromptInput.value.trim();
             if (!promptText) return;
 
             referenceSendBtn.disabled = true;
             referencePromptInput.value = '';
             
             addMessageToReference('user', promptText);
+            
+            // Add formatting instruction if it's the first user message in this reference chat
+            if (referenceHistory.length === 0) {
+                 promptText = formattingInstruction + '\n\n' + promptText;
+            }
+
             referenceHistory.push({ role: 'user', parts: [{ text: promptText }] });
 
             try {
@@ -419,11 +477,9 @@
         }
         
         async function getSuggestedAnswer(promptText) {
-            // This function gets an answer for a suggestion, using the MAIN chat's context.
-            showReferenceModal('Gợi ý', false); // Show modal, hide input
-            referenceContent.innerHTML = ''; // Clear previous content
+            showReferenceModal('Gợi ý', false); 
+            referenceContent.innerHTML = '';
 
-            const tempHistory = [...localHistory, { role: 'user', parts: [{ text: promptText }] }];
             const tempChat = model.startChat({ history: localHistory });
             
             try {
@@ -456,7 +512,14 @@
             localHistory = []; 
             referenceHistory = [];
             referenceChat = null;
-            chat = model.startChat({ history: [] });
+            const initialHistory = [{
+                role: "user",
+                parts: [{ text: formattingInstruction }],
+            }, {
+                role: "model",
+                parts: [{ text: "Đã hiểu! Tôi sẽ định dạng câu trả lời của mình bằng Markdown để dễ đọc hơn." }],
+            }];
+            chat = model.startChat({ history: initialHistory });
             chatContainer.innerHTML = '';
             clearSuggestions();
             addMessage('ai', 'Xin chào! Tôi có thể giúp gì cho bạn?');
@@ -479,6 +542,10 @@
                     clearSuggestions();
                     
                     localHistory.forEach(msg => {
+                        // Don't display the initial formatting instruction
+                        if (msg.parts[0].text === formattingInstruction) return;
+                        if (msg.role === 'model' && msg.parts[0].text.startsWith("Đã hiểu!")) return;
+                        
                         const role = msg.role === 'model' ? 'ai' : 'user';
                         addMessage(role, msg.parts[0].text);
                     });
@@ -620,7 +687,7 @@
                     const docRef = doc(db, 'chats', currentUserId, 'conversations', currentChatId);
                     await updateDoc(docRef, chatData);
                 } else {
-                    chatData.title = localHistory[0].parts[0].text.substring(0, 40) || "Cuộc trò chuyện mới";
+                    chatData.title = localHistory.find(m => m.role === 'user')?.parts[0].text.substring(0, 40) || "Cuộc trò chuyện mới";
                     chatData.createdAt = serverTimestamp();
                     const chatsCollection = collection(db, 'chats', currentUserId, 'conversations');
                     const docRef = await addDoc(chatsCollection, chatData);
