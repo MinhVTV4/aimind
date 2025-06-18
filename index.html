@@ -18,6 +18,8 @@
             --header-bg: #ffffff;
             --button-bg: #1a73e8;
             --button-hover-bg: #185abc;
+            --record-btn-color: #5f6368;
+            --record-btn-recording-color: #d93025;
         }
 
         html, body {
@@ -136,11 +138,12 @@
 
         #input-area {
             display: flex;
-            align-items: flex-end;
+            align-items: center;
             padding: 10px;
             background-color: var(--input-bg);
             border-top: 1px solid var(--border-color);
             flex-shrink: 0;
+            gap: 10px;
         }
 
         #prompt-input {
@@ -155,9 +158,9 @@
             line-height: 1.4;
         }
 
-        #send-btn {
-            background-color: var(--button-bg);
-            color: white;
+        .icon-btn {
+            background-color: transparent;
+            color: var(--record-btn-color);
             border: none;
             width: 40px;
             height: 40px;
@@ -166,13 +169,25 @@
             justify-content: center;
             align-items: center;
             cursor: pointer;
-            margin-left: 10px;
             flex-shrink: 0;
-            transition: background-color 0.2s;
+            transition: background-color 0.2s, color 0.2s;
+        }
+        .icon-btn:hover { background-color: #f1f3f4; }
+        
+        #record-btn.recording {
+            color: white;
+            background-color: var(--record-btn-recording-color);
+        }
+
+        #send-btn {
+            background-color: var(--button-bg);
+            color: white;
         }
         #send-btn:hover { background-color: var(--button-hover-bg); }
         #send-btn:disabled { background-color: #a0c3e6; cursor: not-allowed; }
-        #send-btn svg { width: 24px; height: 24px; }
+        .icon-btn svg { width: 24px; height: 24px; }
+        
+        .hidden { display: none; }
 
     </style>
 </head>
@@ -189,7 +204,10 @@
 
     <div id="input-area">
         <textarea id="prompt-input" rows="1" placeholder="Nhập câu hỏi..."></textarea>
-        <button id="send-btn">
+        <button id="record-btn" class="icon-btn">
+             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg>
+        </button>
+        <button id="send-btn" class="icon-btn">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2 .01 7z"/>
             </svg>
@@ -217,9 +235,49 @@
         const promptInput = document.getElementById('prompt-input');
         const sendBtn = document.getElementById('send-btn');
         const newChatBtn = document.getElementById('new-chat-btn');
+        const recordBtn = document.getElementById('record-btn');
 
         let conversationHistory = [];
         let chat;
+        
+        // Speech Recognition Setup
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        let recognition;
+        let isRecording = false;
+
+        if (SpeechRecognition) {
+            recognition = new SpeechRecognition();
+            recognition.continuous = false;
+            recognition.lang = 'vi-VN';
+            recognition.interimResults = false;
+
+            recognition.onstart = () => {
+                isRecording = true;
+                recordBtn.classList.add('recording');
+                promptInput.placeholder = 'Đang lắng nghe...';
+            };
+
+            recognition.onend = () => {
+                isRecording = false;
+                recordBtn.classList.remove('recording');
+                 promptInput.placeholder = 'Nhập câu hỏi...';
+            };
+
+            recognition.onresult = (event) => {
+                const transcript = event.results[event.results.length - 1][0].transcript.trim();
+                promptInput.value = transcript;
+                adjustInputHeight();
+            };
+
+            recognition.onerror = (event) => {
+                console.error('Lỗi nhận dạng giọng nói:', event.error);
+                addMessage('ai', `**Lỗi ghi âm:** ${event.error}. Vui lòng thử lại.`);
+            };
+
+        } else {
+            console.warn("Trình duyệt không hỗ trợ Web Speech API.");
+            recordBtn.classList.add('hidden');
+        }
 
         function startNewChat() {
             conversationHistory = [];
@@ -270,6 +328,7 @@
             if (!promptText) return;
 
             sendBtn.disabled = true;
+            recordBtn.disabled = true;
             promptInput.value = '';
             adjustInputHeight();
             addMessage('user', promptText);
@@ -291,7 +350,6 @@
                     scrollToBottom();
                 }
                 
-                // Cập nhật lịch sử sau khi AI trả lời xong
                 conversationHistory.push({role: 'user', parts: [{text: promptText}]});
                 conversationHistory.push({role: 'model', parts: [{text: fullResponseText}]});
 
@@ -301,6 +359,7 @@
                 console.error("Lỗi khi gửi tin nhắn:", error);
             } finally {
                 sendBtn.disabled = false;
+                recordBtn.disabled = false;
                 promptInput.focus();
             }
         }
@@ -309,8 +368,20 @@
             promptInput.style.height = 'auto';
             promptInput.style.height = (promptInput.scrollHeight) + 'px';
         }
+        
+        function toggleRecording() {
+            if (!recognition) return;
+            
+            if (isRecording) {
+                recognition.stop();
+            } else {
+                recognition.start();
+            }
+        }
 
         sendBtn.addEventListener('click', sendMessage);
+        recordBtn.addEventListener('click', toggleRecording);
+        
         promptInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
@@ -320,9 +391,7 @@
         promptInput.addEventListener('input', adjustInputHeight);
         newChatBtn.addEventListener('click', startNewChat);
 
-        // Bắt đầu cuộc trò chuyện mới khi tải trang
         startNewChat();
     </script>
 </body>
 </html>
-
