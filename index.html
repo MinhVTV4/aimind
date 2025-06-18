@@ -94,14 +94,21 @@
 
     <!-- Main App UI (hidden by default) -->
     <div id="app-container" class="hidden flex flex-col h-screen bg-gray-50">
-        <header class="flex-shrink-0 flex justify-between items-center p-4 bg-white border-b border-gray-200">
-            <div id="user-info" class="text-sm text-gray-600"></div>
-            <div class="flex items-center gap-2">
+        <header class="flex-shrink-0 flex justify-between items-center p-3 sm:p-4 bg-white border-b border-gray-200">
+            <div id="user-info" class="flex items-center gap-3">
+                 <span id="user-avatar" class="w-9 h-9 rounded-full bg-blue-500 text-white flex items-center justify-center text-sm font-bold uppercase"></span>
+                 <span id="user-name" class="text-sm font-medium text-gray-700 hidden sm:block"></span>
+            </div>
+            <div class="flex items-center gap-1 sm:gap-2">
+                <button id="new-chat-btn" class="p-2 rounded-full hover:bg-gray-100 transition-colors" title="Trò chuyện mới">
+                    <svg class="w-6 h-6 text-gray-600" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="currentColor"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M14.06 9.02l.92.92L5.92 19H5v-.92l9.06-9.06M17.66 3c-.25 0-.51.1-.7.29l-1.83 1.83 3.75 3.75 1.83-1.83c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.2-.2-.45-.29-.71-.29zm-3.6 3.19L3 17.25V21h3.75L17.81 9.94l-3.75-3.75z"/></svg>
+                </button>
                 <button id="view-chats-btn" class="p-2 rounded-full hover:bg-gray-100 transition-colors" title="Lịch sử trò chuyện">
                     <svg class="w-6 h-6 text-gray-600" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="currentColor"><path d="M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42C8.27 19.99 10.51 21 13 21c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-1 5v5l4.25 2.52.77-1.28-3.52-2.09V8H12z"/></svg>
                 </button>
-                <button id="new-chat-btn" class="px-4 py-2 bg-blue-500 text-white rounded-lg text-sm font-semibold hover:bg-blue-600 transition-colors">Trò chuyện mới</button>
-                <button id="logout-btn" class="px-4 py-2 border border-red-500 text-red-500 rounded-lg text-sm font-semibold hover:bg-red-50 hover:text-red-600 transition-colors">Đăng xuất</button>
+                <button id="logout-btn" class="p-2 rounded-full hover:bg-red-50 transition-colors" title="Đăng xuất">
+                    <svg class="w-6 h-6 text-red-500" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="currentColor"><path d="M0 0h24v24H0V0z" fill="none" opacity=".87"/><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5-5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg>
+                </button>
             </div>
         </header>
         
@@ -201,6 +208,8 @@
         const showLoginBtn = document.getElementById('show-login');
         const authError = document.getElementById('auth-error');
         const userInfo = document.getElementById('user-info');
+        const userAvatar = document.getElementById('user-avatar');
+        const userName = document.getElementById('user-name');
         const logoutBtn = document.getElementById('logout-btn');
         const chatContainer = document.getElementById('chat-container');
         const suggestionsContainer = document.getElementById('suggestions-container');
@@ -218,14 +227,18 @@
         onAuthStateChanged(auth, user => {
             if (user) {
                 currentUserId = user.uid;
-                userInfo.textContent = `Chào, ${user.displayName || user.email}`;
+                const email = user.email || '';
+                const displayName = user.displayName || email.split('@')[0];
+                userName.textContent = `Chào, ${displayName}`;
+                userAvatar.textContent = displayName.charAt(0);
+                
                 authContainer.classList.add('hidden');
                 appContainer.classList.remove('hidden');
                 startNewChat(); 
             } else {
                 currentUserId = null;
-                authContainer.classList.remove('hidden');
-                appContainer.classList.add('hidden');
+                authContainer.classList.add('hidden');
+                appContainer.classList.remove('hidden');
             }
         });
 
@@ -486,7 +499,6 @@
         promptInput.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } });
         promptInput.addEventListener('input', adjustInputHeight);
         viewChatsBtn.addEventListener('click', () => { renderSavedChats(); savedChatsModal.classList.remove('hidden'); });
-        // SỬA LỖI: Thêm dấu ngoặc nhọn {} cho hàm xử lý sự kiện
         closeModalBtn.addEventListener('click', () => {
             savedChatsModal.classList.add('hidden');
         });
