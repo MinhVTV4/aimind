@@ -370,7 +370,7 @@
                         </div>
                         <span class="font-semibold text-gray-800">Trợ lý Phụ</span>
                     </div>
-                    <div class="message-content text-gray-800 pl-9"></div>`;
+                    <div class="message-content text-gray-800"></div>`;
                 const contentElem = messageWrapper.querySelector('.message-content');
                 contentElem.innerHTML = DOMPurify.sanitize(marked.parse(text));
                 referenceContent.appendChild(messageWrapper);
@@ -513,7 +513,7 @@
                 headerDiv.appendChild(nameSpan);
 
                 const contentElem = document.createElement('div');
-                contentElem.className = 'message-content text-gray-800 pl-9'; 
+                contentElem.className = 'message-content text-gray-800'; 
                 contentElem.innerHTML = DOMPurify.sanitize(marked.parse(text));
                 
                 messageWrapper.appendChild(headerDiv);
