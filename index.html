@@ -403,7 +403,7 @@
                 currentUserId = user.uid;
                 const email = user.email || '';
                 currentUserName = user.displayName || email.split('@')[0];
-                userNameElem.textContent = `Chào, ${currentUserName}`; // Use renamed variable
+                userNameElem.textContent = `Chào bạn, ${currentUserName}`; // Use renamed variable
                 userAvatar.textContent = currentUserName.charAt(0);
                 authContainer.classList.add('hidden');
                 appContainer.classList.remove('hidden');
@@ -451,8 +451,9 @@
 
         // Welcome Message Functions
         function displayWelcomeMessage() {
-            chatContainer.innerHTML = ''; // Clear chat history to show welcome message
-            welcomeMessageDiv.textContent = `Chào ${currentUserName || 'bạn'},`;
+            chatContainer.innerHTML = ''; // Clear existing messages
+            chatContainer.appendChild(welcomeMessageDiv); // Re-append welcome message div
+            welcomeMessageDiv.textContent = `Chào bạn ${currentUserName || 'bạn'},`;
             welcomeMessageDiv.classList.remove('hidden');
         }
 
@@ -633,7 +634,9 @@
                     currentChatId = chatDoc.id;
                     chat = model.startChat({ history: localHistory });
 
-                    chatContainer.innerHTML = '';
+                    chatContainer.innerHTML = ''; // Clear all existing messages
+                    // No need to re-append welcomeMessageDiv here, it's just hidden
+
                     clearSuggestions();
 
                     localHistory.forEach(msg => {
