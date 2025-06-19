@@ -340,7 +340,7 @@
         const db = getFirestore(app);
         const ai = getAI(app);
         // Changed model to gemini-2.0-flash
-        const model = getGenerativeModel(ai, { model: "gemini-2.0-flash" });
+        const model = getGenerativeModel(ai, { model: "gemini-2.5-flash" });
 
         let currentUserId = null;
         let currentUserName = ''; // To store user's display name for welcome message
@@ -735,7 +735,7 @@
             try {
                 const suggestionPrompt = `Dựa vào câu trả lời sau: "${lastResponse.substring(0, 500)}". Hãy đề xuất 3 câu hỏi tiếp theo ngắn gọn và thú vị mà người dùng có thể hỏi. QUAN TRỌNG: Chỉ trả về 3 câu hỏi, mỗi câu trên một dòng. Không đánh số, không dùng gạch đầu dòng, không thêm bất kỳ văn bản nào khác.`;
                 // Changed suggestionModel to gemini-2.0-flash
-                const suggestionModel = getGenerativeModel(ai, { model: "gemini-2.0-flash" });
+                const suggestionModel = getGenerativeModel(ai, { model: "gemini-2.5-flash" });
                 const result = await suggestionModel.generateContent(suggestionPrompt);
                 const responseText = result.response.text();
                 const suggestions = responseText.split('\n').filter(s => s.trim() !== '');
