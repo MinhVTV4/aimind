@@ -103,16 +103,69 @@
 
         /* NEW: Note Message Styles */
         .note-wrapper {
-            @apply my-4 p-4 rounded-lg border bg-yellow-50 border-yellow-200 dark:bg-slate-800 dark:border-slate-700;
+            margin-top: 1rem;
+            margin-bottom: 1rem;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            border-width: 1px;
+            background-color: #fefce8; /* yellow-50 */
+            border-color: #fde68a; /* yellow-200 */
+        }
+        .dark .note-wrapper {
+             background-color: #1e293b; /* slate-800 */
+             border-color: #334155; /* slate-700 */
         }
         .note-header {
-            @apply flex items-center gap-2 mb-2 text-sm font-semibold text-yellow-800 dark:text-yellow-300;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+            font-size: 0.875rem;
+            line-height: 1.25rem;
+            font-weight: 600;
+            color: #92400e; /* yellow-800 */
+        }
+        .dark .note-header {
+            color: #fcd34d; /* yellow-300 */
         }
         .note-content {
-            @apply text-gray-800 dark:text-gray-200 prose prose-sm max-w-none;
+            color: #374151; /* gray-700 */
         }
         .dark .note-content {
-             @apply prose-invert;
+             color: #d1d5db; /* gray-300 */
+        }
+
+        /* FIX: Term Link Styles with plain CSS */
+        .term-link {
+            color: #2563eb; /* blue-600 */
+            font-weight: 600;
+            border-bottom: 2px dotted #93c5fd; /* blue-300 */
+            cursor: pointer;
+            transition: color 0.2s, border-color 0.2s;
+        }
+        .dark .term-link {
+             color: #60a5fa; /* blue-400 */
+             border-bottom-color: #3b82f6; /* blue-500 */
+        }
+        .term-link:hover {
+            color: #1d4ed8; /* blue-800 */
+            border-bottom-color: #2563eb; /* blue-600 */
+        }
+        .dark .term-link:hover {
+             color: #93c5fd; /* blue-300 */
+             border-bottom-color: #60a5fa; /* blue-400 */
+        }
+        
+        /* FIX: Enhanced AI Status Style with plain CSS */
+        .ai-status {
+            font-size: 0.875rem; /* text-sm */
+            line-height: 1.25rem;
+            font-weight: 600;
+            color: #2563eb; /* blue-600 */
+            padding-right: 0.5rem;
+        }
+        .dark .ai-status {
+            color: #60a5fa; /* blue-400 */
         }
 
 
@@ -335,7 +388,7 @@
 
         <div id="suggestion-area" class="px-4 pb-2">
             <button id="toggle-suggestions-btn" class="hidden w-full text-left text-sm text-blue-600 dark:text-blue-400 font-semibold p-2 rounded-lg hover:bg-blue-50 dark:hover:bg-slate-800 flex items-center gap-2">
-                <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" enable-background="new 0 0 24 24" height="24px" viewBox="0 0 24 24" width="24px" fill="currentColor"><g><rect fill="none" height="24" width="24"/></g><g><g><path d="M4,18h11c0.55,0,1-0.45,1-1v-2c0-0.55-0.45-1-1-1H4c-0.55,0-1,0.45-1,1v2C3,17.55,3.45,18,4,18z M3,7c0,0.55,0.45,1,1,1 h11c0.55,0,1-0.45,1-1V5c0-0.55-0.45-1-1-1H4C3.45,4,3,4.45,3,5V7z M4,13h11c0.55,0,1-0.45,1-1v-2c0-0.55-0.45-1-1-1H4 c-0.55,0-1,0.45-1,1v2C3,12.55,3.45,13,4,13z M19.5,4.5L19.5,4.5c0.47,0.47,0.47,1.23,0,1.7l-4.08,4.08 c-0.47,0.47-1.23,0.47-1.7,0l0,0c-0.47-0.47-0.47,1.23,0-1.7l4.08-4.08C18.27,4.03,19.03,4.03,19.5,4.5z M19.5,17.82 c0.47-0.47,1.23-0.47,1.7,0l0,0c0.47,0.47,0.47,1.23,0,1.7l-4.08,4.08c-0.47,0.47-1.23,0.47-1.7,0l0,0c-0.47-0.47-0.47-1.23,0-1.7 L19.5,17.82z"/></g></g></svg>
+                <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" enable-background="new 0 0 24 24" height="24px" viewBox="0 0 24 24" width="24px" fill="currentColor"><g><rect fill="none" height="24" width="24"/></g><g><g><path d="M4,18h11c0.55,0,1-0.45,1-1v-2c0-0.55-0.45-1-1-1H4c-0.55,0-1,0.45-1,1v2C3,17.55,3.45,18,4,18z M3,7c0,0.55,0.45,1,1,1 h11c0.55,0,1-0.45,1-1V5c0-0.55-0.45-1-1-1H4C3.45,4,3,4.45,3,5V7z M4,13h11c0.55,0,1-0.45,1-1v-2c0-0.55-0.45-1-1-1H4 c-0.55,0-1,0.45-1,1v2C3,12.55,3.45,13,4,13z M19.5,4.5L19.5,4.5c0.47,0.47,0.47,1.23,0,1.7l-4.08,4.08 c-0.47,0.47-1.23,0.47-1.7,0l0,0c-0.47-0.47-0.47,1.23,0-1.7l4.08-4.08C18.27,4.03,19.03,4.03,19.5,4.5z M19.5,17.82 c0.47-0.47,1.23-0.47,1.7,0l0,0c0.47,0.47,0.47,1.23,0,1.7l-4.08,4.08c-0.47,0.47-1.23,0.47-1.7,0l0,0c-0.47-0.47-0.47,1.23,0-1.7 L19.5,17.82z"/></g></g></svg>
                 Xem gợi ý
             </button>
             <div id="suggestions-container" class="hidden mt-2 flex flex-wrap gap-2"></div>
@@ -434,7 +487,8 @@
         let referenceChat;
         let referenceHistory = [];
         let isSummarizing = false; // Flag to prevent multiple summaries
-        const formattingInstruction = "**Chỉ thị hệ thống:** Mục tiêu chính của bạn là đưa ra câu trả lời rõ ràng, chi tiết và có cấu trúc tốt. Luôn sử dụng Markdown để định dạng (tiêu đề, danh sách, in đậm). Hãy giải thích các khái niệm từng bước, bắt đầu bằng tóm tắt rồi đi vào chi tiết và ví dụ.";
+        const formattingInstruction = `**Chỉ thị hệ thống:** Mục tiêu chính của bạn là đưa ra câu trả lời rõ ràng, chi tiết và có cấu trúc tốt. Luôn sử dụng Markdown để định dạng (tiêu đề, danh sách, in đậm). Hãy giải thích các khái niệm từng bước, bắt đầu bằng tóm tắt rồi đi vào chi tiết và ví dụ. **Yêu cầu bổ sung:** Trong quá trình trả lời, khi bạn đề cập đến một thuật ngữ kỹ thuật, một khái niệm quan trọng, hoặc một tên riêng (ví dụ: tên một công nghệ, một phương pháp), hãy bọc thuật ngữ đó trong cặp dấu ngoặc vuông. Ví dụ: '...sử dụng ngôn ngữ [JavaScript] để tương tác với [DOM]...'. Chỉ bọc duy nhất thuật ngữ đó.`;
+
 
         // --- CHAT HISTORY PAGINATION STATE ---
         let lastVisibleChat = null;
@@ -622,7 +676,7 @@
                             </div>
                             <span class="font-semibold text-gray-800 dark:text-gray-200">Trợ lý Phụ</span>
                         </div>
-                        <div class="ai-status text-xs text-gray-500 dark:text-gray-400 pr-2"></div>
+                        <div class="ai-status"></div>
                     </div>
                     <div class="message-content text-gray-800 dark:text-gray-200"></div>
                     <div class="message-actions mt-2 flex justify-end gap-2"></div>`;
@@ -660,7 +714,10 @@
             referenceHistory.push({ role: 'user', parts: [{ text: promptForAI }] });
 
             const { messageWrapper, contentElem, statusElem } = addMessageToReference('ai', '<span class="blinking-cursor"></span>');
-            if (statusElem) statusElem.textContent = 'Đang suy nghĩ...';
+            if (statusElem) {
+                statusElem.classList.add('ai-status');
+                statusElem.textContent = 'Đang suy nghĩ...';
+            }
 
             try {
                 const result = await referenceChat.sendMessageStream(promptForAI);
@@ -715,7 +772,10 @@
 
             addMessageToReference('user', promptText, false);
             const { messageWrapper, contentElem, statusElem } = addMessageToReference('ai', '<span class="blinking-cursor"></span>');
-            if (statusElem) statusElem.textContent = 'Đang suy nghĩ...';
+            if (statusElem) {
+                statusElem.classList.add('ai-status');
+                statusElem.textContent = 'Đang suy nghĩ...';
+            }
 
             try {
                 const result = await tempChat.sendMessageStream(promptText);
@@ -783,7 +843,6 @@
             localHistory = [];
             referenceHistory = [];
             referenceChat = null;
-            // The initial history is now stored in localHistory to be saved to DB
             localHistory = [{
                 role: "user",
                 parts: [{ text: formattingInstruction }],
@@ -856,9 +915,9 @@
                             </div>
                             <span class="font-semibold text-gray-800 dark:text-gray-200">Gemini</span>
                         </div>
-                        <div class="ai-status text-xs text-gray-500 dark:text-gray-400 pr-2"></div>
+                        <div class="ai-status"></div>
                     </div>
-                    <div class="message-content text-gray-800 dark:text-gray-200"></div>`;
+                    <div class="message-content text-gray-800 dark:text-gray-200" data-raw-text="${text.replace(/"/g, '&quot;')}"></div>`;
                 contentElem = messageWrapper.querySelector('.message-content');
                 statusElem = messageWrapper.querySelector('.ai-status');
             } else if (role === 'user') {
@@ -877,7 +936,9 @@
                 contentElem = messageWrapper.querySelector('.note-content');
             }
             
-            contentElem.innerHTML = DOMPurify.sanitize(marked.parse(text));
+            const processedText = text.replace(/\[([^\]]+)\]/g, `<a href="#" class="term-link" data-term="$1">$1</a>`);
+            contentElem.innerHTML = DOMPurify.sanitize(marked.parse(processedText), { ADD_ATTR: ['target', 'data-term', 'data-raw-text'] });
+
             chatContainer.insertBefore(messageWrapper, notificationArea);
             if (shouldScroll) {
                 messageWrapper.scrollIntoView({ behavior: "smooth", block: "end" });
@@ -946,12 +1007,16 @@
             promptInput.value = ''; adjustInputHeight();
             clearSuggestions();
             hideWelcomeMessage();
-            addMessage('user', promptText);
+            
+            const { messageWrapper: userMsgWrapper } = addMessage('user', promptText);
             localHistory.push({ role: 'user', parts: [{ text: promptText }] });
 
             const { messageWrapper, contentElem, statusElem } = addMessage('ai', '<span class="blinking-cursor"></span>');
-            if (statusElem) statusElem.textContent = 'Đang suy nghĩ...';
-
+            if (statusElem) {
+                statusElem.classList.add('ai-status');
+                statusElem.textContent = 'Đang suy nghĩ...';
+            }
+            
             try {
                 const result = await chat.sendMessageStream(promptText);
 
@@ -966,13 +1031,16 @@
                     }
 
                     fullResponseText += chunk.text();
-                    contentElem.innerHTML = DOMPurify.sanitize(marked.parse(fullResponseText)) + '<span class="blinking-cursor"></span>';
+                    const processedChunk = fullResponseText.replace(/\[([^\]]+)\]/g, `<a href="#" class="term-link" data-term="$1">$1</a>`);
+                    contentElem.innerHTML = DOMPurify.sanitize(marked.parse(processedChunk)) + '<span class="blinking-cursor"></span>';
                     handleSmartScroll(messageWrapper, chatContainer);
                 }
 
                 if (statusElem) statusElem.classList.add('hidden');
-                contentElem.innerHTML = DOMPurify.sanitize(marked.parse(fullResponseText));
-
+                const finalProcessedText = fullResponseText.replace(/\[([^\]]+)\]/g, `<a href="#" class="term-link" data-term="$1">$1</a>`);
+                contentElem.innerHTML = DOMPurify.sanitize(marked.parse(finalProcessedText), { ADD_ATTR: ['target', 'data-term', 'data-raw-text'] });
+                contentElem.dataset.rawText = fullResponseText;
+                
                 const headerHeight = mainHeader.offsetHeight;
                 const scrollTop = messageWrapper.offsetTop - headerHeight - 16;
                 chatContainer.scrollTo({ top: scrollTop, behavior: 'smooth' });
@@ -1019,6 +1087,44 @@
                  toggleSuggestionsBtn.classList.add('hidden');
             }
         }
+        
+        async function explainTerm(term, context) {
+            showReferenceModal(`Giải thích: ${term}`, false); 
+            referenceContent.innerHTML = '';
+            
+            const promptForExplanation = `Trong ngữ cảnh của câu sau: "${context}", hãy giải thích thuật ngữ "${term}" một cách đơn giản, ngắn gọn và dễ hiểu cho người mới bắt đầu.`;
+            
+            const tempChat = model.startChat({ history: [] });
+            
+            const { messageWrapper, contentElem, statusElem } = addMessageToReference('ai', '<span class="blinking-cursor"></span>');
+            if (statusElem) {
+                 statusElem.classList.add('ai-status');
+                 statusElem.textContent = 'Đang suy nghĩ...';
+            }
+
+            try {
+                const result = await tempChat.sendMessageStream(promptForExplanation);
+                let fullResponseText = "";
+                let isFirstChunk = true;
+
+                for await (const chunk of result.stream) {
+                    if (isFirstChunk) {
+                        if (statusElem) statusElem.textContent = 'Đang viết...';
+                        isFirstChunk = false;
+                    }
+                    fullResponseText += chunk.text();
+                    contentElem.innerHTML = DOMPurify.sanitize(marked.parse(fullResponseText)) + '<span class="blinking-cursor"></span>';
+                    handleSmartScroll(messageWrapper, referenceContent);
+                }
+
+                if (statusElem) statusElem.classList.add('hidden');
+                contentElem.innerHTML = DOMPurify.sanitize(marked.parse(fullResponseText));
+
+            } catch (error) {
+                if (messageWrapper.parentNode) referenceContent.removeChild(messageWrapper);
+                addMessageToReference('ai', `**Đã xảy ra lỗi khi giải thích thuật ngữ:** ${error.message}`);
+            }
+        }
 
         async function updateConversationInDb() {
             if (!currentUserId || localHistory.length < 2) return;
@@ -1028,7 +1134,6 @@
                     const docRef = doc(db, 'chats', currentUserId, 'conversations', currentChatId);
                     await updateDoc(docRef, chatData);
                 } else {
-                    // Title is the first actual user prompt that isn't a note
                     const firstUserPrompt = localHistory.find(m => m.role === 'user' && !m.parts[0].text.includes('**Chỉ thị hệ thống:**'));
                     chatData.title = firstUserPrompt?.parts[0].text.substring(0, 40) || "Cuộc trò chuyện mới";
                     chatData.createdAt = serverTimestamp();
@@ -1242,6 +1347,17 @@
             const isNearBottom = sidebarContent.scrollHeight - sidebarContent.scrollTop - sidebarContent.clientHeight < 100;
             if (isNearBottom && !isFetchingChats && !allChatsLoaded) {
                 fetchRecentChats(true);
+            }
+        });
+
+        chatContainer.addEventListener('click', (e) => {
+            const termLink = e.target.closest('.term-link');
+            if (termLink) {
+                e.preventDefault();
+                const term = termLink.dataset.term;
+                const messageContentElement = termLink.closest('.message-content');
+                const context = messageContentElement ? messageContentElement.dataset.rawText : '';
+                explainTerm(term, context);
             }
         });
 
