@@ -292,14 +292,15 @@
                     <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="currentColor"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M14.06 9.02l.92.92L5.92 19H5v-.92l9.06-9.06M17.66 3c-.25 0-.51.1-.7.29l-1.83 1.83 3.75 3.75 1.83-1.83c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.2-.2-.45-.29-.71-.29zm-3.6 3.19L3 17.25V21h3.75L17.81 9.94l-3.75-3.75z"/></svg>
                     Trò chuyện mới
                 </button>
-                <div id="pinned-chats-container">
+                <!-- Pinned Chats Section -->
+                <div id="pinned-chats-section" class="hidden">
                     <h3 class="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-2 uppercase">Đã ghim</h3>
-                    <ul id="pinned-chats-list" class="space-y-1"></ul>
+                    <ul id="pinned-chats-list" class="space-y-1 mb-4"></ul>
                 </div>
-                <div id="recent-chats-container" class="mt-4">
-                     <h3 class="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-2 uppercase">Gần đây</h3>
-                    <ul id="saved-chats-list" class="space-y-1"></ul>
-                </div>
+
+                <!-- Recent Chats Section -->
+                <h3 class="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-2 uppercase">Gần đây</h3>
+                <ul id="saved-chats-list" class="space-y-1"></ul>
                 <div id="saved-chats-skeleton" class="space-y-2 mt-2 hidden">
                     <div class="h-8 bg-gray-200 dark:bg-slate-700 rounded animate-pulse w-11/12"></div>
                     <div class="h-8 bg-gray-200 dark:bg-slate-700 rounded animate-pulse w-10/12"></div>
@@ -420,7 +421,7 @@
         let isSummarizing = false; // Flag to prevent multiple summaries
         const formattingInstruction = "**Chỉ thị hệ thống:** Mục tiêu chính của bạn là đưa ra câu trả lời rõ ràng, chi tiết và có cấu trúc tốt. Luôn sử dụng Markdown để định dạng (tiêu đề, danh sách, in đậm). Hãy giải thích các khái niệm từng bước, bắt đầu bằng tóm tắt rồi đi vào chi tiết và ví dụ.";
 
-        // --- NEW: CHAT HISTORY PAGINATION STATE ---
+        // --- CHAT HISTORY PAGINATION STATE ---
         let lastVisibleChat = null;
         let isFetchingChats = false;
         let allChatsLoaded = false;
@@ -455,11 +456,10 @@
         const closeSidebarBtn = document.getElementById('close-sidebar-btn');
         const newChatBtn = document.getElementById('new-chat-btn');
         const savedChatsList = document.getElementById('saved-chats-list');
+        const pinnedChatsList = document.getElementById('pinned-chats-list');
+        const pinnedChatsSection = document.getElementById('pinned-chats-section');
         const savedChatsSkeleton = document.getElementById('saved-chats-skeleton');
         const sidebarContent = document.getElementById('sidebar-content');
-        const pinnedChatsList = document.getElementById('pinned-chats-list');
-        const pinnedChatsContainer = document.getElementById('pinned-chats-container');
-        const recentChatsContainer = document.getElementById('recent-chats-container');
 
         const welcomeMessageDiv = document.getElementById('welcome-message');
 
@@ -509,7 +509,7 @@
                 authContainer.classList.add('hidden');
                 appContainer.classList.remove('hidden');
                 startNewChat(); 
-                renderSavedChats();
+                renderAllChats();
             } else {
                 currentUserId = null;
                 currentUserName = '';
@@ -540,7 +540,7 @@
             sidebar.classList.remove('-translate-x-full');
             sidebarOverlay.classList.remove('hidden');
             setTimeout(() => sidebarOverlay.classList.add('opacity-100'), 10);
-            renderSavedChats();
+            renderAllChats();
         }
 
         function closeSidebar() {
@@ -961,152 +961,125 @@
                     // Title is the first actual user prompt
                     chatData.title = localHistory[2]?.parts[0].text.substring(0, 40) || "Cuộc trò chuyện mới";
                     chatData.createdAt = serverTimestamp();
+                    chatData.isPinned = false; // Set default pinned status
                     const chatsCollection = collection(db, 'chats', currentUserId, 'conversations');
                     const docRef = await addDoc(chatsCollection, chatData);
                     currentChatId = docRef.id;
+                    renderAllChats(); // Re-render to show the new chat
                 }
-                // Don't do a full re-render here as it might be disruptive
             } catch (error) {
                 console.error("Lỗi khi cập nhật cuộc trò chuyện:", error);
             }
         }
 
-        function createChatListItem(docSnap) {
-            const chatItem = docSnap.data();
+        function createChatItem(docSnap) {
+            const chatItemData = docSnap.data();
             const li = document.createElement('li');
-            li.className = "group p-2 cursor-pointer flex justify-between items-center rounded-md";
-            
-            // Add different background for pinned chats
-            if (chatItem.isPinned) {
-                li.classList.add('bg-blue-50', 'dark:bg-slate-700/50', 'hover:bg-blue-100', 'dark:hover:bg-slate-700');
-            } else {
-                li.classList.add('hover:bg-gray-100', 'dark:hover:bg-slate-700');
-            }
+            li.className = "p-2 hover:bg-gray-100 dark:hover:bg-slate-700 cursor-pointer flex justify-between items-center rounded-md group";
 
             const titleSpan = document.createElement('span');
-            titleSpan.textContent = chatItem.title;
+            titleSpan.textContent = chatItemData.title;
             titleSpan.className = "flex-1 truncate pr-2 text-gray-800 dark:text-gray-200";
             li.appendChild(titleSpan);
 
             const buttonsWrapper = document.createElement('div');
             buttonsWrapper.className = 'flex items-center opacity-0 group-hover:opacity-100 transition-opacity';
 
-            // Pin button
+            // Pin Button
             const pinBtn = document.createElement('button');
-            pinBtn.className = 'p-1 text-gray-400 hover:text-blue-500 dark:hover:text-blue-400 rounded-full';
-            pinBtn.title = chatItem.isPinned ? "Bỏ ghim" : "Ghim";
-            pinBtn.innerHTML = chatItem.isPinned 
-                ? `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 3a1 1 0 011 1v1.033l1.24 1.24a1 1 0 11-1.414 1.414L10 5.414l-1.826 1.826a1 1 0 11-1.414-1.414L8 4.033V4a1 1 0 011-1zM6 6a1 1 0 011.707-.707l6 6A1 1 0 0113 13H7a1 1 0 01-1-1V6zM4 9a1 1 0 011-1h.243A1.99 1.99 0 005 7.757V7a1 1 0 112 0v1.414l1.293 1.293a1 1 0 01-1.414 1.414L7.586 10H7a1 1 0 01-1-1v-.586L4.293 6.707A1 1 0 014 6.243V9zM15 9.757a1.99 1.99 0 00-.243-1H15a1 1 0 110-2h-.586l1.293-1.293a1 1 0 011.414 1.414L16 7.414V8a1 1 0 01-1 1h-.414l-1.293 1.293A1 1 0 0115 9.757z" clip-rule="evenodd" /></svg>` 
-                : `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16 8v8m-8-8v8m-4-4h16" /></svg>`.replace('d="M16 8v8m-8-8v8m-4-4h16"', 'd="M16 8v8m-8-8v8M4 12h16" transform="rotate(-45 12 12)"'); // Simplified pin
+            pinBtn.className = 'p-1 text-gray-400 hover:text-blue-500 rounded-full';
+            pinBtn.title = chatItemData.isPinned ? "Bỏ ghim" : "Ghim";
+            pinBtn.innerHTML = chatItemData.isPinned ? 
+                `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3.293 3.293a1 1 0 011.414 0L10 8.586l5.293-5.293a1 1 0 111.414 1.414L11.414 10l5.293 5.293a1 1 0 01-1.414 1.414L10 11.414l-5.293 5.293a1 1 0 01-1.414-1.414L8.586 10 3.293 4.707a1 1 0 010-1.414z" clip-rule="evenodd" /></svg><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.5 9a.5.5 0 01.5.5v5a.5.5 0 01-1 0v-5a.5.5 0 01.5-.5zM10 3.5a1.5 1.5 0 100 3 1.5 1.5 0 000-3z" clip-rule="evenodd" />` : 
+                `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.428a1 1 0 00.475 0l5 1.428a1 1 0 001.17-1.409l-7-14z" /></svg>`;
             pinBtn.onclick = (e) => {
                 e.stopPropagation();
-                togglePinChat(docSnap.id, chatItem.isPinned || false);
+                togglePinChat(docSnap.id, chatItemData.isPinned || false);
             };
-            buttonsWrapper.appendChild(pinBtn);
 
-            // Delete button
+            // Delete Button
             const deleteBtn = document.createElement('button');
             deleteBtn.className = 'p-1 text-gray-400 hover:text-red-600 rounded-full';
             deleteBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" /></svg>';
-            deleteBtn.onclick = async (e) => {
+            deleteBtn.onclick = (e) => {
                 e.stopPropagation();
                 if (confirm("Bạn có chắc chắn muốn xóa cuộc trò chuyện này?")) {
-                    await deleteChat(docSnap.id);
+                    deleteChat(docSnap.id);
                 }
             };
+            
+            buttonsWrapper.appendChild(pinBtn);
             buttonsWrapper.appendChild(deleteBtn);
-
             li.appendChild(buttonsWrapper);
             li.onclick = () => loadChat(docSnap.id);
+
             return li;
         }
 
-        async function togglePinChat(chatId, currentStatus) {
+        async function renderAllChats() {
             if (!currentUserId) return;
-            const docRef = doc(db, 'chats', currentUserId, 'conversations', chatId);
-            try {
-                await updateDoc(docRef, {
-                    isPinned: !currentStatus,
-                    updatedAt: serverTimestamp() // Always update timestamp to re-order
-                });
-                await renderSavedChats(); // Re-render the list to show the change immediately
-            } catch(error) {
-                console.error("Lỗi khi ghim cuộc trò chuyện:", error);
-            }
+            // Reset all lists and states
+            isFetchingChats = false;
+            allChatsLoaded = false;
+            lastVisibleChat = null;
+            pinnedChatsList.innerHTML = '';
+            savedChatsList.innerHTML = '';
+
+            await fetchPinnedChats();
+            await fetchRecentChats();
         }
 
+        async function fetchPinnedChats() {
+             const chatsCollection = collection(db, 'chats', currentUserId, 'conversations');
+             const q = query(chatsCollection, where('isPinned', '==', true), orderBy('updatedAt', 'desc'));
+             const querySnapshot = await getDocs(q);
 
-        async function renderSavedChats(loadMore = false) {
-            if (isFetchingChats && loadMore) return; // Prevent multiple fetches when scrolling
+             if (querySnapshot.empty) {
+                 pinnedChatsSection.classList.add('hidden');
+             } else {
+                 pinnedChatsSection.classList.remove('hidden');
+                 querySnapshot.forEach(docSnap => {
+                     const li = createChatItem(docSnap);
+                     pinnedChatsList.appendChild(li);
+                 });
+             }
+        }
+
+        async function fetchRecentChats(loadMore = false) {
+            if (isFetchingChats || allChatsLoaded) return;
             
             isFetchingChats = true;
-            if (!loadMore) {
-                pinnedChatsList.innerHTML = '';
-                savedChatsList.innerHTML = '';
-                lastVisibleChat = null;
-                allChatsLoaded = false;
-            }
-
-            if (allChatsLoaded && loadMore) {
-                isFetchingChats = false;
-                return;
-            }
-            
             savedChatsSkeleton.classList.remove('hidden');
 
-            if (!currentUserId) {
-                savedChatsList.innerHTML = '<li class="text-gray-500 dark:text-gray-400">Đăng nhập để xem lịch sử trò chuyện.</li>';
-                isFetchingChats = false;
-                savedChatsSkeleton.classList.add('hidden');
-                return;
+            const chatsCollection = collection(db, 'chats', currentUserId, 'conversations');
+            let q;
+            const unpinnedQuery = where('isPinned', '==', false);
+
+            if (lastVisibleChat && loadMore) {
+                q = query(chatsCollection, unpinnedQuery, orderBy('updatedAt', 'desc'), startAfter(lastVisibleChat), limit(CHATS_PER_PAGE));
+            } else {
+                q = query(chatsCollection, unpinnedQuery, orderBy('updatedAt', 'desc'), limit(CHATS_PER_PAGE));
             }
-            
+
             try {
-                // Fetch pinned chats only on the initial load
-                if (!loadMore) {
-                    const pinnedQuery = query(collection(db, 'chats', currentUserId, 'conversations'), where('isPinned', '==', true), orderBy('updatedAt', 'desc'));
-                    const pinnedSnapshot = await getDocs(pinnedQuery);
-                    if (pinnedSnapshot.empty) {
-                        pinnedChatsContainer.classList.add('hidden');
-                    } else {
-                        pinnedChatsContainer.classList.remove('hidden');
-                        pinnedSnapshot.forEach(docSnap => {
-                            const li = createChatListItem(docSnap);
-                            pinnedChatsList.appendChild(li);
-                        });
-                    }
-                }
+                const querySnapshot = await getDocs(q);
                 
-                // Fetch recent (unpinned) chats
-                const chatsCollection = collection(db, 'chats', currentUserId, 'conversations');
-                let unpinnedQuery;
-                const unpinnedConstraints = [where('isPinned', '!=', true), orderBy('updatedAt', 'desc'), limit(CHATS_PER_PAGE)];
+                if (querySnapshot.empty && !loadMore) {
+                     savedChatsList.innerHTML = '<li class="text-gray-500 dark:text-gray-400 text-sm">Chưa có cuộc trò chuyện gần đây.</li>';
+                } 
                 
-                if (lastVisibleChat) {
-                    unpinnedConstraints.splice(2, 0, startAfter(lastVisibleChat));
-                }
-                unpinnedQuery = query(chatsCollection, ...unpinnedConstraints);
-
-                const unpinnedSnapshot = await getDocs(unpinnedQuery);
-                if (unpinnedSnapshot.empty && !loadMore) {
-                    recentChatsContainer.classList.add('hidden');
-                } else {
-                    recentChatsContainer.classList.remove('hidden');
-                }
-
-                unpinnedSnapshot.forEach(docSnap => {
-                     const li = createChatListItem(docSnap);
-                     savedChatsList.appendChild(li);
+                querySnapshot.forEach(docSnap => {
+                    const li = createChatItem(docSnap);
+                    savedChatsList.appendChild(li);
                 });
 
-                if (unpinnedSnapshot.docs.length > 0) {
-                    lastVisibleChat = unpinnedSnapshot.docs[unpinnedSnapshot.docs.length - 1];
+                if (querySnapshot.docs.length > 0) {
+                    lastVisibleChat = querySnapshot.docs[querySnapshot.docs.length - 1];
                 }
 
-                if (unpinnedSnapshot.docs.length < CHATS_PER_PAGE) {
+                if (querySnapshot.docs.length < CHATS_PER_PAGE) {
                     allChatsLoaded = true;
                 }
-
             } catch (error) {
                 console.error("Lỗi khi lấy lịch sử trò chuyện:", error);
                 savedChatsList.innerHTML += '<li class="text-red-500 text-sm">Không thể tải thêm lịch sử.</li>';
@@ -1116,11 +1089,24 @@
             }
         }
 
+        async function togglePinChat(chatId, isCurrentlyPinned) {
+            if (!currentUserId) return;
+            const docRef = doc(db, 'chats', currentUserId, 'conversations', chatId);
+            try {
+                await updateDoc(docRef, {
+                    isPinned: !isCurrentlyPinned
+                });
+                renderAllChats(); // Re-render all lists to reflect the change
+            } catch(error) {
+                console.error("Lỗi khi ghim cuộc trò chuyện:", error);
+            }
+        }
+
         async function deleteChat(chatId) {
             if (!currentUserId) return;
             try {
                 await deleteDoc(doc(db, 'chats', currentUserId, 'conversations', chatId));
-                await renderSavedChats(); // Force a full refresh
+                renderAllChats(); 
                 if(chatId === currentChatId) startNewChat();
             } catch (error) {
                 console.error("Error deleting chat:", error);
@@ -1182,7 +1168,7 @@
         sidebarContent.addEventListener('scroll', () => {
             const isNearBottom = sidebarContent.scrollHeight - sidebarContent.scrollTop - sidebarContent.clientHeight < 100;
             if (isNearBottom && !isFetchingChats && !allChatsLoaded) {
-                renderSavedChats(true);
+                fetchRecentChats(true);
             }
         });
 
