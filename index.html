@@ -101,21 +101,6 @@
             color: #9ca3af; /* gray-400 */
         }
 
-        /* NEW: Note Message Styles */
-        .note-wrapper {
-            @apply my-4 p-4 rounded-lg border bg-yellow-50 border-yellow-200 dark:bg-slate-800 dark:border-slate-700;
-        }
-        .note-header {
-            @apply flex items-center gap-2 mb-2 text-sm font-semibold text-yellow-800 dark:text-yellow-300;
-        }
-        .note-content {
-            @apply text-gray-800 dark:text-gray-200 prose prose-sm max-w-none;
-        }
-        .dark .note-content {
-             @apply prose-invert;
-        }
-
-
         /* Skeleton Loader CSS */
         .skeleton-box {
             @apply bg-gray-200 dark:bg-gray-700 rounded animate-pulse;
@@ -335,7 +320,7 @@
 
         <div id="suggestion-area" class="px-4 pb-2">
             <button id="toggle-suggestions-btn" class="hidden w-full text-left text-sm text-blue-600 dark:text-blue-400 font-semibold p-2 rounded-lg hover:bg-blue-50 dark:hover:bg-slate-800 flex items-center gap-2">
-                <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" enable-background="new 0 0 24 24" height="24px" viewBox="0 0 24 24" width="24px" fill="currentColor"><g><rect fill="none" height="24" width="24"/></g><g><g><path d="M4,18h11c0.55,0,1-0.45,1-1v-2c0-0.55-0.45-1-1-1H4c-0.55,0-1,0.45-1,1v2C3,17.55,3.45,18,4,18z M3,7c0,0.55,0.45,1,1,1 h11c0.55,0,1-0.45,1-1V5c0-0.55-0.45-1-1-1H4C3.45,4,3,4.45,3,5V7z M4,13h11c0.55,0,1-0.45,1-1v-2c0-0.55-0.45-1-1-1H4 c-0.55,0-1,0.45-1,1v2C3,12.55,3.45,13,4,13z M19.5,4.5L19.5,4.5c0.47,0.47,0.47,1.23,0,1.7l-4.08,4.08 c-0.47,0.47-1.23,0.47-1.7,0l0,0c-0.47-0.47-0.47,1.23,0-1.7l4.08-4.08C18.27,4.03,19.03,4.03,19.5,4.5z M19.5,17.82 c0.47-0.47,1.23-0.47,1.7,0l0,0c0.47,0.47,0.47,1.23,0,1.7l-4.08,4.08c-0.47,0.47-1.23,0.47-1.7,0l0,0c-0.47-0.47-0.47-1.23,0-1.7 L19.5,17.82z"/></g></g></svg>
+                <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" enable-background="new 0 0 24 24" height="24px" viewBox="0 0 24 24" width="24px" fill="currentColor"><g><rect fill="none" height="24" width="24"/></g><g><g><path d="M4,18h11c0.55,0,1-0.45,1-1v-2c0-0.55-0.45-1-1-1H4c-0.55,0-1,0.45-1,1v2C3,17.55,3.45,18,4,18z M3,7c0,0.55,0.45,1,1,1 h11c0.55,0,1-0.45,1-1V5c0-0.55-0.45-1-1-1H4C3.45,4,3,4.45,3,5V7z M4,13h11c0.55,0,1-0.45,1-1v-2c0-0.55-0.45-1-1-1H4 c-0.55,0-1,0.45-1,1v2C3,12.55,3.45,13,4,13z M19.5,4.5L19.5,4.5c0.47,0.47,0.47,1.23,0,1.7l-4.08,4.08 c-0.47,0.47-1.23,0.47-1.7,0l0,0c-0.47-0.47-0.47-1.23,0-1.7l4.08-4.08C18.27,4.03,19.03,4.03,19.5,4.5z M19.5,17.82 c0.47-0.47,1.23-0.47,1.7,0l0,0c0.47,0.47,0.47,1.23,0,1.7l-4.08,4.08c-0.47,0.47-1.23,0.47-1.7,0l0,0c-0.47-0.47-0.47-1.23,0-1.7 L19.5,17.82z"/></g></g></svg>
                 Xem gợi ý
             </button>
             <div id="suggestions-container" class="hidden mt-2 flex flex-wrap gap-2"></div>
@@ -423,7 +408,7 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
         const ai = getAI(app);
-        const model = getGenerativeModel(ai, { model: "gemini-1.5-flash" });
+        const model = getGenerativeModel(ai, { model: "gemini-2.5-flash" });
 
         let currentUserId = null;
         let currentUserName = ''; 
@@ -624,8 +609,7 @@
                         </div>
                         <div class="ai-status text-xs text-gray-500 dark:text-gray-400 pr-2"></div>
                     </div>
-                    <div class="message-content text-gray-800 dark:text-gray-200"></div>
-                    <div class="message-actions mt-2 flex justify-end gap-2"></div>`;
+                    <div class="message-content text-gray-800 dark:text-gray-200"></div>`;
                 contentElem = messageWrapper.querySelector('.message-content');
                 statusElem = messageWrapper.querySelector('.ai-status');
                 contentElem.innerHTML = DOMPurify.sanitize(marked.parse(text));
@@ -647,23 +631,21 @@
         }
 
         async function sendReferenceMessage() {
-            const userPrompt = referencePromptInput.value.trim();
-            if (!userPrompt) return;
+            let promptText = referencePromptInput.value.trim();
+            if (!promptText) return;
             referenceSendBtn.disabled = true;
             referencePromptInput.value = '';
-            addMessageToReference('user', userPrompt);
-
-            let promptForAI = userPrompt;
+            addMessageToReference('user', promptText);
             if (referenceHistory.length === 0) {
-                 promptForAI = formattingInstruction + '\n\n' + userPrompt;
+                 promptText = formattingInstruction + '\n\n' + promptText;
             }
-            referenceHistory.push({ role: 'user', parts: [{ text: promptForAI }] });
+            referenceHistory.push({ role: 'user', parts: [{ text: promptText }] });
 
             const { messageWrapper, contentElem, statusElem } = addMessageToReference('ai', '<span class="blinking-cursor"></span>');
             if (statusElem) statusElem.textContent = 'Đang suy nghĩ...';
 
             try {
-                const result = await referenceChat.sendMessageStream(promptForAI);
+                const result = await referenceChat.sendMessageStream(promptText);
                 contentElem.innerHTML = '';
                 let fullResponseText = "";
                 let isFirstChunk = true;
@@ -680,18 +662,6 @@
                 
                 if (statusElem) statusElem.classList.add('hidden');
                 contentElem.innerHTML = DOMPurify.sanitize(marked.parse(fullResponseText));
-
-                const actionsContainer = messageWrapper.querySelector('.message-actions');
-                if (actionsContainer && fullResponseText.trim()) {
-                    const saveNoteBtn = document.createElement('button');
-                    saveNoteBtn.className = 'flex items-center gap-2 text-xs px-3 py-1 bg-yellow-200 dark:bg-slate-600 text-yellow-800 dark:text-yellow-200 rounded-full hover:bg-yellow-300 dark:hover:bg-slate-500 transition-colors';
-                    saveNoteBtn.innerHTML = `<svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M5.433 13.917l1.262-3.155A4 4 0 017.58 9.42l6.92-6.918a2.121 2.121 0 013 3l-6.92 6.918c-.383.383-.84.685-1.343.886l-3.154 1.262a.5.5 0 01-.65-.65z" /><path d="M3.5 5.75c0-.69.56-1.25 1.25-1.25H10A.75.75 0 0010 3H4.75A2.75 2.75 0 002 5.75v9.5A2.75 2.75 0 004.75 18h9.5A2.75 2.75 0 0017 15.25V10a.75.75 0 00-1.5 0v5.25c0 .69-.56 1.25-1.25 1.25h-9.5c-.69 0-1.25-.56-1.25-1.25v-9.5z" /></svg> <span>Lưu Ghi chú</span>`;
-                    saveNoteBtn.onclick = () => {
-                        saveAsNote(userPrompt, fullResponseText);
-                    };
-                    actionsContainer.appendChild(saveNoteBtn);
-                }
-
                 const headerHeight = referenceHeader.offsetHeight;
                 const scrollTop = messageWrapper.offsetTop - headerHeight - 16;
                 referenceContent.scrollTo({ top: scrollTop, behavior: 'smooth' });
@@ -706,15 +676,14 @@
                 referencePromptInput.focus();
             }
         }
-        
+
         async function getSuggestedAnswer(promptText) {
             showReferenceModal('Gợi ý', false);
             referenceContent.innerHTML = '';
-            const filteredHistoryForSuggestion = localHistory.filter(msg => msg.role !== 'note');
-            const tempChat = model.startChat({ history: filteredHistoryForSuggestion });
+            const tempChat = model.startChat({ history: localHistory });
 
-            addMessageToReference('user', promptText, false);
             const { messageWrapper, contentElem, statusElem } = addMessageToReference('ai', '<span class="blinking-cursor"></span>');
+            addMessageToReference('user', promptText);
             if (statusElem) statusElem.textContent = 'Đang suy nghĩ...';
 
             try {
@@ -735,18 +704,6 @@
 
                 if (statusElem) statusElem.classList.add('hidden');
                 contentElem.innerHTML = DOMPurify.sanitize(marked.parse(fullResponseText));
-                
-                const actionsContainer = messageWrapper.querySelector('.message-actions');
-                if (actionsContainer && fullResponseText.trim()) {
-                    const saveNoteBtn = document.createElement('button');
-                    saveNoteBtn.className = 'flex items-center gap-2 text-xs px-3 py-1 bg-yellow-200 dark:bg-slate-600 text-yellow-800 dark:text-yellow-200 rounded-full hover:bg-yellow-300 dark:hover:bg-slate-500 transition-colors';
-                    saveNoteBtn.innerHTML = `<svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M5.433 13.917l1.262-3.155A4 4 0 017.58 9.42l6.92-6.918a2.121 2.121 0 013 3l-6.92 6.918c-.383.383-.84.685-1.343.886l-3.154 1.262a.5.5 0 01-.65-.65z" /><path d="M3.5 5.75c0-.69.56-1.25 1.25-1.25H10A.75.75 0 0010 3H4.75A2.75 2.75 0 002 5.75v9.5A2.75 2.75 0 004.75 18h9.5A2.75 2.75 0 0017 15.25V10a.75.75 0 00-1.5 0v5.25c0 .69-.56 1.25-1.25 1.25h-9.5c-.69 0-1.25-.56-1.25-1.25v-9.5z" /></svg> <span>Lưu Ghi chú</span>`;
-                    saveNoteBtn.onclick = () => {
-                        saveAsNote(promptText, fullResponseText);
-                    };
-                    actionsContainer.appendChild(saveNoteBtn);
-                }
-
                 const headerHeight = referenceHeader.offsetHeight;
                 const scrollTop = messageWrapper.offsetTop - headerHeight - 16;
                 referenceContent.scrollTo({ top: scrollTop, behavior: 'smooth' });
@@ -755,21 +712,6 @@
                  if (messageWrapper.parentNode) referenceContent.removeChild(messageWrapper);
                 addMessageToReference('ai', `**Đã xảy ra lỗi:** ${error.message}`);
             }
-        }
-
-        async function saveAsNote(prompt, response) {
-            if (!response.trim()) return;
-
-            const fullNoteText = `**Hỏi:** ${prompt}\n\n<hr class="my-2 border-yellow-300 dark:border-slate-600"/>\n\n**Đáp:**\n${response}`;
-
-            const noteMessage = { role: 'note', parts: [{ text: fullNoteText }] };
-            localHistory.push(noteMessage);
-
-            addMessage('note', fullNoteText);
-            
-            await updateConversationInDb();
-
-            closeReferenceModal();
         }
 
         function clearSuggestions() {
@@ -791,8 +733,7 @@
                 role: "model",
                 parts: [{ text: "Đã hiểu! Tôi sẽ cung cấp các câu trả lời chi tiết, rõ ràng và được định dạng cẩn thận." }],
             }];
-            const filteredHistory = localHistory.filter(msg => msg.role !== 'note');
-            chat = model.startChat({ history: filteredHistory });
+            chat = model.startChat({ history: localHistory });
             displayWelcomeMessage();
             clearSuggestions();
             closeSidebar();
@@ -812,41 +753,38 @@
                 if (chatDoc.exists()) {
                     localHistory = chatDoc.data().history || [];
                     currentChatId = chatDoc.id;
-                    
-                    const filteredHistory = localHistory.filter(msg => msg.role !== 'note');
-                    chat = model.startChat({ history: filteredHistory });
-                    
+                    chat = model.startChat({ history: localHistory });
                     chatContainer.innerHTML = ''; 
-                    chatContainer.appendChild(notificationArea);
+                    chatContainer.appendChild(notificationArea); // Re-append notification area
 
                     clearSuggestions();
                     localHistory.forEach(msg => {
+                        // Don't display any system messages, including summaries or initial prompts
                         if (msg.role === 'system') return;
+                        // For backward compatibility, also hide old instruction format
                         if (msg.role === 'user' && msg.parts[0].text.includes("**Chỉ thị hệ thống:**")) return;
                         if (msg.role === 'model' && msg.parts[0].text.startsWith("Đã hiểu!")) return;
                         
-                        addMessage(msg.role, msg.parts[0].text, false);
+                        const role = msg.role === 'model' ? 'ai' : 'user';
+                        addMessage(role, msg.parts[0].text, false);
                     });
                     setTimeout(() => chatContainer.scrollTop = chatContainer.scrollHeight, 0);
                 } else {
-                     chatContainer.innerHTML = ''; 
-                     chatContainer.appendChild(notificationArea);
                      addMessage('ai', '**Lỗi:** Không tìm thấy cuộc trò chuyện.');
                 }
             } catch (error) {
                 console.error("Lỗi khi tải cuộc trò chuyện:", error);
                 chatContainer.innerHTML = '';
-                chatContainer.appendChild(notificationArea);
                 addMessage('ai', '**Lỗi:** Không thể tải cuộc trò chuyện.');
             }
         }
-        
+
         function addMessage(role, text, shouldScroll = true) {
             hideWelcomeMessage();
             const messageWrapper = document.createElement('div');
             let contentElem, statusElem;
 
-            if (role === 'ai' || role === 'model') {
+            if (role === 'ai') {
                 messageWrapper.className = 'w-full space-y-2';
                 messageWrapper.innerHTML = `
                     <div class="flex items-center justify-between">
@@ -861,45 +799,39 @@
                     <div class="message-content text-gray-800 dark:text-gray-200"></div>`;
                 contentElem = messageWrapper.querySelector('.message-content');
                 statusElem = messageWrapper.querySelector('.ai-status');
-            } else if (role === 'user') {
+                contentElem.innerHTML = DOMPurify.sanitize(marked.parse(text));
+                chatContainer.insertBefore(messageWrapper, notificationArea);
+                if (shouldScroll) {
+                    messageWrapper.scrollIntoView({ behavior: "smooth", block: "end" });
+                }
+            } else {
                 messageWrapper.className = 'flex justify-end';
                 messageWrapper.innerHTML = `<div class="message-content px-4 py-2 rounded-2xl bg-blue-600 dark:bg-blue-700 text-white max-w-xs sm:max-w-md lg:max-w-2xl"></div>`;
                 contentElem = messageWrapper.querySelector('.message-content');
-            } else if (role === 'note') {
-                messageWrapper.className = 'note-wrapper';
-                messageWrapper.innerHTML = `
-                    <div class="note-header">
-                        <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M5.433 13.917l1.262-3.155A4 4 0 017.58 9.42l6.92-6.918a2.121 2.121 0 013 3l-6.92 6.918c-.383.383-.84.685-1.343.886l-3.154 1.262a.5.5 0 01-.65-.65z" /><path d="M3.5 5.75c0-.69.56-1.25 1.25-1.25H10A.75.75 0 0010 3H4.75A2.75 2.75 0 002 5.75v9.5A2.75 2.75 0 004.75 18h9.5A2.75 2.75 0 0017 15.25V10a.75.75 0 00-1.5 0v5.25c0 .69-.56 1.25-1.25 1.25h-9.5c-.69 0-1.25-.56-1.25-1.25v-9.5z" /></svg>
-                        <span>Ghi chú</span>
-                    </div>
-                    <div class="note-content message-content"></div>
-                `;
-                contentElem = messageWrapper.querySelector('.note-content');
+                contentElem.innerHTML = DOMPurify.sanitize(marked.parse(text));
+                chatContainer.insertBefore(messageWrapper, notificationArea);
+                if(shouldScroll) {
+                    messageWrapper.scrollIntoView({ behavior: "smooth", block: "end" });
+                }
             }
-            
-            contentElem.innerHTML = DOMPurify.sanitize(marked.parse(text));
-            chatContainer.insertBefore(messageWrapper, notificationArea);
-            if (shouldScroll) {
-                messageWrapper.scrollIntoView({ behavior: "smooth", block: "end" });
-            }
-
             return { messageWrapper, contentElem, statusElem };
         }
         
+        // --- NEW CONTEXT MANAGEMENT FUNCTION ---
         async function summarizeAndShortenHistory(history) {
-            const originalFirstMessages = history.slice(0, 2); 
-            const conversation = history.slice(2); 
-            if (conversation.length < 15) return history;
+            const originalFirstMessages = history.slice(0, 2); // Keep initial instructions
+            const conversation = history.slice(2); // The actual chat to work with
+            if (conversation.length < 15) return history; // Don't summarize too early
 
             console.log("Summarizing history...");
-            const messagesToSummarize = conversation.slice(0, 10).filter(msg => msg.role !== 'note');
+            const messagesToSummarize = conversation.slice(0, 10);
             const recentMessages = conversation.slice(10);
             
             const summarizationPrompt = "Tóm tắt ngắn gọn những điểm chính của cuộc trò chuyện sau đây thành một đoạn văn. Giữ lại các chi tiết quan trọng nhất để cuộc trò chuyện có thể tiếp tục một cách mạch lạc:\n\n" 
                 + messagesToSummarize.map(msg => `${msg.role}: ${msg.parts[0].text}`).join('\n');
 
             try {
-                const summarizerModel = getGenerativeModel(ai, { model: "gemini-1.5-flash" });
+                const summarizerModel = getGenerativeModel(ai, { model: "gemini-2.5-flash" });
                 const result = await summarizerModel.generateContent(summarizationPrompt);
                 const summaryText = result.response.text();
 
@@ -908,10 +840,11 @@
                     parts: [{ text: `TÓM TẮT NGỮ CẢNH TRƯỚC ĐÓ: ${summaryText}` }] 
                 };
                 
+                // Return new history: [instructions, summary, recent messages]
                 return [...originalFirstMessages, summaryMessage, ...recentMessages];
             } catch (error) {
                 console.error("Lỗi khi tóm tắt:", error);
-                return history;
+                return history; // Return original history if summarization fails
             }
         }
         
@@ -919,9 +852,7 @@
             const promptText = promptInput.value.trim();
             if (!promptText || isSummarizing) return;
 
-            const filteredHistoryForSending = localHistory.filter(msg => msg.role !== 'note');
-            chat = model.startChat({ history: filteredHistoryForSending });
-
+            // --- CONTEXT MANAGEMENT LOGIC ---
             const CONTEXT_THRESHOLD = 20;
             if (localHistory.length > CONTEXT_THRESHOLD) {
                 isSummarizing = true;
@@ -930,8 +861,7 @@
                     const newHistory = await summarizeAndShortenHistory(localHistory);
                     if (newHistory.length < localHistory.length) {
                          localHistory = newHistory;
-                         const filteredHistoryForChat = localHistory.filter(msg => msg.role !== 'note');
-                         chat = model.startChat({ history: filteredHistoryForChat });
+                         chat = model.startChat({ history: localHistory });
                          console.log("Lịch sử đã được tóm tắt và làm mới.");
                     }
                 } catch(e) {
@@ -941,7 +871,8 @@
                     notificationArea.classList.add('hidden');
                 }
             }
-           
+            // --- END CONTEXT MANAGEMENT LOGIC ---
+
             sendBtn.disabled = true; recordBtn.disabled = true;
             promptInput.value = ''; adjustInputHeight();
             clearSuggestions();
@@ -990,11 +921,10 @@
             }
         }
 
-
         async function getFollowUpSuggestions(lastResponse) {
             try {
                 const suggestionPrompt = `Dựa vào câu trả lời sau: "${lastResponse.substring(0, 500)}". Hãy đề xuất 3 câu hỏi tiếp theo ngắn gọn và thú vị mà người dùng có thể hỏi. QUAN TRỌNG: Chỉ trả về 3 câu hỏi, mỗi câu trên một dòng. Không đánh số, không dùng gạch đầu dòng, không thêm bất kỳ văn bản nào khác.`;
-                const suggestionModel = getGenerativeModel(ai, { model: "gemini-1.5-flash" });
+                const suggestionModel = getGenerativeModel(ai, { model: "gemini-2.5-flash" });
                 const result = await suggestionModel.generateContent(suggestionPrompt);
                 const responseText = result.response.text();
                 const suggestions = responseText.split('\n').filter(s => s.trim() !== '');
@@ -1028,9 +958,8 @@
                     const docRef = doc(db, 'chats', currentUserId, 'conversations', currentChatId);
                     await updateDoc(docRef, chatData);
                 } else {
-                    // Title is the first actual user prompt that isn't a note
-                    const firstUserPrompt = localHistory.find(m => m.role === 'user' && !m.parts[0].text.includes('**Chỉ thị hệ thống:**'));
-                    chatData.title = firstUserPrompt?.parts[0].text.substring(0, 40) || "Cuộc trò chuyện mới";
+                    // Title is the first actual user prompt
+                    chatData.title = localHistory[2]?.parts[0].text.substring(0, 40) || "Cuộc trò chuyện mới";
                     chatData.createdAt = serverTimestamp();
                     chatData.isPinned = false; // Set default pinned status
                     const chatsCollection = collection(db, 'chats', currentUserId, 'conversations');
@@ -1186,7 +1115,6 @@
 
         function showHistorySkeleton() {
             chatContainer.innerHTML = '';
-            chatContainer.appendChild(notificationArea); // FIX: Ensure notification area is present
             const skeletonHTML = `
                 <div class="w-full space-y-2">
                     <div class="flex items-center gap-2">
@@ -1204,10 +1132,9 @@
                     </div>
                 </div>
             `;
+            chatContainer.appendChild(notificationArea);
             for (let i = 0; i < 3; i++) {
-                const skeletonWrapper = document.createElement('div');
-                skeletonWrapper.innerHTML = skeletonHTML;
-                chatContainer.insertBefore(skeletonWrapper, notificationArea);
+                chatContainer.innerHTML += skeletonHTML;
             }
             chatContainer.scrollTop = chatContainer.scrollHeight;
         }
@@ -1248,8 +1175,6 @@
 
     </script>
 
-<!-- FIX: Comment out problematic service worker registration -->
-<!-- 
 <script>
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", function () {
@@ -1259,7 +1184,6 @@
     });
   }
 </script>
--->
 
 </body>
 </html>
