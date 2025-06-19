@@ -489,7 +489,7 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
         const ai = getAI(app);
-        const model = getGenerativeModel(ai, { model: "gemini-2.5-flash" });
+        const model = getGenerativeModel(ai, { model: "gemini-1.5-flash" });
         const fastModel = getGenerativeModel(ai, { model: "gemini-1.5-flash" });
 
         let currentUserId = null;
@@ -502,6 +502,7 @@
         let referenceHistory = [];
         let isSummarizing = false;
         let currentPersonaId = 'general'; // Default persona
+        let activeSpeech = null; // CẬP NHẬT: Biến toàn cục để theo dõi việc đọc
 
         // --- NEW: Persona Definitions ---
         const personas = [
@@ -515,7 +516,7 @@
             {
                 id: 'programmer',
                 name: 'Chuyên gia Lập trình',
-                icon: '👨‍�',
+                icon: '👨‍💻',
                 description: 'Chuyên gia về mã nguồn, thuật toán, giải thích và gỡ lỗi code.',
                 systemPrompt: `**Chỉ thị hệ thống:** Bạn là một lập trình viên cao cấp với 10 năm kinh nghiệm. Luôn đưa ra câu trả lời dưới dạng mã nguồn được giải thích rõ ràng, tuân thủ các coding convention tốt nhất. Khi được yêu cầu, hãy phân tích ưu và nhược điểm của các giải pháp khác nhau. Hãy ưu tiên tính hiệu quả và khả năng bảo trì của mã nguồn. **Yêu cầu bổ sung:** Khi đề cập đến một hàm, thư viện, hoặc khái niệm lập trình, hãy bọc nó trong dấu ngoặc vuông, ví dụ: [React], [API], [useState].`
             },
@@ -639,6 +640,8 @@
             personaSelectionScreen.classList.remove('hidden');
             chatViewContainer.classList.add('hidden');
             renderPersonas();
+            // CẬP NHẬT: Hủy việc đọc khi quay lại màn hình chọn persona
+            speechSynthesis.cancel();
         }
 
         function renderPersonas() {
@@ -931,11 +934,16 @@
             chatContainer.appendChild(notificationArea);
             clearSuggestions();
             closeSidebar();
+            // CẬP NHẬT: Hủy việc đọc khi bắt đầu chat mới
+            speechSynthesis.cancel();
         }
 
         async function loadChat(chatId) {
             if (!currentUserId) return;
 
+            // CẬP NHẬT: Hủy việc đọc khi tải chat cũ
+            speechSynthesis.cancel();
+            
             personaSelectionScreen.classList.add('hidden');
             chatViewContainer.classList.remove('hidden');
             showHistorySkeleton(); 
@@ -997,7 +1005,9 @@
                         </div>
                         <div class="ai-status"></div>
                     </div>
-                    <div class="message-content text-gray-800 dark:text-gray-200" data-raw-text="${text.replace(/"/g, '&quot;')}"></div>`;
+                    <div class="message-content text-gray-800 dark:text-gray-200" data-raw-text="${text.replace(/"/g, '&quot;')}"></div>
+                    <!-- CẬP NHẬT: Container cho các nút hành động của tin nhắn -->
+                    <div class="message-actions mt-1 flex justify-end items-center gap-2"></div>`;
                 contentElem = messageWrapper.querySelector('.message-content');
                 statusElem = messageWrapper.querySelector('.ai-status');
             } else if (role === 'user') {
@@ -1018,6 +1028,18 @@
             
             const processedText = text.replace(/\[([^\]]+)\]/g, `<a href="#" class="term-link" data-term="$1">$1</a>`);
             contentElem.innerHTML = DOMPurify.sanitize(marked.parse(processedText), { ADD_ATTR: ['target', 'data-term', 'data-raw-text'] });
+
+            // CẬP NHẬT: Thêm nút loa vào tin nhắn của AI
+            if ((role === 'ai' || role === 'model') && text.trim().length > 0) {
+                const actionsContainer = messageWrapper.querySelector('.message-actions');
+                const speakBtn = document.createElement('button');
+                speakBtn.className = 'speak-btn p-1.5 text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 rounded-full transition-colors';
+                speakBtn.innerHTML = '🔊';
+                speakBtn.title = 'Đọc văn bản';
+                speakBtn.dataset.text = text; // Dùng text chưa qua xử lý để đọc
+                speakBtn.dataset.state = 'idle';
+                actionsContainer.appendChild(speakBtn);
+            }
 
             chatContainer.insertBefore(messageWrapper, notificationArea);
             if (shouldScroll) {
@@ -1120,6 +1142,21 @@
                 contentElem.innerHTML = DOMPurify.sanitize(marked.parse(finalProcessedText), { ADD_ATTR: ['target', 'data-term', 'data-raw-text'] });
                 contentElem.dataset.rawText = fullResponseText;
                 
+                 // CẬP NHẬT: Thêm lại nút loa sau khi có nội dung đầy đủ
+                const actionsContainer = messageWrapper.querySelector('.message-actions');
+                if (actionsContainer) { // Xóa nút cũ nếu có và tạo lại
+                    actionsContainer.innerHTML = '';
+                    if (fullResponseText.trim().length > 0) {
+                        const speakBtn = document.createElement('button');
+                        speakBtn.className = 'speak-btn p-1.5 text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 rounded-full transition-colors';
+                        speakBtn.innerHTML = '🔊';
+                        speakBtn.title = 'Đọc văn bản';
+                        speakBtn.dataset.text = fullResponseText;
+                        speakBtn.dataset.state = 'idle';
+                        actionsContainer.appendChild(speakBtn);
+                    }
+                }
+
                 const headerHeight = mainHeader.offsetHeight;
                 const scrollTop = messageWrapper.offsetTop - headerHeight - 16;
                 chatContainer.scrollTo({ top: scrollTop, behavior: 'smooth' });
@@ -1404,6 +1441,93 @@
         }
 
         function toggleRecording() { if (!recognition) return; isRecording ? recognition.stop() : recognition.start(); }
+        
+        // --- CẬP NHẬT: LOGIC ĐIỀU KHIỂN VIỆC ĐỌC ---
+        
+        /**
+         * Hàm này reset icon và trạng thái của nút loa đang hoạt động về mặc định.
+         */
+        function resetActiveSpeechButton() {
+            if (activeSpeech && activeSpeech.button) {
+                activeSpeech.button.innerHTML = '🔊';
+                activeSpeech.button.dataset.state = 'idle';
+                activeSpeech.button.title = 'Đọc văn bản';
+            }
+        }
+
+        // Sử dụng event delegation để xử lý click trên các nút loa được tạo động.
+        chatContainer.addEventListener('click', (e) => {
+            const speakButton = e.target.closest('.speak-btn');
+            if (!speakButton) return;
+
+            e.preventDefault();
+            e.stopPropagation();
+
+            const currentState = speakButton.dataset.state;
+            const textToSpeak = speakButton.dataset.text;
+
+            // TRƯỜNG HỢP 1: Nhấn nút ▶️ (Tiếp tục)
+            if (currentState === 'paused') {
+                speechSynthesis.resume();
+                speakButton.innerHTML = '⏸️';
+                speakButton.dataset.state = 'playing';
+                speakButton.title = 'Tạm dừng';
+                return;
+            }
+
+            // TRƯỜNG HỢP 2: Nhấn nút ⏸️ (Tạm dừng)
+            if (currentState === 'playing') {
+                speechSynthesis.pause();
+                speakButton.innerHTML = '▶️';
+                speakButton.dataset.state = 'paused';
+                speakButton.title = 'Tiếp tục';
+                return;
+            }
+
+            // TRƯỜNG HỢP 3: Nhấn nút 🔊 (Bắt đầu đọc)
+            // Hủy bất kỳ việc đọc nào đang diễn ra hoặc đang tạm dừng trước đó.
+            // Thao tác này sẽ kích hoạt sự kiện 'onend' của utterance cũ, tự động dọn dẹp nó.
+            if (speechSynthesis.speaking || speechSynthesis.paused) {
+                speechSynthesis.cancel();
+            }
+
+            // Tạo một utterance mới
+            const utterance = new SpeechSynthesisUtterance(textToSpeak);
+            utterance.lang = 'vi-VN'; // Chọn giọng đọc tiếng Việt
+            utterance.rate = 1.0;     // Tốc độ đọc bình thường
+
+            // Xử lý khi việc đọc kết thúc (tự nhiên hoặc bị hủy)
+            utterance.onend = () => {
+                resetActiveSpeechButton();
+                activeSpeech = null;
+            };
+
+            // Xử lý khi có lỗi
+            utterance.onerror = (event) => {
+                console.error('Lỗi SpeechSynthesis:', event);
+                resetActiveSpeechButton();
+                activeSpeech = null;
+                speakButton.title = 'Lỗi phát âm';
+            };
+
+            // Bắt đầu đọc
+            speechSynthesis.speak(utterance);
+            
+            // Cập nhật trạng thái cho utterance và nút mới
+            activeSpeech = { utterance, button: speakButton };
+            
+            // Cập nhật UI của nút vừa được nhấn
+            speakButton.innerHTML = '⏸️';
+            speakButton.dataset.state = 'playing';
+            speakButton.title = 'Tạm dừng';
+        });
+
+        // Hủy việc đọc khi người dùng cuộn
+        chatContainer.addEventListener('scroll', () => {
+            if (speechSynthesis.speaking) {
+                 speechSynthesis.cancel();
+            }
+        });
 
         // Event Listeners
         menuBtn.addEventListener('click', openSidebar);
