@@ -77,6 +77,8 @@
         /* Sidebar transitions */
         #sidebar {
             transition: transform 0.3s ease-in-out;
+            /* Đảm bảo nội dung không tràn ra ngoài góc bo tròn */
+            overflow: hidden;
         }
         #sidebar-overlay {
             transition: opacity 0.3s ease-in-out;
@@ -104,16 +106,22 @@
             }
         }
 
-        /* New: Subtle shadow for input-area */
-        #input-area-wrapper {
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); /* subtle shadow for elevation */
+        /* Subtle shadow for input-area */
+        .p-4 > #input-area-wrapper { /* More specific selector to ensure override */
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04); /* Adjusted to be more subtle */
             border-radius: 9999px; /* apply full rounded corners to the wrapper */
             padding: 4px; /* compensate for the p-2 on the inner div */
             background-color: white; /* ensure background for shadow */
             transition: box-shadow 0.2s ease-in-out; /* smooth transition for focus/hover */
         }
-        #input-area-wrapper:focus-within {
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* slightly stronger shadow on focus */
+        .p-4 > #input-area-wrapper:focus-within {
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08); /* slightly stronger shadow on focus */
+        }
+
+        /* Đảm bảo sidebar-content có thể cuộn */
+        #sidebar-content {
+            overflow-y: scroll; /* Đã thay đổi từ auto thành scroll */
+            overflow-x: hidden; /* Ngăn chặn cuộn ngang */
         }
     </style>
 
@@ -197,15 +205,15 @@
         <div id="sidebar-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden opacity-0 transition-opacity duration-300 ease-in-out"></div>
 
         <!-- Sidebar -->
-        <div id="sidebar" class="fixed top-0 left-0 h-screen w-64 bg-white shadow-xl z-50 transform -translate-x-full lg:translate-x-0 lg:static lg:w-72 lg:flex lg:flex-col lg:border-r border-gray-200">
+        <div id="sidebar" class="fixed top-0 left-0 h-screen w-[calc(100vw-56px)] sm:w-64 md:w-72 bg-white shadow-xl z-50 transform -translate-x-full lg:translate-x-0 lg:static lg:flex lg:flex-col lg:border-r border-gray-200 rounded-r-2xl">
             <div class="p-4 border-b border-gray-200 flex items-center justify-between lg:hidden">
                 <h2 class="text-lg font-semibold">Menu</h2>
                 <button id="close-sidebar-btn" class="p-2 rounded-full hover:bg-gray-200">
                     <svg class="w-6 h-6 text-gray-600" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="currentColor"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/></svg>
                 </button>
             </div>
-            <div id="sidebar-content" class="flex-1 overflow-y-auto p-4">
-                <button id="new-chat-btn" class="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-blue-50 transition-colors text-blue-700 font-semibold mb-4">
+            <div id="sidebar-content" class="flex-1 overflow-y-scroll overflow-x-hidden p-4">
+                <button id="new-chat-btn" class="w-full flex items-center gap-3 p-3 rounded-lg border border-blue-200 hover:bg-blue-50 transition-colors text-blue-700 font-semibold mb-4">
                     <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="currentColor"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M14.06 9.02l.92.92L5.92 19H5v-.92l9.06-9.06M17.66 3c-.25 0-.51.1-.7.29l-1.83 1.83 3.75 3.75 1.83-1.83c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.2-.2-.45-.29-.71-.29zm-3.6 3.19L3 17.25V21h3.75L17.81 9.94l-3.75-3.75z"/></svg>
                     Trò chuyện mới
                 </button>
