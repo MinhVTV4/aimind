@@ -123,6 +123,24 @@
             overflow-y: scroll; /* Đã thay đổi từ auto thành scroll */
             overflow-x: hidden; /* Ngăn chặn cuộn ngang */
         }
+
+        /* Welcome Message Styling */
+        #welcome-message {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 2.5rem; /* Large font size */
+            font-weight: 600; /* Semi-bold */
+            text-align: center;
+            white-space: nowrap; /* Prevent wrapping for gradient effect */
+            background-image: linear-gradient(to right, #6366f1, #9333ea); /* Indigo to Purple gradient */
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            color: transparent; /* Fallback for unsupported browsers */
+            pointer-events: none; /* Ensure it doesn't block clicks */
+        }
     </style>
 
 <link rel="manifest" href="manifest.json">
@@ -228,7 +246,10 @@
             </div>
         </div>
 
-        <div id="chat-container" class="flex-1 px-4 pt-4 space-y-4 overflow-y-auto"></div>
+        <div id="chat-container" class="flex-1 px-4 pt-4 space-y-4 overflow-y-auto relative">
+            <!-- Welcome Message - Initially hidden, displayed by JS -->
+            <div id="welcome-message" class="hidden"></div>
+        </div>
 
         <div id="suggestion-area" class="px-4 pb-2">
             <button id="toggle-suggestions-btn" class="hidden w-full text-left text-sm text-blue-600 font-semibold p-2 rounded-lg hover:bg-blue-50 flex items-center gap-2">
@@ -318,9 +339,11 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
         const ai = getAI(app);
-        const model = getGenerativeModel(ai, { model: "gemini-1.5-flash-latest" });
+        // Changed model to gemini-2.0-flash
+        const model = getGenerativeModel(ai, { model: "gemini-2.0-flash" });
 
         let currentUserId = null;
+        let currentUserName = ''; // To store user's display name for welcome message
         let currentChatId = null;
         let chat;
         let localHistory = [];
@@ -341,7 +364,7 @@
         const authError = document.getElementById('auth-error');
         const userInfo = document.getElementById('user-info');
         const userAvatar = document.getElementById('user-avatar');
-        const userName = document.getElementById('user-name');
+        const userNameElem = document.getElementById('user-name'); // Renamed to avoid conflict
         const logoutBtn = document.getElementById('logout-btn');
         const mainHeader = document.getElementById('main-header');
         const chatContainer = document.getElementById('chat-container');
@@ -356,9 +379,12 @@
         const sidebar = document.getElementById('sidebar');
         const sidebarOverlay = document.getElementById('sidebar-overlay');
         const closeSidebarBtn = document.getElementById('close-sidebar-btn');
-        const newChatBtn = document.getElementById('new-chat-btn'); // Nút này đã được di chuyển vào sidebar
-        const savedChatsList = document.getElementById('saved-chats-list'); // List này cũng được di chuyển vào sidebar
+        const newChatBtn = document.getElementById('new-chat-btn');
+        const savedChatsList = document.getElementById('saved-chats-list');
         const savedChatsSkeleton = document.getElementById('saved-chats-skeleton');
+
+        // Welcome Message element
+        const welcomeMessageDiv = document.getElementById('welcome-message');
 
 
         const referenceBtn = document.getElementById('reference-btn');
@@ -376,15 +402,16 @@
             if (user) {
                 currentUserId = user.uid;
                 const email = user.email || '';
-                const displayName = user.displayName || email.split('@')[0];
-                userName.textContent = `Chào, ${displayName}`;
-                userAvatar.textContent = displayName.charAt(0);
+                currentUserName = user.displayName || email.split('@')[0];
+                userNameElem.textContent = `Chào, ${currentUserName}`; // Use renamed variable
+                userAvatar.textContent = currentUserName.charAt(0);
                 authContainer.classList.add('hidden');
                 appContainer.classList.remove('hidden');
-                startNewChat();
-                renderSavedChats(); // Load saved chats when user logs in
+                startNewChat(); // Will display welcome message
+                renderSavedChats();
             } else {
                 currentUserId = null;
+                currentUserName = '';
                 authContainer.classList.remove('hidden');
                 appContainer.classList.add('hidden');
             }
@@ -412,16 +439,26 @@
         function openSidebar() {
             sidebar.classList.remove('-translate-x-full');
             sidebarOverlay.classList.remove('hidden');
-            setTimeout(() => sidebarOverlay.classList.add('opacity-100'), 10); // Trigger opacity transition
-            renderSavedChats(); // Render chats every time sidebar is opened
+            setTimeout(() => sidebarOverlay.classList.add('opacity-100'), 10);
+            renderSavedChats();
         }
 
         function closeSidebar() {
             sidebar.classList.add('-translate-x-full');
             sidebarOverlay.classList.remove('opacity-100');
-            setTimeout(() => sidebarOverlay.classList.add('hidden'), 300); // Hide after transition
+            setTimeout(() => sidebarOverlay.classList.add('hidden'), 300);
         }
 
+        // Welcome Message Functions
+        function displayWelcomeMessage() {
+            chatContainer.innerHTML = ''; // Clear chat history to show welcome message
+            welcomeMessageDiv.textContent = `Chào ${currentUserName || 'bạn'},`;
+            welcomeMessageDiv.classList.remove('hidden');
+        }
+
+        function hideWelcomeMessage() {
+            welcomeMessageDiv.classList.add('hidden');
+        }
 
         function showReferenceModal(title, showInput) {
             referenceTitle.textContent = title;
@@ -429,8 +466,8 @@
             referenceModalOverlay.classList.remove('hidden');
             referenceModal.classList.remove('hidden');
             requestAnimationFrame(() => {
-                referenceModalOverlay.classList.add('opacity-100'); // Use opacity for overlay
-                referenceModal.classList.add('modal-enter-active'); // Existing class
+                referenceModalOverlay.classList.add('opacity-100');
+                referenceModal.classList.add('modal-enter-active');
             });
             if (showInput) {
                 referenceHistory = [];
@@ -574,17 +611,18 @@
                 parts: [{ text: "Đã hiểu! Tôi sẽ cung cấp các câu trả lời chi tiết, rõ ràng và được định dạng cẩn thận." }],
             }];
             chat = model.startChat({ history: initialHistory });
-            chatContainer.innerHTML = '';
+            // Instead of clearing chatContainer and adding "Xin chào!", display welcome message
+            displayWelcomeMessage();
             clearSuggestions();
-            addMessage('ai', 'Xin chào! Tôi có thể giúp gì cho bạn?');
-            closeSidebar(); // Close sidebar after starting new chat
+            closeSidebar();
         }
 
         async function loadChat(chatId) {
             if (!currentUserId) return;
 
             showHistorySkeleton(); // Show skeleton while loading
-            closeSidebar(); // Close sidebar when a chat is selected
+            hideWelcomeMessage(); // Hide welcome message when loading chat
+            closeSidebar();
 
             try {
                 const docRef = doc(db, 'chats', currentUserId, 'conversations', chatId);
@@ -616,6 +654,7 @@
         }
 
         function addMessage(role, text, shouldScroll = true) {
+            hideWelcomeMessage(); // Hide welcome message when new chat messages appear
             const messageWrapper = document.createElement('div');
             if (role === 'ai') {
                 messageWrapper.className = 'w-full space-y-2';
@@ -653,6 +692,7 @@
             sendBtn.disabled = true; recordBtn.disabled = true;
             promptInput.value = ''; adjustInputHeight();
             clearSuggestions();
+            hideWelcomeMessage(); // Ensure welcome message is hidden
             addMessage('user', promptText);
             localHistory.push({ role: 'user', parts: [{ text: promptText }] });
 
@@ -691,7 +731,8 @@
         async function getFollowUpSuggestions(lastResponse) {
             try {
                 const suggestionPrompt = `Dựa vào câu trả lời sau: "${lastResponse.substring(0, 500)}". Hãy đề xuất 3 câu hỏi tiếp theo ngắn gọn và thú vị mà người dùng có thể hỏi. QUAN TRỌNG: Chỉ trả về 3 câu hỏi, mỗi câu trên một dòng. Không đánh số, không dùng gạch đầu dòng, không thêm bất kỳ văn bản nào khác.`;
-                const suggestionModel = getGenerativeModel(ai, { model: "gemini-1.5-flash-latest" });
+                // Changed suggestionModel to gemini-2.0-flash
+                const suggestionModel = getGenerativeModel(ai, { model: "gemini-2.0-flash" });
                 const result = await suggestionModel.generateContent(suggestionPrompt);
                 const responseText = result.response.text();
                 const suggestions = responseText.split('\n').filter(s => s.trim() !== '');
@@ -731,7 +772,7 @@
                     const docRef = await addDoc(chatsCollection, chatData);
                     currentChatId = docRef.id;
                 }
-                renderSavedChats(); // Re-render sidebar to show updated/new chat
+                renderSavedChats();
             } catch (error) {
                 console.error("Lỗi khi cập nhật cuộc trò chuyện:", error);
             }
@@ -742,8 +783,8 @@
                 savedChatsList.innerHTML = '<li>Đăng nhập để xem lịch sử trò chuyện.</li>';
                 return;
             }
-            savedChatsSkeleton.classList.remove('hidden'); // Show skeleton
-            savedChatsList.innerHTML = ''; // Clear existing list
+            savedChatsSkeleton.classList.remove('hidden');
+            savedChatsList.innerHTML = '';
             const chatsCollection = collection(db, 'chats', currentUserId, 'conversations');
             const q = query(chatsCollection, orderBy('updatedAt', 'desc'));
             try {
@@ -780,7 +821,7 @@
                 console.error("Lỗi khi lấy lịch sử trò chuyện:", error);
                 savedChatsList.innerHTML = '<li class="text-red-500 text-sm">Không thể tải lịch sử.</li>';
             } finally {
-                savedChatsSkeleton.classList.add('hidden'); // Hide skeleton
+                savedChatsSkeleton.classList.add('hidden');
             }
         }
 
@@ -789,7 +830,7 @@
             try {
                 await deleteDoc(doc(db, 'chats', currentUserId, 'conversations', chatId));
                 renderSavedChats();
-                if(chatId === currentChatId) startNewChat(); // Start a new chat if the current one is deleted
+                if(chatId === currentChatId) startNewChat();
             } catch (error) {
                 console.error("Error deleting chat:", error);
             }
@@ -833,8 +874,7 @@
         menuBtn.addEventListener('click', openSidebar);
         closeSidebarBtn.addEventListener('click', closeSidebar);
         sidebarOverlay.addEventListener('click', closeSidebar);
-        newChatBtn.addEventListener('click', startNewChat); // Nút này giờ nằm trong sidebar
-        // viewChatsBtn đã bị loại bỏ, chức năng xem chats được tích hợp vào việc mở sidebar
+        newChatBtn.addEventListener('click', startNewChat);
 
         sendBtn.addEventListener('click', sendMessage);
         recordBtn.addEventListener('click', toggleRecording);
