@@ -82,6 +82,39 @@
             transition: opacity 0.3s ease-in-out;
         }
 
+        /* Recording button effect */
+        #record-btn.recording {
+            animation: pulse-red 1s infinite;
+            background-color: #ef4444; /* red-500 */
+            color: white;
+        }
+
+        @keyframes pulse-red {
+            0% {
+                box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+                transform: scale(1);
+            }
+            70% {
+                box-shadow: 0 0 0 10px rgba(239, 68, 68, 0);
+                transform: scale(1.05);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+                transform: scale(1);
+            }
+        }
+
+        /* New: Subtle shadow for input-area */
+        #input-area-wrapper {
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); /* subtle shadow for elevation */
+            border-radius: 9999px; /* apply full rounded corners to the wrapper */
+            padding: 4px; /* compensate for the p-2 on the inner div */
+            background-color: white; /* ensure background for shadow */
+            transition: box-shadow 0.2s ease-in-out; /* smooth transition for focus/hover */
+        }
+        #input-area-wrapper:focus-within {
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* slightly stronger shadow on focus */
+        }
     </style>
 
 <link rel="manifest" href="manifest.json">
@@ -198,17 +231,20 @@
         </div>
 
         <div class="p-4 bg-white border-t border-gray-200">
-            <div id="input-area" class="flex items-center gap-3 bg-gray-100 rounded-full p-2">
-                <button id="reference-btn" class="p-2 rounded-full hover:bg-gray-200 transition-colors" title="Trợ lý Phụ">
-                     <svg class="w-6 h-6 text-gray-600" xmlns="http://www.w3.org/2000/svg" enable-background="new 0 0 24 24" height="24px" viewBox="0 0 24 24" width="24px" fill="currentColor"><g><path d="M0,0h24v24H0V0z" fill="none"/></g><g><g><path d="M11,7h2v2h-2V7z M11,11h2v6h-2V11z M12,2C6.48,2,2,6.48,2,12s4.48,10,10,10s10-4.48,10-10S17.52,2,12,2z M12,20 c-4.41,0-8-3.59-8-8s3.59-8,8-8s8,3.59,8,8S16.41,20,12,20z"/></g></g></svg>
-                </button>
-                <textarea id="prompt-input" rows="1" placeholder="Nhập câu hỏi..." class="flex-1 bg-transparent px-3 py-2 resize-none focus:outline-none"></textarea>
-                <button id="record-btn" class="p-2 rounded-full hover:bg-gray-200 transition-colors" title="Ghi âm">
-                     <svg class="w-6 h-6 text-gray-600" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg>
-                </button>
-                <button id="send-btn" class="w-10 h-10 flex items-center justify-center bg-blue-600 rounded-full text-white hover:bg-blue-700 transition-colors disabled:bg-blue-300 disabled:cursor-not-allowed" title="Gửi">
-                    <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2 .01 7z"/></svg>
-                </button>
+            <!-- New wrapper for input area to apply shadow -->
+            <div id="input-area-wrapper" class="rounded-full">
+                <div id="input-area" class="flex items-center gap-3 bg-gray-100 rounded-full p-2">
+                    <button id="reference-btn" class="p-2 rounded-full hover:bg-gray-200 transition-colors" title="Trợ lý Phụ">
+                        <svg class="w-6 h-6 text-gray-600" xmlns="http://www.w3.org/2000/svg" enable-background="new 0 0 24 24" height="24px" viewBox="0 0 24 24" width="24px" fill="currentColor"><g><path d="M0,0h24v24H0V0z" fill="none"/></g><g><g><path d="M11,7h2v2h-2V7z M11,11h2v6h-2V11z M12,2C6.48,2,2,6.48,2,12s4.48,10,10,10s10-4.48,10-10S17.52,2,12,2z M12,20 c-4.41,0-8-3.59-8-8s3.59-8,8-8s8,3.59,8,8S16.41,20,12,20z"/></g></g></svg>
+                    </button>
+                    <textarea id="prompt-input" rows="1" placeholder="Nhập câu hỏi..." class="flex-1 bg-transparent px-3 py-2 resize-none focus:outline-none"></textarea>
+                    <button id="record-btn" class="p-2 rounded-full hover:bg-gray-200 transition-colors" title="Ghi âm">
+                        <svg class="w-6 h-6 text-gray-600" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg>
+                    </button>
+                    <button id="send-btn" class="w-10 h-10 flex items-center justify-center bg-blue-600 rounded-full text-white hover:bg-blue-700 transition-colors disabled:bg-blue-300 disabled:cursor-not-allowed" title="Gửi">
+                        <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2 .01 7z"/></svg>
+                    </button>
+                </div>
             </div>
         </div>
     </div>
