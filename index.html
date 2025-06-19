@@ -7,42 +7,82 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/dompurify@2.3.6/dist/purify.min.js"></script>
+    <script>
+        // Script này được đặt trong <head> để tránh hiện tượng "FOUC" (Flash of Unstyled Content)
+        // Nó sẽ áp dụng theme tối ngay lập tức nếu được lưu trong localStorage hoặc theo cài đặt hệ thống.
+        if (localStorage.getItem('color-theme') === 'dark' || (!('color-theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    </script>
     <style>
-        /* Custom scrollbar */
+        /* Custom scrollbar for light mode */
+        :root {
+            --scrollbar-track-bg: #f1f1f1;
+            --scrollbar-thumb-bg: #888;
+            --scrollbar-thumb-hover-bg: #555;
+        }
+
+        /* Custom scrollbar for dark mode */
+        .dark {
+            --scrollbar-track-bg: #2d3748; /* gray-800 */
+            --scrollbar-thumb-bg: #718096; /* gray-500 */
+            --scrollbar-thumb-hover-bg: #a0aec0; /* gray-400 */
+        }
+        
         #chat-container::-webkit-scrollbar, #reference-content::-webkit-scrollbar, #sidebar-content::-webkit-scrollbar {
             width: 6px;
         }
         #chat-container::-webkit-scrollbar-track, #reference-content::-webkit-scrollbar-track, #sidebar-content::-webkit-scrollbar-track {
-            background: #f1f1f1;
+            background: var(--scrollbar-track-bg);
         }
         #chat-container::-webkit-scrollbar-thumb, #reference-content::-webkit-scrollbar-thumb, #sidebar-content::-webkit-scrollbar-thumb {
-            background: #888;
+            background: var(--scrollbar-thumb-bg);
             border-radius: 6px;
         }
         #chat-container::-webkit-scrollbar-thumb:hover, #reference-content::-webkit-scrollbar-thumb:hover, #sidebar-content::-webkit-scrollbar-thumb:hover {
-            background: #555;
+            background: var(--scrollbar-thumb-hover-bg);
         }
 
         /* Markdown Styles */
         .message-content pre {
-            background-color: #1e293b; color: #e2e8f0;
-            padding: 1rem; border-radius: 0.5rem;
-            overflow-x: auto; font-family: 'Courier New', Courier, monospace;
+            background-color: #1e293b; /* slate-800 */
+            color: #e2e8f0; /* slate-200 */
+            padding: 1rem; 
+            border-radius: 0.5rem;
+            overflow-x: auto; 
+            font-family: 'Courier New', Courier, monospace;
+        }
+        .dark .message-content pre {
+            background-color: #0f172a; /* slate-900 */
         }
         .message-content code:not(pre > code) {
-            background-color: #e2e8f0; padding: 0.2em 0.4em;
-            margin: 0; font-size: 85%; border-radius: 3px;
+            background-color: #e2e8f0; /* slate-200 */
+            color: #1e293b; /* slate-800 */
+            padding: 0.2em 0.4em;
+            margin: 0; 
+            font-size: 85%; 
+            border-radius: 3px;
+        }
+        .dark .message-content code:not(pre > code) {
+            background-color: #334155; /* slate-700 */
+            color: #e2e8f0; /* slate-200 */
         }
         .message-content h1, .message-content h2, .message-content h3, .message-content h4 {
-            font-weight: 600; margin-top: 1rem; margin-bottom: 0.5rem;
+            font-weight: 600; 
+            margin-top: 1rem; 
+            margin-bottom: 0.5rem;
         }
         .message-content h1 { font-size: 1.5em; }
         .message-content h2 { font-size: 1.25em; }
         .message-content h3 { font-size: 1.1em; }
         .message-content p { margin-bottom: 0.75rem; }
         .message-content ul, .message-content ol {
-            margin-left: 1.25rem; margin-top: 0.5rem;
-            margin-bottom: 1rem; display: block;
+            margin-left: 1.25rem; 
+            margin-top: 0.5rem;
+            margin-bottom: 1rem; 
+            display: block;
         }
         .message-content ul { list-style-type: disc; }
         .message-content ol { list-style-type: decimal; }
@@ -50,13 +90,20 @@
         .message-content ul ul, .message-content ol ul { list-style-type: circle; margin-top: 0.5rem; }
         .message-content ul ul ul, .message-content ol ul ul { list-style-type: square; }
         .message-content blockquote {
-            border-left: 4px solid #d1d5db; padding-left: 1rem;
-            margin: 1rem 0; color: #4b5563; font-style: italic;
+            border-left: 4px solid #d1d5db; /* gray-300 */
+            padding-left: 1rem;
+            margin: 1rem 0; 
+            color: #4b5563; /* gray-600 */
+            font-style: italic;
+        }
+        .dark .message-content blockquote {
+            border-left-color: #4b5563; /* gray-600 */
+            color: #9ca3af; /* gray-400 */
         }
 
         /* Skeleton Loader CSS */
         .skeleton-box {
-            @apply bg-gray-200 rounded animate-pulse;
+            @apply bg-gray-200 dark:bg-gray-700 rounded animate-pulse;
         }
 
         /* Cập nhật: CSS cho con trỏ nhấp nháy */
@@ -64,20 +111,21 @@
             display: inline-block;
             width: 8px;
             height: 1.2em; /* Tương ứng với chiều cao dòng */
-            background-color: #333;
+            background-color: #333; /* For light mode */
             animation: blink 1s step-end infinite;
             vertical-align: text-bottom;
         }
-
+        .dark .blinking-cursor {
+            background-color: #ccc; /* For dark mode */
+        }
         @keyframes blink {
             from, to { background-color: transparent; }
-            50% { background-color: #333; }
+            50% { background-color: inherit; }
         }
 
         /* Sidebar transitions */
         #sidebar {
             transition: transform 0.3s ease-in-out;
-            /* Đảm bảo nội dung không tràn ra ngoài góc bo tròn */
             overflow: hidden;
         }
         #sidebar-overlay {
@@ -90,38 +138,35 @@
             background-color: #ef4444; /* red-500 */
             color: white;
         }
-
         @keyframes pulse-red {
-            0% {
-                box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
-                transform: scale(1);
-            }
-            70% {
-                box-shadow: 0 0 0 10px rgba(239, 68, 68, 0);
-                transform: scale(1.05);
-            }
-            100% {
-                box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
-                transform: scale(1);
-            }
+            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); transform: scale(1); }
+            70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); transform: scale(1.05); }
+            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); transform: scale(1); }
         }
 
         /* Subtle shadow for input-area */
-        .p-4 > #input-area-wrapper { /* More specific selector to ensure override */
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04); /* Adjusted to be more subtle */
-            border-radius: 9999px; /* apply full rounded corners to the wrapper */
-            padding: 4px; /* compensate for the p-2 on the inner div */
-            background-color: white; /* ensure background for shadow */
-            transition: box-shadow 0.2s ease-in-out; /* smooth transition for focus/hover */
+        .p-4 > #input-area-wrapper {
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+            border-radius: 9999px;
+            padding: 4px;
+            background-color: white; /* Changed to apply dark mode */
+            transition: box-shadow 0.2s ease-in-out;
         }
         .p-4 > #input-area-wrapper:focus-within {
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08); /* slightly stronger shadow on focus */
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+        }
+        .dark .p-4 > #input-area-wrapper {
+            background-color: #1f2937; /* gray-800 */
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+        }
+        .dark .p-4 > #input-area-wrapper:focus-within {
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
         }
 
-        /* Đảm bảo sidebar-content có thể cuộn */
+        /* Sidebar scroll */
         #sidebar-content {
-            overflow-y: scroll; /* Đã thay đổi từ auto thành scroll */
-            overflow-x: hidden; /* Ngăn chặn cuộn ngang */
+            overflow-y: scroll;
+            overflow-x: hidden;
         }
 
         /* Welcome Message Styling */
@@ -130,16 +175,19 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            font-size: 2.5rem; /* Large font size */
-            font-weight: 600; /* Semi-bold */
+            font-size: 2.5rem;
+            font-weight: 600;
             text-align: center;
-            white-space: nowrap; /* Prevent wrapping for gradient effect */
-            background-image: linear-gradient(to right, #6366f1, #9333ea); /* Indigo to Purple gradient */
+            white-space: nowrap;
+            background-image: linear-gradient(to right, #6366f1, #9333ea);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
-            color: transparent; /* Fallback for unsupported browsers */
-            pointer-events: none; /* Ensure it doesn't block clicks */
+            color: transparent;
+            pointer-events: none;
+        }
+        .dark #welcome-message {
+            background-image: linear-gradient(to right, #818cf8, #c084fc); /* Lighter gradient for dark mode */
         }
     </style>
 
@@ -148,72 +196,81 @@
 <link rel="icon" href="icon-192.png">
 
 </head>
-<body class="bg-gray-100 font-sans">
+<body class="bg-gray-100 dark:bg-gray-900 font-sans">
 
     <!-- Authentication UI -->
     <div id="auth-container" class="flex items-center justify-center h-screen">
-        <div class="bg-white p-8 rounded-xl shadow-lg w-full max-w-md m-4">
+        <div class="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg w-full max-w-md m-4">
             <div id="login-view">
-                <h2 class="text-2xl font-bold text-center text-gray-800 mb-6">Đăng nhập</h2>
+                <h2 class="text-2xl font-bold text-center text-gray-800 dark:text-gray-100 mb-6">Đăng nhập</h2>
                 <form id="login-form">
                     <div class="mb-4">
-                        <label for="login-email" class="block text-gray-700 text-sm font-bold mb-2">Email</label>
-                        <input type="email" id="login-email" required class="shadow-sm appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <label for="login-email" class="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2">Email</label>
+                        <input type="email" id="login-email" required class="shadow-sm appearance-none border dark:border-gray-600 rounded w-full py-3 px-4 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400">
                     </div>
                     <div class="mb-6">
-                        <label for="login-password" class="block text-gray-700 text-sm font-bold mb-2">Mật khẩu</label>
-                        <input type="password" id="login-password" required class="shadow-sm appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <label for="login-password" class="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2">Mật khẩu</label>
+                        <input type="password" id="login-password" required class="shadow-sm appearance-none border dark:border-gray-600 rounded w-full py-3 px-4 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400">
                     </div>
                     <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg focus:outline-none focus:shadow-outline transition-colors duration-200">Đăng nhập</button>
                 </form>
                 <div class="my-4 flex items-center">
-                    <div class="flex-grow border-t border-gray-300"></div>
-                    <span class="flex-shrink mx-4 text-gray-400">hoặc</span>
-                    <div class="flex-grow border-t border-gray-300"></div>
+                    <div class="flex-grow border-t border-gray-300 dark:border-gray-600"></div>
+                    <span class="flex-shrink mx-4 text-gray-400 dark:text-gray-500">hoặc</span>
+                    <div class="flex-grow border-t border-gray-300 dark:border-gray-600"></div>
                 </div>
-                <button id="google-login-btn" class="w-full bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-bold py-3 px-4 rounded-lg focus:outline-none focus:shadow-outline transition-colors duration-200 flex items-center justify-center">
+                <button id="google-login-btn" class="w-full bg-white dark:bg-gray-200 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-300 text-gray-700 font-bold py-3 px-4 rounded-lg focus:outline-none focus:shadow-outline transition-colors duration-200 flex items-center justify-center">
                     <svg class="w-5 h-5 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48"><path fill="#4285F4" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l8.1 6.28C12.09 13.42 17.63 9.5 24 9.5z"/><path fill="#34A853" d="M46.98 24.55c0-1.57-.15-3.09-.42-4.55H24v8.51h12.8c-.57 3.02-2.31 5.47-4.91 7.28l7.81 6.04C44.29 36.29 46.98 30.95 46.98 24.55z"/><path fill="#FBBC05" d="M10.66 28.14c-.58-1.74-.91-3.58-.91-5.48s.33-3.74.91-5.48l-8.1-6.28C.92 14.16 0 18.91 0 24s.92 9.84 2.56 13.22l8.1-6.08z"/><path fill="#EA4335" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.81-6.04c-2.18 1.47-4.96 2.34-8.08 2.34-6.37 0-11.91-3.92-13.84-9.3l-8.1 6.28C6.51 42.62 14.62 48 24 48z"/><path fill="none" d="M0 0h48v48H0z"/></svg>
                     Đăng nhập với Google
                 </button>
                 <p class="text-center mt-6 text-sm">
-                    <a href="#" class="font-medium text-blue-600 hover:text-blue-500" id="show-register">Chưa có tài khoản? Đăng ký ngay</a>
+                    <a href="#" class="font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300" id="show-register">Chưa có tài khoản? Đăng ký ngay</a>
                 </p>
             </div>
             <div id="register-view" class="hidden">
-                 <h2 class="text-2xl font-bold text-center text-gray-800 mb-6">Tạo tài khoản</h2>
+                 <h2 class="text-2xl font-bold text-center text-gray-800 dark:text-gray-100 mb-6">Tạo tài khoản</h2>
                 <form id="register-form">
                     <div class="mb-4">
-                        <label for="register-email" class="block text-gray-700 text-sm font-bold mb-2">Email</label>
-                        <input type="email" id="register-email" required class="shadow-sm appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <label for="register-email" class="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2">Email</label>
+                        <input type="email" id="register-email" required class="shadow-sm appearance-none border dark:border-gray-600 rounded w-full py-3 px-4 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400">
                     </div>
                     <div class="mb-6">
-                        <label for="register-password" class="block text-gray-700 text-sm font-bold mb-2">Mật khẩu</label>
-                        <input type="password" id="register-password" required class="shadow-sm appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <label for="register-password" class="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2">Mật khẩu</label>
+                        <input type="password" id="register-password" required class="shadow-sm appearance-none border dark:border-gray-600 rounded w-full py-3 px-4 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400">
                     </div>
                     <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg focus:outline-none focus:shadow-outline transition-colors duration-200">Đăng ký</button>
                 </form>
                 <p class="text-center mt-6 text-sm">
-                    <a href="#" class="font-medium text-blue-600 hover:text-blue-500" id="show-login">Đã có tài khoản? Đăng nhập</a>
+                    <a href="#" class="font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300" id="show-login">Đã có tài khoản? Đăng nhập</a>
                 </p>
             </div>
-            <p id="auth-error" class="text-red-500 text-center mt-4 min-h-[1.2em]"></p>
+            <p id="auth-error" class="text-red-500 dark:text-red-400 text-center mt-4 min-h-[1.2em]"></p>
         </div>
     </div>
 
     <!-- Main App UI (hidden by default) -->
-    <div id="app-container" class="hidden flex flex-col h-screen bg-gray-50">
-        <header id="main-header" class="flex-shrink-0 flex justify-between items-center p-3 sm:p-4 bg-white border-b border-gray-200">
+    <div id="app-container" class="hidden flex flex-col h-screen bg-gray-50 dark:bg-slate-900">
+        <header id="main-header" class="flex-shrink-0 flex justify-between items-center p-3 sm:p-4 bg-white dark:bg-slate-800 border-b border-gray-200 dark:border-slate-700">
             <!-- Nút Menu để mở Sidebar -->
-            <button id="menu-btn" class="p-2 rounded-full hover:bg-gray-100 transition-colors" title="Menu">
-                <svg class="w-6 h-6 text-gray-600" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="currentColor"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
+            <button id="menu-btn" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors" title="Menu">
+                <svg class="w-6 h-6 text-gray-600 dark:text-gray-300" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="currentColor"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
             </button>
 
             <div id="user-info" class="flex items-center gap-3">
                  <span id="user-avatar" class="w-9 h-9 rounded-full bg-blue-500 text-white flex items-center justify-center text-sm font-bold uppercase"></span>
-                 <span id="user-name" class="text-sm font-medium text-gray-700 hidden sm:block"></span>
+                 <span id="user-name" class="text-sm font-medium text-gray-700 dark:text-gray-200 hidden sm:block"></span>
             </div>
             <div class="flex items-center gap-1 sm:gap-2">
-                <button id="logout-btn" class="p-2 rounded-full hover:bg-red-50 transition-colors" title="Đăng xuất">
+                <!-- NÚT DARK MODE TOGGLE MỚI -->
+                <button id="theme-toggle" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors" title="Chuyển chế độ Sáng/Tối">
+                    <svg id="theme-toggle-dark-icon" class="hidden w-5 h-5 text-gray-600 dark:text-gray-300" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path>
+                    </svg>
+                    <svg id="theme-toggle-light-icon" class="hidden w-5 h-5 text-gray-600 dark:text-gray-300" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 14.95a1 1 0 010-1.414l.707-.707a1 1 0 011.414 1.414l-.707.707a1 1 0 01-1.414 0zM3 11a1 1 0 100-2H2a1 1 0 100 2h1z" clip-rule="evenodd"></path>
+                    </svg>
+                </button>
+                <button id="logout-btn" class="p-2 rounded-full hover:bg-red-50 dark:hover:bg-red-900/50 transition-colors" title="Đăng xuất">
                     <svg class="w-6 h-6 text-red-500" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="currentColor"><path d="M0 0h24v24H0V0z" fill="none" opacity=".87"/><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5-5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg>
                 </button>
             </div>
@@ -223,54 +280,51 @@
         <div id="sidebar-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden opacity-0 transition-opacity duration-300 ease-in-out"></div>
 
         <!-- Sidebar -->
-        <div id="sidebar" class="fixed top-0 left-0 h-screen w-[calc(100vw-56px)] sm:w-64 md:w-72 bg-white shadow-xl z-50 transform -translate-x-full flex flex-col lg:translate-x-0 lg:static lg:w-72 lg:border-r border-gray-200 rounded-r-2xl">
-            <div class="p-4 border-b border-gray-200 flex items-center justify-between lg:hidden">
-                <h2 class="text-lg font-semibold">Menu</h2>
-                <button id="close-sidebar-btn" class="p-2 rounded-full hover:bg-gray-200">
-                    <svg class="w-6 h-6 text-gray-600" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="currentColor"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/></svg>
+        <div id="sidebar" class="fixed top-0 left-0 h-screen w-[calc(100vw-56px)] sm:w-64 md:w-72 bg-white dark:bg-slate-800 shadow-xl z-50 transform -translate-x-full flex flex-col lg:translate-x-0 lg:static lg:w-72 lg:border-r border-gray-200 dark:border-slate-700 rounded-r-2xl">
+            <div class="p-4 border-b border-gray-200 dark:border-slate-700 flex items-center justify-between lg:hidden">
+                <h2 class="text-lg font-semibold dark:text-gray-100">Menu</h2>
+                <button id="close-sidebar-btn" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-slate-700">
+                    <svg class="w-6 h-6 text-gray-600 dark:text-gray-300" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="currentColor"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/></svg>
                 </button>
             </div>
             <div id="sidebar-content" class="flex-1 overflow-y-scroll overflow-x-hidden p-4">
-                <button id="new-chat-btn" class="w-full flex items-center gap-3 p-3 rounded-lg border border-blue-200 hover:bg-blue-50 transition-colors text-blue-700 font-semibold mb-4">
+                <button id="new-chat-btn" class="w-full flex items-center gap-3 p-3 rounded-lg border border-blue-200 dark:border-slate-600 hover:bg-blue-50 dark:hover:bg-slate-700 transition-colors text-blue-700 dark:text-blue-400 font-semibold mb-4">
                     <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="currentColor"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M14.06 9.02l.92.92L5.92 19H5v-.92l9.06-9.06M17.66 3c-.25 0-.51.1-.7.29l-1.83 1.83 3.75 3.75 1.83-1.83c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.2-.2-.45-.29-.71-.29zm-3.6 3.19L3 17.25V21h3.75L17.81 9.94l-3.75-3.75z"/></svg>
                     Trò chuyện mới
                 </button>
-                <h3 class="text-sm font-semibold text-gray-500 mb-2 uppercase">Lịch sử</h3>
+                <h3 class="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-2 uppercase">Lịch sử</h3>
                 <ul id="saved-chats-list" class="space-y-1"></ul>
-                <!-- Skeleton loader for saved chats -->
                 <div id="saved-chats-skeleton" class="space-y-2 mt-4 hidden">
-                    <div class="h-8 bg-gray-200 rounded animate-pulse w-11/12"></div>
-                    <div class="h-8 bg-gray-200 rounded animate-pulse w-10/12"></div>
-                    <div class="h-8 bg-gray-200 rounded animate-pulse w-9/12"></div>
+                    <div class="h-8 bg-gray-200 dark:bg-slate-700 rounded animate-pulse w-11/12"></div>
+                    <div class="h-8 bg-gray-200 dark:bg-slate-700 rounded animate-pulse w-10/12"></div>
+                    <div class="h-8 bg-gray-200 dark:bg-slate-700 rounded animate-pulse w-9/12"></div>
                 </div>
             </div>
         </div>
 
         <div id="chat-container" class="flex-1 px-4 pt-4 space-y-4 overflow-y-auto relative">
-            <!-- Welcome Message - Initially hidden, displayed by JS -->
             <div id="welcome-message" class="hidden"></div>
         </div>
 
         <div id="suggestion-area" class="px-4 pb-2">
-            <button id="toggle-suggestions-btn" class="hidden w-full text-left text-sm text-blue-600 font-semibold p-2 rounded-lg hover:bg-blue-50 flex items-center gap-2">
+            <button id="toggle-suggestions-btn" class="hidden w-full text-left text-sm text-blue-600 dark:text-blue-400 font-semibold p-2 rounded-lg hover:bg-blue-50 dark:hover:bg-slate-800 flex items-center gap-2">
                 <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" enable-background="new 0 0 24 24" height="24px" viewBox="0 0 24 24" width="24px" fill="currentColor"><g><rect fill="none" height="24" width="24"/></g><g><g><path d="M4,18h11c0.55,0,1-0.45,1-1v-2c0-0.55-0.45-1-1-1H4c-0.55,0-1,0.45-1,1v2C3,17.55,3.45,18,4,18z M3,7c0,0.55,0.45,1,1,1 h11c0.55,0,1-0.45,1-1V5c0-0.55-0.45-1-1-1H4C3.45,4,3,4.45,3,5V7z M4,13h11c0.55,0,1-0.45,1-1v-2c0-0.55-0.45-1-1-1H4 c-0.55,0-1,0.45-1,1v2C3,12.55,3.45,13,4,13z M19.5,4.5L19.5,4.5c0.47,0.47,0.47,1.23,0,1.7l-4.08,4.08 c-0.47,0.47-1.23,0.47-1.7,0l0,0c-0.47-0.47-0.47-1.23,0-1.7l4.08-4.08C18.27,4.03,19.03,4.03,19.5,4.5z M19.5,17.82 c0.47-0.47,1.23-0.47,1.7,0l0,0c0.47,0.47,0.47,1.23,0,1.7l-4.08,4.08c-0.47,0.47-1.23,0.47-1.7,0l0,0c-0.47-0.47-0.47-1.23,0-1.7 L19.5,17.82z"/></g></g></svg>
                 Xem gợi ý
             </button>
             <div id="suggestions-container" class="hidden mt-2 flex flex-wrap gap-2"></div>
         </div>
 
-        <div class="p-4 bg-white border-t border-gray-200">
-            <!-- New wrapper for input area to apply shadow -->
+        <div class="p-4 bg-white dark:bg-slate-800 border-t border-gray-200 dark:border-slate-700">
             <div id="input-area-wrapper" class="rounded-full">
-                <div id="input-area" class="flex items-center gap-3 bg-gray-100 rounded-full p-2">
-                    <button id="reference-btn" class="p-2 rounded-full hover:bg-gray-200 transition-colors" title="Trợ lý Phụ">
-                        <svg class="w-6 h-6 text-gray-600" xmlns="http://www.w3.org/2000/svg" enable-background="new 0 0 24 24" height="24px" viewBox="0 0 24 24" width="24px" fill="currentColor"><g><path d="M0,0h24v24H0V0z" fill="none"/></g><g><g><path d="M11,7h2v2h-2V7z M11,11h2v6h-2V11z M12,2C6.48,2,2,6.48,2,12s4.48,10,10,10s10-4.48,10-10S17.52,2,12,2z M12,20 c-4.41,0-8-3.59-8-8s3.59-8,8-8s8,3.59,8,8S16.41,20,12,20z"/></g></g></svg>
+                <div id="input-area" class="flex items-center gap-3 bg-gray-100 dark:bg-slate-700 rounded-full p-2">
+                    <button id="reference-btn" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-slate-600 transition-colors" title="Trợ lý Phụ">
+                        <svg class="w-6 h-6 text-gray-600 dark:text-gray-300" xmlns="http://www.w3.org/2000/svg" enable-background="new 0 0 24 24" height="24px" viewBox="0 0 24 24" width="24px" fill="currentColor"><g><path d="M0,0h24v24H0V0z" fill="none"/></g><g><g><path d="M11,7h2v2h-2V7z M11,11h2v6h-2V11z M12,2C6.48,2,2,6.48,2,12s4.48,10,10,10s10-4.48,10-10S17.52,2,12,2z M12,20 c-4.41,0-8-3.59-8-8s3.59-8,8-8s8,3.59,8,8S16.41,20,12,20z"/></g></g></svg>
                     </button>
-                    <textarea id="prompt-input" rows="1" placeholder="Nhập câu hỏi..." class="flex-1 bg-transparent px-3 py-2 resize-none focus:outline-none"></textarea>
-                    <button id="record-btn" class="p-2 rounded-full hover:bg-gray-200 transition-colors" title="Ghi âm">
-                        <svg class="w-6 h-6 text-gray-600" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg>
+                    <textarea id="prompt-input" rows="1" placeholder="Nhập câu hỏi..." class="flex-1 bg-transparent px-3 py-2 resize-none focus:outline-none dark:text-gray-200 dark:placeholder-gray-400"></textarea>
+                    <button id="record-btn" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-slate-600 transition-colors" title="Ghi âm">
+                        <svg class="w-6 h-6 text-gray-600 dark:text-gray-300" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg>
                     </button>
-                    <button id="send-btn" class="w-10 h-10 flex items-center justify-center bg-blue-600 rounded-full text-white hover:bg-blue-700 transition-colors disabled:bg-blue-300 disabled:cursor-not-allowed" title="Gửi">
+                    <button id="send-btn" class="w-10 h-10 flex items-center justify-center bg-blue-600 rounded-full text-white hover:bg-blue-700 transition-colors disabled:bg-blue-300 dark:disabled:bg-blue-800 disabled:cursor-not-allowed" title="Gửi">
                         <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2 .01 7z"/></svg>
                     </button>
                 </div>
@@ -280,17 +334,17 @@
 
     <!-- Reference Modal (Bottom Sheet) -->
     <div id="reference-modal-overlay" class="hidden fixed inset-0 bg-black bg-opacity-50 z-40 transition-opacity duration-300 ease-in-out"></div>
-    <div id="reference-modal" class="hidden fixed bottom-0 left-0 right-0 bg-white rounded-t-2xl shadow-2xl z-50 flex flex-col transform transition-transform duration-300 ease-in-out" style="max-height: 85vh;">
-        <div id="reference-header" class="flex justify-between items-center p-4 border-b border-gray-200 flex-shrink-0">
-            <h2 id="reference-title" class="text-lg font-semibold text-gray-800">Trợ lý Phụ</h2>
-            <button id="close-reference-modal-btn" class="p-2 rounded-full hover:bg-gray-200">
-                <svg class="w-6 h-6 text-gray-600" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="currentColor"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/></svg>
+    <div id="reference-modal" class="hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-800 rounded-t-2xl shadow-2xl z-50 flex flex-col transform transition-transform duration-300 ease-in-out" style="max-height: 85vh;">
+        <div id="reference-header" class="flex justify-between items-center p-4 border-b border-gray-200 dark:border-slate-700 flex-shrink-0">
+            <h2 id="reference-title" class="text-lg font-semibold text-gray-800 dark:text-gray-100">Trợ lý Phụ</h2>
+            <button id="close-reference-modal-btn" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-slate-700">
+                <svg class="w-6 h-6 text-gray-600 dark:text-gray-300" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="currentColor"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/></svg>
             </button>
         </div>
         <div id="reference-content" class="p-4 overflow-y-auto flex-1 space-y-4"></div>
-        <div id="reference-input-area" class="p-4 bg-white border-t border-gray-200 flex-shrink-0">
-            <div class="flex items-center gap-3 bg-gray-100 rounded-full p-2">
-                <textarea id="reference-prompt-input" rows="1" placeholder="Hỏi trợ lý phụ..." class="flex-1 bg-transparent px-3 py-2 resize-none focus:outline-none"></textarea>
+        <div id="reference-input-area" class="p-4 bg-white dark:bg-slate-800 border-t border-gray-200 dark:border-slate-700 flex-shrink-0">
+            <div class="flex items-center gap-3 bg-gray-100 dark:bg-slate-700 rounded-full p-2">
+                <textarea id="reference-prompt-input" rows="1" placeholder="Hỏi trợ lý phụ..." class="flex-1 bg-transparent px-3 py-2 resize-none focus:outline-none dark:text-gray-200 dark:placeholder-gray-400"></textarea>
                 <button id="reference-send-btn" class="w-10 h-10 flex items-center justify-center bg-blue-600 rounded-full text-white hover:bg-blue-700 transition-colors" title="Gửi">
                     <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2 .01 7z"/></svg>
                 </button>
@@ -339,11 +393,10 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
         const ai = getAI(app);
-        // Changed model to gemini-2.0-flash
         const model = getGenerativeModel(ai, { model: "gemini-2.5-flash" });
 
         let currentUserId = null;
-        let currentUserName = ''; // To store user's display name for welcome message
+        let currentUserName = ''; 
         let currentChatId = null;
         let chat;
         let localHistory = [];
@@ -364,7 +417,7 @@
         const authError = document.getElementById('auth-error');
         const userInfo = document.getElementById('user-info');
         const userAvatar = document.getElementById('user-avatar');
-        const userNameElem = document.getElementById('user-name'); // Renamed to avoid conflict
+        const userNameElem = document.getElementById('user-name');
         const logoutBtn = document.getElementById('logout-btn');
         const mainHeader = document.getElementById('main-header');
         const chatContainer = document.getElementById('chat-container');
@@ -374,7 +427,6 @@
         const sendBtn = document.getElementById('send-btn');
         const recordBtn = document.getElementById('record-btn');
 
-        // Sidebar elements
         const menuBtn = document.getElementById('menu-btn');
         const sidebar = document.getElementById('sidebar');
         const sidebarOverlay = document.getElementById('sidebar-overlay');
@@ -383,9 +435,7 @@
         const savedChatsList = document.getElementById('saved-chats-list');
         const savedChatsSkeleton = document.getElementById('saved-chats-skeleton');
 
-        // Welcome Message element
         const welcomeMessageDiv = document.getElementById('welcome-message');
-
 
         const referenceBtn = document.getElementById('reference-btn');
         const referenceModalOverlay = document.getElementById('reference-modal-overlay');
@@ -397,17 +447,42 @@
         const referenceInputArea = document.getElementById('reference-input-area');
         const referencePromptInput = document.getElementById('reference-prompt-input');
         const referenceSendBtn = document.getElementById('reference-send-btn');
+        
+        // --- LOGIC DARK MODE ---
+        const themeToggleBtn = document.getElementById('theme-toggle');
+        const themeToggleDarkIcon = document.getElementById('theme-toggle-dark-icon');
+        const themeToggleLightIcon = document.getElementById('theme-toggle-light-icon');
+
+        const updateThemeIcon = () => {
+            if (document.documentElement.classList.contains('dark')) {
+                themeToggleDarkIcon.classList.add('hidden');
+                themeToggleLightIcon.classList.remove('hidden');
+            } else {
+                themeToggleDarkIcon.classList.remove('hidden');
+                themeToggleLightIcon.classList.add('hidden');
+            }
+        };
+
+        themeToggleBtn.addEventListener('click', () => {
+            document.documentElement.classList.toggle('dark');
+            localStorage.setItem('color-theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light');
+            updateThemeIcon();
+        });
+        
+        updateThemeIcon(); // Cập nhật icon lúc tải trang
+        // --- KẾT THÚC LOGIC DARK MODE ---
+
 
         onAuthStateChanged(auth, user => {
             if (user) {
                 currentUserId = user.uid;
                 const email = user.email || '';
                 currentUserName = user.displayName || email.split('@')[0];
-                userNameElem.textContent = `Chào bạn, ${currentUserName}`; // Use renamed variable
+                userNameElem.textContent = `Chào bạn, ${currentUserName}`;
                 userAvatar.textContent = currentUserName.charAt(0);
                 authContainer.classList.add('hidden');
                 appContainer.classList.remove('hidden');
-                startNewChat(); // Will display welcome message
+                startNewChat(); 
                 renderSavedChats();
             } else {
                 currentUserId = null;
@@ -435,7 +510,6 @@
             recognition.onerror = (event) => { addMessage('ai', `**Lỗi ghi âm:** ${event.error}. Vui lòng thử lại.`); };
         } else { recordBtn.classList.add('hidden'); }
 
-        // Sidebar functions
         function openSidebar() {
             sidebar.classList.remove('-translate-x-full');
             sidebarOverlay.classList.remove('hidden');
@@ -449,10 +523,9 @@
             setTimeout(() => sidebarOverlay.classList.add('hidden'), 300);
         }
 
-        // Welcome Message Functions
         function displayWelcomeMessage() {
-            chatContainer.innerHTML = ''; // Clear existing messages
-            chatContainer.appendChild(welcomeMessageDiv); // Re-append welcome message div
+            chatContainer.innerHTML = ''; 
+            chatContainer.appendChild(welcomeMessageDiv); 
             welcomeMessageDiv.textContent = `Chào bạn ${currentUserName || 'bạn'},`;
             welcomeMessageDiv.classList.remove('hidden');
         }
@@ -502,9 +575,9 @@
                         <div class="w-7 h-7 rounded-full flex-shrink-0 bg-gradient-to-tr from-green-400 to-cyan-500 flex items-center justify-center">
                             <svg class="w-4 h-4 text-white" xmlns="http://www.w3.org/2000/svg" enable-background="new 0 0 24 24" height="24px" viewBox="0 0 24 24" width="24px" fill="currentColor"><g><rect fill="none" height="24" width="24"/></g><g><g><path d="M11,7h2v2h-2V7z M11,11h2v6h-2V11z M12,2C6.48,2,2,6.48,2,12s4.48,10,10,10s10-4.48,10-10S17.52,2,12,2z M12,20 c-4.41,0-8-3.59-8-8s3.59-8,8-8s8,3.59,8,8S16.41,20,12,20z"/></g></g></svg>
                         </div>
-                        <span class="font-semibold text-gray-800">Trợ lý Phụ</span>
+                        <span class="font-semibold text-gray-800 dark:text-gray-200">Trợ lý Phụ</span>
                     </div>
-                    <div class="message-content text-gray-800"></div>`;
+                    <div class="message-content text-gray-800 dark:text-gray-200"></div>`;
                 const contentElem = messageWrapper.querySelector('.message-content');
                 contentElem.innerHTML = DOMPurify.sanitize(marked.parse(text));
                 referenceContent.appendChild(messageWrapper);
@@ -612,7 +685,6 @@
                 parts: [{ text: "Đã hiểu! Tôi sẽ cung cấp các câu trả lời chi tiết, rõ ràng và được định dạng cẩn thận." }],
             }];
             chat = model.startChat({ history: initialHistory });
-            // Instead of clearing chatContainer and adding "Xin chào!", display welcome message
             displayWelcomeMessage();
             clearSuggestions();
             closeSidebar();
@@ -621,8 +693,8 @@
         async function loadChat(chatId) {
             if (!currentUserId) return;
 
-            showHistorySkeleton(); // Show skeleton while loading
-            hideWelcomeMessage(); // Hide welcome message when loading chat
+            showHistorySkeleton(); 
+            hideWelcomeMessage(); 
             closeSidebar();
 
             try {
@@ -633,12 +705,8 @@
                     localHistory = chatDoc.data().history || [];
                     currentChatId = chatDoc.id;
                     chat = model.startChat({ history: localHistory });
-
-                    chatContainer.innerHTML = ''; // Clear all existing messages
-                    // No need to re-append welcomeMessageDiv here, it's just hidden
-
+                    chatContainer.innerHTML = ''; 
                     clearSuggestions();
-
                     localHistory.forEach(msg => {
                         if (msg.role === 'user' && msg.parts[0].text.includes("**Chỉ thị hệ thống:**")) return;
                         if (msg.role === 'model' && msg.parts[0].text.startsWith("Đã hiểu!")) return;
@@ -657,7 +725,7 @@
         }
 
         function addMessage(role, text, shouldScroll = true) {
-            hideWelcomeMessage(); // Hide welcome message when new chat messages appear
+            hideWelcomeMessage();
             const messageWrapper = document.createElement('div');
             if (role === 'ai') {
                 messageWrapper.className = 'w-full space-y-2';
@@ -666,9 +734,9 @@
                         <div class="w-7 h-7 rounded-full flex-shrink-0 bg-gradient-to-tr from-purple-400 to-indigo-500 flex items-center justify-center">
                            <svg class="w-4 h-4 text-white" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="currentColor"><path d="M12 6c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6 2.69-6 6-6m0-2c-4.42 0-8 3.58-8 8s3.58 8 8 8 8-3.58 8-8-3.58-8-8-8z"/><path d="M12 10c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>
                         </div>
-                        <span class="font-semibold text-gray-800">Gemini</span>
+                        <span class="font-semibold text-gray-800 dark:text-gray-200">Gemini</span>
                     </div>
-                    <div class="message-content text-gray-800"></div>`;
+                    <div class="message-content text-gray-800 dark:text-gray-200"></div>`;
                 const contentElem = messageWrapper.querySelector('.message-content');
                 contentElem.innerHTML = DOMPurify.sanitize(marked.parse(text));
                 chatContainer.appendChild(messageWrapper);
@@ -678,7 +746,7 @@
                 return { messageWrapper, contentElem };
             } else {
                 messageWrapper.className = 'flex justify-end';
-                messageWrapper.innerHTML = `<div class="message-content px-4 py-2 rounded-2xl bg-blue-600 text-white max-w-xs sm:max-w-md lg:max-w-2xl"></div>`;
+                messageWrapper.innerHTML = `<div class="message-content px-4 py-2 rounded-2xl bg-blue-600 dark:bg-blue-700 text-white max-w-xs sm:max-w-md lg:max-w-2xl"></div>`;
                 const contentElem = messageWrapper.querySelector('.message-content');
                 contentElem.innerHTML = DOMPurify.sanitize(marked.parse(text));
                 chatContainer.appendChild(messageWrapper);
@@ -695,7 +763,7 @@
             sendBtn.disabled = true; recordBtn.disabled = true;
             promptInput.value = ''; adjustInputHeight();
             clearSuggestions();
-            hideWelcomeMessage(); // Ensure welcome message is hidden
+            hideWelcomeMessage();
             addMessage('user', promptText);
             localHistory.push({ role: 'user', parts: [{ text: promptText }] });
 
@@ -734,7 +802,6 @@
         async function getFollowUpSuggestions(lastResponse) {
             try {
                 const suggestionPrompt = `Dựa vào câu trả lời sau: "${lastResponse.substring(0, 500)}". Hãy đề xuất 3 câu hỏi tiếp theo ngắn gọn và thú vị mà người dùng có thể hỏi. QUAN TRỌNG: Chỉ trả về 3 câu hỏi, mỗi câu trên một dòng. Không đánh số, không dùng gạch đầu dòng, không thêm bất kỳ văn bản nào khác.`;
-                // Changed suggestionModel to gemini-2.0-flash
                 const suggestionModel = getGenerativeModel(ai, { model: "gemini-2.5-flash" });
                 const result = await suggestionModel.generateContent(suggestionPrompt);
                 const responseText = result.response.text();
@@ -751,7 +818,7 @@
                 toggleSuggestionsBtn.classList.remove('hidden');
                 suggestions.forEach(suggestionText => {
                     const chip = document.createElement('button');
-                    chip.className = 'suggestion-chip border border-blue-200 bg-blue-50 text-blue-700 rounded-full px-3 py-1 text-sm hover:bg-blue-100 transition-colors';
+                    chip.className = 'suggestion-chip border border-blue-200 dark:border-slate-600 bg-blue-50 dark:bg-slate-700 text-blue-700 dark:text-blue-400 rounded-full px-3 py-1 text-sm hover:bg-blue-100 dark:hover:bg-slate-600 transition-colors';
                     chip.textContent = suggestionText;
                     chip.onclick = () => { getSuggestedAnswer(suggestionText); };
                     suggestionsContainer.appendChild(chip);
@@ -783,7 +850,7 @@
 
         async function renderSavedChats() {
             if (!currentUserId) {
-                savedChatsList.innerHTML = '<li>Đăng nhập để xem lịch sử trò chuyện.</li>';
+                savedChatsList.innerHTML = '<li class="text-gray-500 dark:text-gray-400">Đăng nhập để xem lịch sử trò chuyện.</li>';
                 return;
             }
             savedChatsSkeleton.classList.remove('hidden');
@@ -793,16 +860,16 @@
             try {
                 const querySnapshot = await getDocs(q);
                 if (querySnapshot.empty) {
-                    savedChatsList.innerHTML = '<li class="text-gray-500 text-sm">Chưa có cuộc trò chuyện nào.</li>';
+                    savedChatsList.innerHTML = '<li class="text-gray-500 dark:text-gray-400 text-sm">Chưa có cuộc trò chuyện nào.</li>';
                 } else {
                     querySnapshot.forEach(doc => {
                         const chatItem = doc.data();
                         const li = document.createElement('li');
-                        li.className = "p-2 hover:bg-gray-100 cursor-pointer flex justify-between items-center rounded-md";
+                        li.className = "p-2 hover:bg-gray-100 dark:hover:bg-slate-700 cursor-pointer flex justify-between items-center rounded-md";
 
                         const titleSpan = document.createElement('span');
                         titleSpan.textContent = chatItem.title;
-                        titleSpan.className = "flex-1 truncate pr-2 text-gray-800";
+                        titleSpan.className = "flex-1 truncate pr-2 text-gray-800 dark:text-gray-200";
                         li.appendChild(titleSpan);
 
                         const deleteBtn = document.createElement('button');
@@ -839,7 +906,6 @@
             }
         }
 
-        // Giữ lại hàm này cho việc tải lịch sử chat (skeleton loader trong main chat area)
         function showHistorySkeleton() {
             chatContainer.innerHTML = '';
             const skeletonHTML = `
