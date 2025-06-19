@@ -304,6 +304,12 @@
 
         <div id="chat-container" class="flex-1 px-4 pt-4 space-y-4 overflow-y-auto relative">
             <div id="welcome-message" class="hidden"></div>
+            <!-- Notification Area for Summarization -->
+            <div id="notification-area" class="hidden sticky bottom-2 w-full flex justify-center">
+                <div class="bg-blue-100 dark:bg-slate-700 text-blue-800 dark:text-blue-200 text-xs font-semibold px-4 py-2 rounded-full shadow-lg">
+                    Đang tối ưu hóa cuộc trò chuyện...
+                </div>
+            </div>
         </div>
 
         <div id="suggestion-area" class="px-4 pb-2">
@@ -403,6 +409,7 @@
         let isRecording = false;
         let referenceChat;
         let referenceHistory = [];
+        let isSummarizing = false; // Flag to prevent multiple summaries
         const formattingInstruction = "**Chỉ thị hệ thống:** Mục tiêu chính của bạn là đưa ra câu trả lời rõ ràng, chi tiết và có cấu trúc tốt. Luôn sử dụng Markdown để định dạng (tiêu đề, danh sách, in đậm). Hãy giải thích các khái niệm từng bước, bắt đầu bằng tóm tắt rồi đi vào chi tiết và ví dụ.";
 
         const authContainer = document.getElementById('auth-container');
@@ -426,6 +433,7 @@
         const promptInput = document.getElementById('prompt-input');
         const sendBtn = document.getElementById('send-btn');
         const recordBtn = document.getElementById('record-btn');
+        const notificationArea = document.getElementById('notification-area');
 
         const menuBtn = document.getElementById('menu-btn');
         const sidebar = document.getElementById('sidebar');
@@ -448,7 +456,7 @@
         const referencePromptInput = document.getElementById('reference-prompt-input');
         const referenceSendBtn = document.getElementById('reference-send-btn');
         
-        // --- LOGIC DARK MODE ---
+        // --- DARK MODE LOGIC ---
         const themeToggleBtn = document.getElementById('theme-toggle');
         const themeToggleDarkIcon = document.getElementById('theme-toggle-dark-icon');
         const themeToggleLightIcon = document.getElementById('theme-toggle-light-icon');
@@ -469,8 +477,8 @@
             updateThemeIcon();
         });
         
-        updateThemeIcon(); // Cập nhật icon lúc tải trang
-        // --- KẾT THÚC LOGIC DARK MODE ---
+        updateThemeIcon();
+        // --- END DARK MODE LOGIC ---
 
 
         onAuthStateChanged(auth, user => {
@@ -526,6 +534,7 @@
         function displayWelcomeMessage() {
             chatContainer.innerHTML = ''; 
             chatContainer.appendChild(welcomeMessageDiv); 
+            chatContainer.appendChild(notificationArea); // Ensure notification area is there
             welcomeMessageDiv.textContent = `Chào bạn ${currentUserName || 'bạn'},`;
             welcomeMessageDiv.classList.remove('hidden');
         }
@@ -677,14 +686,15 @@
             localHistory = [];
             referenceHistory = [];
             referenceChat = null;
-            const initialHistory = [{
+            // The initial history is now stored in localHistory to be saved to DB
+            localHistory = [{
                 role: "user",
                 parts: [{ text: formattingInstruction }],
             }, {
                 role: "model",
                 parts: [{ text: "Đã hiểu! Tôi sẽ cung cấp các câu trả lời chi tiết, rõ ràng và được định dạng cẩn thận." }],
             }];
-            chat = model.startChat({ history: initialHistory });
+            chat = model.startChat({ history: localHistory });
             displayWelcomeMessage();
             clearSuggestions();
             closeSidebar();
@@ -706,10 +716,16 @@
                     currentChatId = chatDoc.id;
                     chat = model.startChat({ history: localHistory });
                     chatContainer.innerHTML = ''; 
+                    chatContainer.appendChild(notificationArea); // Re-append notification area
+
                     clearSuggestions();
                     localHistory.forEach(msg => {
+                        // Don't display any system messages, including summaries or initial prompts
+                        if (msg.role === 'system') return;
+                        // For backward compatibility, also hide old instruction format
                         if (msg.role === 'user' && msg.parts[0].text.includes("**Chỉ thị hệ thống:**")) return;
                         if (msg.role === 'model' && msg.parts[0].text.startsWith("Đã hiểu!")) return;
+                        
                         const role = msg.role === 'model' ? 'ai' : 'user';
                         addMessage(role, msg.parts[0].text, false);
                     });
@@ -739,7 +755,7 @@
                     <div class="message-content text-gray-800 dark:text-gray-200"></div>`;
                 const contentElem = messageWrapper.querySelector('.message-content');
                 contentElem.innerHTML = DOMPurify.sanitize(marked.parse(text));
-                chatContainer.appendChild(messageWrapper);
+                chatContainer.insertBefore(messageWrapper, notificationArea);
                 if (shouldScroll) {
                     messageWrapper.scrollIntoView({ behavior: "smooth", block: "end" });
                 }
@@ -749,17 +765,70 @@
                 messageWrapper.innerHTML = `<div class="message-content px-4 py-2 rounded-2xl bg-blue-600 dark:bg-blue-700 text-white max-w-xs sm:max-w-md lg:max-w-2xl"></div>`;
                 const contentElem = messageWrapper.querySelector('.message-content');
                 contentElem.innerHTML = DOMPurify.sanitize(marked.parse(text));
-                chatContainer.appendChild(messageWrapper);
+                chatContainer.insertBefore(messageWrapper, notificationArea);
                 if(shouldScroll) {
                     messageWrapper.scrollIntoView({ behavior: "smooth", block: "end" });
                 }
                 return { messageWrapper, contentElem };
             }
         }
+        
+        // --- NEW CONTEXT MANAGEMENT FUNCTION ---
+        async function summarizeAndShortenHistory(history) {
+            const originalFirstMessages = history.slice(0, 2); // Keep initial instructions
+            const conversation = history.slice(2); // The actual chat to work with
+            if (conversation.length < 15) return history; // Don't summarize too early
 
+            console.log("Summarizing history...");
+            const messagesToSummarize = conversation.slice(0, 10);
+            const recentMessages = conversation.slice(10);
+            
+            const summarizationPrompt = "Tóm tắt ngắn gọn những điểm chính của cuộc trò chuyện sau đây thành một đoạn văn. Giữ lại các chi tiết quan trọng nhất để cuộc trò chuyện có thể tiếp tục một cách mạch lạc:\n\n" 
+                + messagesToSummarize.map(msg => `${msg.role}: ${msg.parts[0].text}`).join('\n');
+
+            try {
+                const summarizerModel = getGenerativeModel(ai, { model: "gemini-2.5-flash" });
+                const result = await summarizerModel.generateContent(summarizationPrompt);
+                const summaryText = result.response.text();
+
+                const summaryMessage = { 
+                    role: 'system', 
+                    parts: [{ text: `TÓM TẮT NGỮ CẢNH TRƯỚC ĐÓ: ${summaryText}` }] 
+                };
+                
+                // Return new history: [instructions, summary, recent messages]
+                return [...originalFirstMessages, summaryMessage, ...recentMessages];
+            } catch (error) {
+                console.error("Lỗi khi tóm tắt:", error);
+                return history; // Return original history if summarization fails
+            }
+        }
+        
         async function sendMessage() {
             const promptText = promptInput.value.trim();
-            if (!promptText) return;
+            if (!promptText || isSummarizing) return;
+
+            // --- CONTEXT MANAGEMENT LOGIC ---
+            const CONTEXT_THRESHOLD = 20;
+            if (localHistory.length > CONTEXT_THRESHOLD) {
+                isSummarizing = true;
+                notificationArea.classList.remove('hidden');
+                try {
+                    const newHistory = await summarizeAndShortenHistory(localHistory);
+                    if (newHistory.length < localHistory.length) {
+                         localHistory = newHistory;
+                         chat = model.startChat({ history: localHistory });
+                         console.log("Lịch sử đã được tóm tắt và làm mới.");
+                    }
+                } catch(e) {
+                    console.error("Lỗi trong quá trình tóm tắt:", e);
+                } finally {
+                    isSummarizing = false;
+                    notificationArea.classList.add('hidden');
+                }
+            }
+            // --- END CONTEXT MANAGEMENT LOGIC ---
+
             sendBtn.disabled = true; recordBtn.disabled = true;
             promptInput.value = ''; adjustInputHeight();
             clearSuggestions();
@@ -836,7 +905,8 @@
                     const docRef = doc(db, 'chats', currentUserId, 'conversations', currentChatId);
                     await updateDoc(docRef, chatData);
                 } else {
-                    chatData.title = localHistory.find(m => m.role === 'user' && !m.parts[0].text.includes('**Chỉ thị hệ thống:**'))?.parts[0].text.substring(0, 40) || "Cuộc trò chuyện mới";
+                    // Title is the first actual user prompt
+                    chatData.title = localHistory[2]?.parts[0].text.substring(0, 40) || "Cuộc trò chuyện mới";
                     chatData.createdAt = serverTimestamp();
                     const chatsCollection = collection(db, 'chats', currentUserId, 'conversations');
                     const docRef = await addDoc(chatsCollection, chatData);
@@ -925,6 +995,7 @@
                     </div>
                 </div>
             `;
+            chatContainer.appendChild(notificationArea);
             for (let i = 0; i < 3; i++) {
                 chatContainer.innerHTML += skeletonHTML;
             }
