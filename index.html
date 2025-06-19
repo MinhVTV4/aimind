@@ -9,17 +9,17 @@
     <script src="https://cdn.jsdelivr.net/npm/dompurify@2.3.6/dist/purify.min.js"></script>
     <style>
         /* Custom scrollbar */
-        #chat-container::-webkit-scrollbar, #reference-content::-webkit-scrollbar {
+        #chat-container::-webkit-scrollbar, #reference-content::-webkit-scrollbar, #sidebar-content::-webkit-scrollbar {
             width: 6px;
         }
-        #chat-container::-webkit-scrollbar-track, #reference-content::-webkit-scrollbar-track {
+        #chat-container::-webkit-scrollbar-track, #reference-content::-webkit-scrollbar-track, #sidebar-content::-webkit-scrollbar-track {
             background: #f1f1f1;
         }
-        #chat-container::-webkit-scrollbar-thumb, #reference-content::-webkit-scrollbar-thumb {
+        #chat-container::-webkit-scrollbar-thumb, #reference-content::-webkit-scrollbar-thumb, #sidebar-content::-webkit-scrollbar-thumb {
             background: #888;
             border-radius: 6px;
         }
-        #chat-container::-webkit-scrollbar-thumb:hover, #reference-content::-webkit-scrollbar-thumb:hover {
+        #chat-container::-webkit-scrollbar-thumb:hover, #reference-content::-webkit-scrollbar-thumb:hover, #sidebar-content::-webkit-scrollbar-thumb:hover {
             background: #555;
         }
 
@@ -53,12 +53,12 @@
             border-left: 4px solid #d1d5db; padding-left: 1rem;
             margin: 1rem 0; color: #4b5563; font-style: italic;
         }
-        
+
         /* Skeleton Loader CSS */
         .skeleton-box {
             @apply bg-gray-200 rounded animate-pulse;
         }
-        
+
         /* Cập nhật: CSS cho con trỏ nhấp nháy */
         .blinking-cursor {
             display: inline-block;
@@ -72,6 +72,14 @@
         @keyframes blink {
             from, to { background-color: transparent; }
             50% { background-color: #333; }
+        }
+
+        /* Sidebar transitions */
+        #sidebar {
+            transition: transform 0.3s ease-in-out;
+        }
+        #sidebar-overlay {
+            transition: opacity 0.3s ease-in-out;
         }
 
     </style>
@@ -136,25 +144,51 @@
     <!-- Main App UI (hidden by default) -->
     <div id="app-container" class="hidden flex flex-col h-screen bg-gray-50">
         <header id="main-header" class="flex-shrink-0 flex justify-between items-center p-3 sm:p-4 bg-white border-b border-gray-200">
+            <!-- Nút Menu để mở Sidebar -->
+            <button id="menu-btn" class="p-2 rounded-full hover:bg-gray-100 transition-colors" title="Menu">
+                <svg class="w-6 h-6 text-gray-600" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="currentColor"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
+            </button>
+
             <div id="user-info" class="flex items-center gap-3">
                  <span id="user-avatar" class="w-9 h-9 rounded-full bg-blue-500 text-white flex items-center justify-center text-sm font-bold uppercase"></span>
                  <span id="user-name" class="text-sm font-medium text-gray-700 hidden sm:block"></span>
             </div>
             <div class="flex items-center gap-1 sm:gap-2">
-                <button id="new-chat-btn" class="p-2 rounded-full hover:bg-gray-100 transition-colors" title="Trò chuyện mới">
-                    <svg class="w-6 h-6 text-gray-600" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="currentColor"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M14.06 9.02l.92.92L5.92 19H5v-.92l9.06-9.06M17.66 3c-.25 0-.51.1-.7.29l-1.83 1.83 3.75 3.75 1.83-1.83c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.2-.2-.45-.29-.71-.29zm-3.6 3.19L3 17.25V21h3.75L17.81 9.94l-3.75-3.75z"/></svg>
-                </button>
-                <button id="view-chats-btn" class="p-2 rounded-full hover:bg-gray-100 transition-colors" title="Lịch sử trò chuyện">
-                    <svg class="w-6 h-6 text-gray-600" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="currentColor"><path d="M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42C8.27 19.99 10.51 21 13 21c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-1 5v5l4.25 2.52.77-1.28-3.52-2.09V8H12z"/></svg>
-                </button>
                 <button id="logout-btn" class="p-2 rounded-full hover:bg-red-50 transition-colors" title="Đăng xuất">
                     <svg class="w-6 h-6 text-red-500" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="currentColor"><path d="M0 0h24v24H0V0z" fill="none" opacity=".87"/><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5-5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg>
                 </button>
             </div>
         </header>
-        
+
+        <!-- Sidebar Overlay -->
+        <div id="sidebar-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden opacity-0 transition-opacity duration-300 ease-in-out"></div>
+
+        <!-- Sidebar -->
+        <div id="sidebar" class="fixed top-0 left-0 h-screen w-64 bg-white shadow-xl z-50 transform -translate-x-full lg:translate-x-0 lg:static lg:w-72 lg:flex lg:flex-col lg:border-r border-gray-200">
+            <div class="p-4 border-b border-gray-200 flex items-center justify-between lg:hidden">
+                <h2 class="text-lg font-semibold">Menu</h2>
+                <button id="close-sidebar-btn" class="p-2 rounded-full hover:bg-gray-200">
+                    <svg class="w-6 h-6 text-gray-600" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="currentColor"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/></svg>
+                </button>
+            </div>
+            <div id="sidebar-content" class="flex-1 overflow-y-auto p-4">
+                <button id="new-chat-btn" class="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-blue-50 transition-colors text-blue-700 font-semibold mb-4">
+                    <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="currentColor"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M14.06 9.02l.92.92L5.92 19H5v-.92l9.06-9.06M17.66 3c-.25 0-.51.1-.7.29l-1.83 1.83 3.75 3.75 1.83-1.83c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.2-.2-.45-.29-.71-.29zm-3.6 3.19L3 17.25V21h3.75L17.81 9.94l-3.75-3.75z"/></svg>
+                    Trò chuyện mới
+                </button>
+                <h3 class="text-sm font-semibold text-gray-500 mb-2 uppercase">Lịch sử</h3>
+                <ul id="saved-chats-list" class="space-y-1"></ul>
+                <!-- Skeleton loader for saved chats -->
+                <div id="saved-chats-skeleton" class="space-y-2 mt-4 hidden">
+                    <div class="h-8 bg-gray-200 rounded animate-pulse w-11/12"></div>
+                    <div class="h-8 bg-gray-200 rounded animate-pulse w-10/12"></div>
+                    <div class="h-8 bg-gray-200 rounded animate-pulse w-9/12"></div>
+                </div>
+            </div>
+        </div>
+
         <div id="chat-container" class="flex-1 px-4 pt-4 space-y-4 overflow-y-auto"></div>
-        
+
         <div id="suggestion-area" class="px-4 pb-2">
             <button id="toggle-suggestions-btn" class="hidden w-full text-left text-sm text-blue-600 font-semibold p-2 rounded-lg hover:bg-blue-50 flex items-center gap-2">
                 <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" enable-background="new 0 0 24 24" height="24px" viewBox="0 0 24 24" width="24px" fill="currentColor"><g><rect fill="none" height="24" width="24"/></g><g><g><path d="M4,18h11c0.55,0,1-0.45,1-1v-2c0-0.55-0.45-1-1-1H4c-0.55,0-1,0.45-1,1v2C3,17.55,3.45,18,4,18z M3,7c0,0.55,0.45,1,1,1 h11c0.55,0,1-0.45,1-1V5c0-0.55-0.45-1-1-1H4C3.45,4,3,4.45,3,5V7z M4,13h11c0.55,0,1-0.45,1-1v-2c0-0.55-0.45-1-1-1H4 c-0.55,0-1,0.45-1,1v2C3,12.55,3.45,13,4,13z M19.5,4.5L19.5,4.5c0.47,0.47,0.47,1.23,0,1.7l-4.08,4.08 c-0.47,0.47-1.23,0.47-1.7,0l0,0c-0.47-0.47-0.47-1.23,0-1.7l4.08-4.08C18.27,4.03,19.03,4.03,19.5,4.5z M19.5,17.82 c0.47-0.47,1.23-0.47,1.7,0l0,0c0.47,0.47,0.47,1.23,0,1.7l-4.08,4.08c-0.47,0.47-1.23,0.47-1.7,0l0,0c-0.47-0.47-0.47-1.23,0-1.7 L19.5,17.82z"/></g></g></svg>
@@ -163,16 +197,6 @@
             <div id="suggestions-container" class="hidden mt-2 flex flex-wrap gap-2"></div>
         </div>
 
-        <div id="saved-chats-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-            <div class="bg-white p-6 rounded-lg shadow-xl w-full max-w-lg max-h-[80vh] flex flex-col">
-                <div class="flex justify-between items-center pb-3 border-b">
-                    <h2 class="text-xl font-semibold">Lịch sử trò chuyện</h2>
-                    <button id="close-modal-btn" class="text-2xl text-gray-500 hover:text-gray-800">&times;</button>
-                </div>
-                <ul id="saved-chats-list" class="mt-4 flex-1 overflow-y-auto"></ul>
-            </div>
-        </div>
-        
         <div class="p-4 bg-white border-t border-gray-200">
             <div id="input-area" class="flex items-center gap-3 bg-gray-100 rounded-full p-2">
                 <button id="reference-btn" class="p-2 rounded-full hover:bg-gray-200 transition-colors" title="Trợ lý Phụ">
@@ -212,8 +236,8 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
-        import { 
-            getAuth, 
+        import {
+            getAuth,
             onAuthStateChanged,
             createUserWithEmailAndPassword,
             signInWithEmailAndPassword,
@@ -222,7 +246,7 @@
             signOut
         } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
         import { getAI, getGenerativeModel } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-ai.js";
-        import { 
+        import {
             getFirestore,
             collection,
             doc,
@@ -282,11 +306,17 @@
         const promptInput = document.getElementById('prompt-input');
         const sendBtn = document.getElementById('send-btn');
         const recordBtn = document.getElementById('record-btn');
-        const viewChatsBtn = document.getElementById('view-chats-btn');
-        const newChatBtn = document.getElementById('new-chat-btn');
-        const savedChatsModal = document.getElementById('saved-chats-modal');
-        const closeModalBtn = document.getElementById('close-modal-btn');
-        const savedChatsList = document.getElementById('saved-chats-list');
+
+        // Sidebar elements
+        const menuBtn = document.getElementById('menu-btn');
+        const sidebar = document.getElementById('sidebar');
+        const sidebarOverlay = document.getElementById('sidebar-overlay');
+        const closeSidebarBtn = document.getElementById('close-sidebar-btn');
+        const newChatBtn = document.getElementById('new-chat-btn'); // Nút này đã được di chuyển vào sidebar
+        const savedChatsList = document.getElementById('saved-chats-list'); // List này cũng được di chuyển vào sidebar
+        const savedChatsSkeleton = document.getElementById('saved-chats-skeleton');
+
+
         const referenceBtn = document.getElementById('reference-btn');
         const referenceModalOverlay = document.getElementById('reference-modal-overlay');
         const referenceModal = document.getElementById('reference-modal');
@@ -307,7 +337,8 @@
                 userAvatar.textContent = displayName.charAt(0);
                 authContainer.classList.add('hidden');
                 appContainer.classList.remove('hidden');
-                startNewChat(); 
+                startNewChat();
+                renderSavedChats(); // Load saved chats when user logs in
             } else {
                 currentUserId = null;
                 authContainer.classList.remove('hidden');
@@ -332,15 +363,30 @@
             recognition.onresult = (event) => { promptInput.value = event.results[event.results.length - 1][0].transcript.trim(); adjustInputHeight(); };
             recognition.onerror = (event) => { addMessage('ai', `**Lỗi ghi âm:** ${event.error}. Vui lòng thử lại.`); };
         } else { recordBtn.classList.add('hidden'); }
-        
+
+        // Sidebar functions
+        function openSidebar() {
+            sidebar.classList.remove('-translate-x-full');
+            sidebarOverlay.classList.remove('hidden');
+            setTimeout(() => sidebarOverlay.classList.add('opacity-100'), 10); // Trigger opacity transition
+            renderSavedChats(); // Render chats every time sidebar is opened
+        }
+
+        function closeSidebar() {
+            sidebar.classList.add('-translate-x-full');
+            sidebarOverlay.classList.remove('opacity-100');
+            setTimeout(() => sidebarOverlay.classList.add('hidden'), 300); // Hide after transition
+        }
+
+
         function showReferenceModal(title, showInput) {
             referenceTitle.textContent = title;
             referenceInputArea.style.display = showInput ? 'block' : 'none';
             referenceModalOverlay.classList.remove('hidden');
             referenceModal.classList.remove('hidden');
             requestAnimationFrame(() => {
-                referenceModalOverlay.classList.add('overlay-enter-active');
-                referenceModal.classList.add('modal-enter-active');
+                referenceModalOverlay.classList.add('opacity-100'); // Use opacity for overlay
+                referenceModal.classList.add('modal-enter-active'); // Existing class
             });
             if (showInput) {
                 referenceHistory = [];
@@ -351,7 +397,7 @@
         }
 
         function closeReferenceModal() {
-            referenceModalOverlay.classList.remove('overlay-enter-active');
+            referenceModalOverlay.classList.remove('opacity-100');
             referenceModal.classList.remove('modal-enter-active');
             setTimeout(() => {
                 referenceModalOverlay.classList.add('hidden');
@@ -396,7 +442,7 @@
                 return { messageWrapper, contentElem };
             }
         }
-        
+
         async function sendReferenceMessage() {
             let promptText = referencePromptInput.value.trim();
             if (!promptText) return;
@@ -407,7 +453,7 @@
                  promptText = formattingInstruction + '\n\n' + promptText;
             }
             referenceHistory.push({ role: 'user', parts: [{ text: promptText }] });
-            
+
             const { messageWrapper, contentElem } = addMessageToReference('ai', '<span class="blinking-cursor"></span>');
 
             try {
@@ -435,9 +481,9 @@
                 referencePromptInput.focus();
             }
         }
-        
+
         async function getSuggestedAnswer(promptText) {
-            showReferenceModal('Gợi ý', false); 
+            showReferenceModal('Gợi ý', false);
             referenceContent.innerHTML = '';
             const tempChat = model.startChat({ history: localHistory });
 
@@ -446,7 +492,7 @@
             try {
                 addMessageToReference('user', promptText);
                 const result = await tempChat.sendMessageStream(promptText);
-                
+
                 contentElem.innerHTML = '';
                 let fullResponseText = "";
                 for await (const chunk of result.stream) {
@@ -473,7 +519,7 @@
 
         function startNewChat() {
             currentChatId = null;
-            localHistory = []; 
+            localHistory = [];
             referenceHistory = [];
             referenceChat = null;
             const initialHistory = [{
@@ -487,13 +533,14 @@
             chatContainer.innerHTML = '';
             clearSuggestions();
             addMessage('ai', 'Xin chào! Tôi có thể giúp gì cho bạn?');
+            closeSidebar(); // Close sidebar after starting new chat
         }
-        
+
         async function loadChat(chatId) {
             if (!currentUserId) return;
-            
-            showHistorySkeleton();
-            closeModalBtn.click();
+
+            showHistorySkeleton(); // Show skeleton while loading
+            closeSidebar(); // Close sidebar when a chat is selected
 
             try {
                 const docRef = doc(db, 'chats', currentUserId, 'conversations', chatId);
@@ -503,15 +550,15 @@
                     localHistory = chatDoc.data().history || [];
                     currentChatId = chatDoc.id;
                     chat = model.startChat({ history: localHistory });
-                    
+
                     chatContainer.innerHTML = '';
                     clearSuggestions();
-                    
+
                     localHistory.forEach(msg => {
                         if (msg.role === 'user' && msg.parts[0].text.includes("**Chỉ thị hệ thống:**")) return;
                         if (msg.role === 'model' && msg.parts[0].text.startsWith("Đã hiểu!")) return;
                         const role = msg.role === 'model' ? 'ai' : 'user';
-                        addMessage(role, msg.parts[0].text, false); 
+                        addMessage(role, msg.parts[0].text, false);
                     });
                     setTimeout(() => chatContainer.scrollTop = chatContainer.scrollHeight, 0);
                 } else {
@@ -564,15 +611,15 @@
             clearSuggestions();
             addMessage('user', promptText);
             localHistory.push({ role: 'user', parts: [{ text: promptText }] });
-            
+
             const { messageWrapper, contentElem } = addMessage('ai', '<span class="blinking-cursor"></span>');
-            
+
             try {
                 const result = await chat.sendMessageStream(promptText);
-                
+
                 contentElem.innerHTML = '';
                 let fullResponseText = "";
-                
+
                 for await (const chunk of result.stream) {
                     fullResponseText += chunk.text();
                     contentElem.innerHTML = DOMPurify.sanitize(marked.parse(fullResponseText)) + '<span class="blinking-cursor"></span>';
@@ -609,7 +656,7 @@
                 console.error("Error getting suggestions:", error);
             }
         }
-        
+
         function displaySuggestions(suggestions) {
             suggestionsContainer.innerHTML = '';
             if(suggestions.length > 0) {
@@ -627,7 +674,7 @@
         }
 
         async function updateConversationInDb() {
-            if (!currentUserId || localHistory.length < 2) return; 
+            if (!currentUserId || localHistory.length < 2) return;
             const chatData = { history: localHistory, updatedAt: serverTimestamp() };
             try {
                 if (currentChatId) {
@@ -638,61 +685,73 @@
                     chatData.createdAt = serverTimestamp();
                     const chatsCollection = collection(db, 'chats', currentUserId, 'conversations');
                     const docRef = await addDoc(chatsCollection, chatData);
-                    currentChatId = docRef.id; 
+                    currentChatId = docRef.id;
                 }
+                renderSavedChats(); // Re-render sidebar to show updated/new chat
             } catch (error) {
                 console.error("Lỗi khi cập nhật cuộc trò chuyện:", error);
             }
         }
 
         async function renderSavedChats() {
-            if (!currentUserId) return;
-            const chatsCollection = collection(db, 'chats', currentUserId, 'conversations');
-            const q = query(chatsCollection, orderBy('updatedAt', 'desc')); 
-            const querySnapshot = await getDocs(q);
-            savedChatsList.innerHTML = '';
-            if (querySnapshot.empty) {
-                savedChatsList.innerHTML = '<li>Chưa có cuộc trò chuyện nào.</li>';
+            if (!currentUserId) {
+                savedChatsList.innerHTML = '<li>Đăng nhập để xem lịch sử trò chuyện.</li>';
                 return;
             }
-            querySnapshot.forEach(doc => {
-                const chatItem = doc.data();
-                const li = document.createElement('li');
-                li.className = "p-3 hover:bg-gray-100 cursor-pointer flex justify-between items-center rounded-md";
-                
-                const titleSpan = document.createElement('span');
-                titleSpan.textContent = chatItem.title;
-                titleSpan.className = "flex-1 truncate pr-2";
-                li.appendChild(titleSpan);
+            savedChatsSkeleton.classList.remove('hidden'); // Show skeleton
+            savedChatsList.innerHTML = ''; // Clear existing list
+            const chatsCollection = collection(db, 'chats', currentUserId, 'conversations');
+            const q = query(chatsCollection, orderBy('updatedAt', 'desc'));
+            try {
+                const querySnapshot = await getDocs(q);
+                if (querySnapshot.empty) {
+                    savedChatsList.innerHTML = '<li class="text-gray-500 text-sm">Chưa có cuộc trò chuyện nào.</li>';
+                } else {
+                    querySnapshot.forEach(doc => {
+                        const chatItem = doc.data();
+                        const li = document.createElement('li');
+                        li.className = "p-2 hover:bg-gray-100 cursor-pointer flex justify-between items-center rounded-md";
 
-                const deleteBtn = document.createElement('button');
-                deleteBtn.className = 'p-1 text-gray-400 hover:text-red-600 rounded-full';
-                deleteBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" /></svg>';
-                deleteBtn.onclick = async (e) => { 
-                    e.stopPropagation(); 
-                    if (confirm("Bạn có chắc chắn muốn xóa cuộc trò chuyện này?")) {
-                        await deleteChat(doc.id); 
-                    }
-                };
-                
-                li.appendChild(deleteBtn);
-                li.onclick = () => loadChat(doc.id);
-                savedChatsList.appendChild(li);
-            });
+                        const titleSpan = document.createElement('span');
+                        titleSpan.textContent = chatItem.title;
+                        titleSpan.className = "flex-1 truncate pr-2 text-gray-800";
+                        li.appendChild(titleSpan);
+
+                        const deleteBtn = document.createElement('button');
+                        deleteBtn.className = 'p-1 text-gray-400 hover:text-red-600 rounded-full';
+                        deleteBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" /></svg>';
+                        deleteBtn.onclick = async (e) => {
+                            e.stopPropagation();
+                            if (confirm("Bạn có chắc chắn muốn xóa cuộc trò chuyện này?")) {
+                                await deleteChat(doc.id);
+                            }
+                        };
+
+                        li.appendChild(deleteBtn);
+                        li.onclick = () => loadChat(doc.id);
+                        savedChatsList.appendChild(li);
+                    });
+                }
+            } catch (error) {
+                console.error("Lỗi khi lấy lịch sử trò chuyện:", error);
+                savedChatsList.innerHTML = '<li class="text-red-500 text-sm">Không thể tải lịch sử.</li>';
+            } finally {
+                savedChatsSkeleton.classList.add('hidden'); // Hide skeleton
+            }
         }
-        
+
         async function deleteChat(chatId) {
             if (!currentUserId) return;
             try {
                 await deleteDoc(doc(db, 'chats', currentUserId, 'conversations', chatId));
                 renderSavedChats();
-                if(chatId === currentChatId) startNewChat();
+                if(chatId === currentChatId) startNewChat(); // Start a new chat if the current one is deleted
             } catch (error) {
                 console.error("Error deleting chat:", error);
             }
         }
 
-        // Giữ lại hàm này cho việc tải lịch sử chat
+        // Giữ lại hàm này cho việc tải lịch sử chat (skeleton loader trong main chat area)
         function showHistorySkeleton() {
             chatContainer.innerHTML = '';
             const skeletonHTML = `
@@ -726,14 +785,18 @@
 
         function toggleRecording() { if (!recognition) return; isRecording ? recognition.stop() : recognition.start(); }
 
-        newChatBtn.addEventListener('click', startNewChat);
+        // Event Listeners
+        menuBtn.addEventListener('click', openSidebar);
+        closeSidebarBtn.addEventListener('click', closeSidebar);
+        sidebarOverlay.addEventListener('click', closeSidebar);
+        newChatBtn.addEventListener('click', startNewChat); // Nút này giờ nằm trong sidebar
+        // viewChatsBtn đã bị loại bỏ, chức năng xem chats được tích hợp vào việc mở sidebar
+
         sendBtn.addEventListener('click', sendMessage);
         recordBtn.addEventListener('click', toggleRecording);
         promptInput.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } });
         promptInput.addEventListener('input', adjustInputHeight);
-        viewChatsBtn.addEventListener('click', () => { renderSavedChats(); savedChatsModal.classList.remove('hidden'); });
-        closeModalBtn.addEventListener('click', () => { savedChatsModal.classList.add('hidden'); });
-        savedChatsModal.addEventListener('click', e => { if (e.target === savedChatsModal) { savedChatsModal.classList.add('hidden'); } });
+
         toggleSuggestionsBtn.addEventListener('click', () => { suggestionsContainer.classList.toggle('hidden'); });
         referenceBtn.addEventListener('click', () => showReferenceModal('Trợ lý Phụ', true));
         closeReferenceModalBtn.addEventListener('click', closeReferenceModal);
