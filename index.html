@@ -318,7 +318,7 @@
                     <div class="flex items-center justify-between">
                          <label for="persona-prompt" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Chỉ thị Hệ thống (System Prompt)</label>
                          <button type="button" id="generate-prompt-btn" class="p-1 rounded-full text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-slate-700" title="Gợi ý từ AI">
-                            <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 3a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 0110 3zM3.05 4.29a.75.75 0 010 1.06l-1.06 1.06a.75.75 0 11-1.06-1.06l1.06-1.06a.75.75 0 011.06 0zm12.84 1.06a.75.75 0 011.06 0l1.06 1.06a.75.75 0 11-1.06 1.06l-1.06-1.06a.75.75 0 010-1.06zM10 15a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 0110 15zM4.11 15.89a.75.75 0 011.06 0l1.06-1.06a.75.75 0 111.06 1.06l-1.06 1.06a.75.75 0 01-1.06 0l-1.06-1.06a.75.75 0 010-1.06zM15.89 15.89a.75.75 0 010 1.06l-1.06 1.06a.75.75 0 11-1.06-1.06l1.06-1.06a.75.75 0 011.06 0zM3 10a.75.75 0 01.75-.75h1.5a.75.75 0 010 1.5h-1.5A.75.75 0 013 10zM15 10a.75.75 0 01.75-.75h1.5a.75.75 0 010 1.5h-1.5A.75.75 0 0115 10zM10 6a4 4 0 100 8 4 4 0 000-8z" clip-rule="evenodd" /></svg>
+                            <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 3a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 0110 3zM3.05 4.29a.75.75 0 010 1.06l-1.06 1.06a.75.75 0 11-1.06-1.06l1.06-1.06a.75.75 0 011.06 0zm12.84 1.06a.75.75 0 011.06 0l1.06 1.06a.75.75 0 11-1.06-1.06l-1.06-1.06a.75.75 0 010-1.06zM10 15a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 0110 15zM4.11 15.89a.75.75 0 011.06 0l1.06-1.06a.75.75 0 111.06 1.06l-1.06 1.06a.75.75 0 01-1.06 0l-1.06-1.06a.75.75 0 010-1.06zM15.89 15.89a.75.75 0 010 1.06l-1.06 1.06a.75.75 0 11-1.06-1.06l1.06-1.06a.75.75 0 011.06 0zM3 10a.75.75 0 01.75-.75h1.5a.75.75 0 010 1.5h-1.5A.75.75 0 013 10zM15 10a.75.75 0 01.75-.75h1.5a.75.75 0 010 1.5h-1.5A.75.75 0 0115 10zM10 6a4 4 0 100 8 4 4 0 000-8z" clip-rule="evenodd" /></svg>
                          </button>
                     </div>
                     <textarea id="persona-prompt" rows="6" required class="block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm resize-y"></textarea>
@@ -853,7 +853,7 @@
                 if (currentChatId) {
                     await updateDoc(doc(db, 'chats', currentUserId, 'conversations', currentChatId), chatData);
                 } else {
-                    const firstUserPrompt = localHistory.find(m => m.role === 'user' && !m.parts[0].text.includes('**Chỉ thị hệ thống:**'));
+                    const firstUserPrompt = localHistory[2];
                     chatData.title = firstUserPrompt?.parts[0].text.substring(0, 40) || "Cuộc trò chuyện mới";
                     chatData.createdAt = serverTimestamp();
                     chatData.isPinned = false; 
@@ -910,10 +910,8 @@
                     chatContainer.appendChild(notificationArea);
 
                     clearSuggestions();
-                    localHistory.forEach(msg => {
-                        if (msg.role === 'user' && (msg.parts[0].text.includes("**Chỉ thị hệ thống:**"))) return;
-                        if (msg.role === 'model' && msg.parts[0].text.startsWith("Đã hiểu!")) return;
-                        
+                    const messagesToDisplay = localHistory.slice(2);
+                    messagesToDisplay.forEach(msg => {
                         addMessage(msg.role, msg.parts[0].text, false);
                     });
                     setTimeout(() => chatContainer.scrollTop = chatContainer.scrollHeight, 0);
@@ -1398,7 +1396,7 @@
 
         function resetActiveSpeechButton() {
             if (activeSpeech && activeSpeech.button) {
-                activeSpeech.button.innerHTML = '�';
+                activeSpeech.button.innerHTML = '🔊';
                 activeSpeech.button.dataset.state = 'idle';
                 activeSpeech.button.title = 'Đọc văn bản';
             }
