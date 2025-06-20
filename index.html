@@ -656,7 +656,10 @@
                 parts: [{ text: "Đã hiểu! Tôi đã sẵn sàng. Bạn cần tôi giúp gì?" }],
             }];
             
-            await renderAllChats();
+            chatContainer.innerHTML = ''; // Clear the main chat window
+            chatContainer.appendChild(notificationArea); // Re-add the notification area
+            
+            await renderAllChats(); // Refresh the sidebar with chats for the new persona
             closeSidebar();
             if(speechSynthesis.speaking) speechSynthesis.cancel();
         }
