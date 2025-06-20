@@ -91,11 +91,7 @@
         .custom-persona-actions { position: absolute; top: 0.5rem; right: 0.5rem; opacity: 0; transition: opacity 0.2s ease-in-out; }
         .persona-card:hover .custom-persona-actions { opacity: 1; }
     </style>
-    <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#2563eb">
-<link rel="icon" href="icon-192.png">
 </head>
-    
 <body class="bg-gray-100 dark:bg-gray-900 font-sans overflow-x-hidden">
 
     <!-- Authentication UI -->
@@ -434,7 +430,7 @@
         const referenceSendBtn = document.getElementById('reference-send-btn');
 
         const defaultPersonas = [
-            { id: 'general', name: 'Trợ lý Toàn năng', icon: '🧠', description: 'Kiến thức tổng quát, trả lời đa dạng các chủ đề.', systemPrompt: `**Chỉ thị hệ thống:** Mục tiêu chính của bạn là đưa ra câu trả lời rõ ràng, chi tiết và có cấu trúc tốt. Luôn sử dụng Markdown để định dạng (tiêu đề, danh sách, in đậm). Hãy giải thích các khái niệm từng bước, bắt đầu bằng tóm tắt rồi đi vào chi tiết và ví dụ. **Yêu cầu bổ sung:** Trong quá trình trả lời, khi bạn đề cập đến một thuật ngữ kỹ thuật, một khái niệm quan trọng, hoặc một tên riêng (ví dụ: tên một công nghệ, một phương pháp), hãy bọc thuật ngữ đó trong cặp dấu ngoặc vuông. Ví dụ: '...sử dụng ngôn ngữ [JavaScript] để tương tác với [DOM]...'. Chỉ bọc duy nhất thuật ngữ đó.` },
+            { id: 'general', name: 'Trợ lý Toàn năng', icon: '�', description: 'Kiến thức tổng quát, trả lời đa dạng các chủ đề.', systemPrompt: `**Chỉ thị hệ thống:** Mục tiêu chính của bạn là đưa ra câu trả lời rõ ràng, chi tiết và có cấu trúc tốt. Luôn sử dụng Markdown để định dạng (tiêu đề, danh sách, in đậm). Hãy giải thích các khái niệm từng bước, bắt đầu bằng tóm tắt rồi đi vào chi tiết và ví dụ. **Yêu cầu bổ sung:** Trong quá trình trả lời, khi bạn đề cập đến một thuật ngữ kỹ thuật, một khái niệm quan trọng, hoặc một tên riêng (ví dụ: tên một công nghệ, một phương pháp), hãy bọc thuật ngữ đó trong cặp dấu ngoặc vuông. Ví dụ: '...sử dụng ngôn ngữ [JavaScript] để tương tác với [DOM]...'. Chỉ bọc duy nhất thuật ngữ đó.` },
             { id: 'programmer', name: 'Chuyên gia Lập trình', icon: '👨‍💻', description: 'Chuyên gia về mã nguồn, thuật toán, gỡ lỗi code.', systemPrompt: `**Chỉ thị hệ thống:** Bạn là một lập trình viên cao cấp với 10 năm kinh nghiệm. Luôn đưa ra câu trả lời dưới dạng mã nguồn được giải thích rõ ràng, tuân thủ các coding convention tốt nhất. Khi được yêu cầu, hãy phân tích ưu và nhược điểm của các giải pháp khác nhau. Hãy ưu tiên tính hiệu quả và khả năng bảo trì của mã nguồn. **Yêu cầu bổ sung:** Khi đề cập đến một hàm, thư viện, hoặc khái niệm lập trình, hãy bọc nó trong dấu ngoặc vuông, ví dụ: [React], [API], [useState].` },
             { id: 'writer', name: 'Nhà văn Sáng tạo', icon: '✍️', description: 'Hỗ trợ viết lách, lên ý tưởng, xây dựng cốt truyện.', systemPrompt: `**Chỉ thị hệ thống:** Bạn là một nhà văn và biên tập viên chuyên nghiệp. Phong cách của bạn giàu cảm xúc, sử dụng từ ngữ phong phú và hình ảnh. Hãy giúp người dùng lên ý tưởng, phát triển nhân vật, xây dựng cốt truyện, hoặc viết các đoạn văn, bài thơ theo yêu cầu. Luôn giữ một giọng văn truyền cảm hứng.` },
             { id: 'marketing', name: 'Chuyên gia Marketing', icon: '📈', description: 'Tư vấn chiến lược, phân tích thị trường, quảng cáo.', systemPrompt: `**Chỉ thị hệ thống:** Bạn là một giám đốc marketing dày dặn kinh nghiệm. Hãy cung cấp các phân tích thị trường sắc bén, đề xuất các chiến lược marketing sáng tạo, và giúp viết các nội dung quảng cáo (copywriting) hấp dẫn, tập trung vào lợi ích của khách hàng và lời kêu gọi hành động (CTA) rõ ràng.` }
@@ -451,7 +447,7 @@
                 appContainer.classList.remove('hidden');
 
                 await showPersonaSelectionScreen();
-                await renderAllChats(); 
+                renderAllChats(); 
             } else {
                 currentUserId = null;
                 currentUserName = '';
@@ -658,7 +654,8 @@
             
             chatContainer.innerHTML = '';
             chatContainer.appendChild(notificationArea);
-            clearSuggestions();
+            
+            await renderAllChats();
             closeSidebar();
             if(speechSynthesis.speaking) speechSynthesis.cancel();
         }
@@ -858,6 +855,7 @@
                     const filteredHistory = localHistory.filter(msg => msg.role !== 'note');
                     chat = model.startChat({ history: filteredHistory });
                     
+                    await renderAllChats();
                     chatContainer.innerHTML = ''; 
                     chatContainer.appendChild(notificationArea);
 
@@ -953,7 +951,12 @@
         }
 
         async function renderAllChats() {
-            if (!currentUserId) return;
+            if (!currentUserId || !currentPersona) {
+                savedChatsList.innerHTML = '';
+                pinnedChatsList.innerHTML = '';
+                pinnedChatsSection.classList.add('hidden');
+                return;
+            };
             isFetchingChats = false;
             allChatsLoaded = false;
             lastVisibleChat = null;
@@ -965,13 +968,17 @@
 
         async function fetchPinnedChats() {
              const chatsCollection = collection(db, 'chats', currentUserId, 'conversations');
-             const q = query(chatsCollection, where('isPinned', '==', true), orderBy('updatedAt', 'desc'));
-             const querySnapshot = await getDocs(q);
-             pinnedChatsSection.classList.toggle('hidden', querySnapshot.empty);
-             querySnapshot.forEach(docSnap => {
-                 const li = createChatItem(docSnap);
-                 pinnedChatsList.appendChild(li);
-             });
+             const q = query(chatsCollection, where('personaId', '==', currentPersona.id), where('isPinned', '==', true), orderBy('updatedAt', 'desc'));
+             try {
+                const querySnapshot = await getDocs(q);
+                pinnedChatsSection.classList.toggle('hidden', querySnapshot.empty);
+                querySnapshot.forEach(docSnap => {
+                    const li = createChatItem(docSnap);
+                    pinnedChatsList.appendChild(li);
+                });
+             } catch (error) {
+                console.error("Lỗi khi lấy chat đã ghim (cần tạo index trên Firebase):", error);
+             }
         }
 
         async function fetchRecentChats(loadMore = false) {
@@ -980,7 +987,7 @@
             if (!loadMore) savedChatsSkeleton.classList.remove('hidden');
 
             const chatsCollection = collection(db, 'chats', currentUserId, 'conversations');
-            const constraints = [where('isPinned', '==', false), orderBy('updatedAt', 'desc'), limit(CHATS_PER_PAGE)];
+            const constraints = [where('personaId', '==', currentPersona.id), where('isPinned', '==', false), orderBy('updatedAt', 'desc'), limit(CHATS_PER_PAGE)];
             if (lastVisibleChat && loadMore) {
                 constraints.push(startAfter(lastVisibleChat));
             }
@@ -1004,7 +1011,7 @@
                     allChatsLoaded = true;
                 }
             } catch (error) {
-                console.error("Lỗi khi lấy lịch sử trò chuyện:", error);
+                console.error("Lỗi khi lấy lịch sử trò chuyện (cần tạo index trên Firebase):", error);
             } finally {
                 isFetchingChats = false;
                 savedChatsSkeleton.classList.add('hidden');
@@ -1332,14 +1339,6 @@
 
 
     </script>
-    <script>
-  if ("serviceWorker" in navigator) {
-    window.addEventListener("load", function () {
-      navigator.serviceWorker.register("./service-worker.js")
-        .then(reg => console.log("SW registered:", reg.scope))
-        .catch(err => console.error("SW registration failed:", err));
-    });
-  }
-</script>
 </body>
 </html>
+�
