@@ -106,6 +106,9 @@
           animation: spin 1s linear infinite;
         }
     </style>
+    <link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#2563eb">
+<link rel="icon" href="icon-192.png">
 </head>
 <body class="bg-gray-100 dark:bg-gray-900 font-sans overflow-x-hidden">
 
@@ -242,13 +245,11 @@
                 </header>
 
                 <div id="main-content" class="flex-1 flex flex-col overflow-hidden">
-                    <!-- NEW: Welcome Screen for new chats -->
                     <div id="welcome-screen" class="flex-1 flex-col items-center justify-center p-4 text-center hidden">
                         <div id="welcome-persona-icon" class="text-6xl mb-4"></div>
                         <h2 id="welcome-persona-name" class="text-2xl font-bold text-gray-800 dark:text-gray-200"></h2>
                         <p id="welcome-persona-description" class="max-w-md mt-2 text-gray-600 dark:text-gray-400"></p>
                         <div id="welcome-suggestions-container" class="mt-8 w-full max-w-2xl mx-auto space-y-3">
-                            <!-- Suggestion cards will be injected here -->
                         </div>
                     </div>
                     
@@ -371,7 +372,7 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
         const ai = getAI(app);
-        const model = getGenerativeModel(ai, { model: "gemini-2.5-flash" });
+        const model = getGenerativeModel(ai, { model: "gemini-1.5-flash" });
         const fastModel = getGenerativeModel(ai, { model: "gemini-1.5-flash" });
 
         let currentUserId = null;
@@ -522,7 +523,8 @@
         
         // --- PERSONA SELECTION ---
         async function showPersonaSelectionScreen() {
-            welcomeUserName.textContent = currentUserName;
+            welcomeScreen.classList.add('hidden');
+            welcomeScreen.classList.remove('flex');
             personaSelectionScreen.classList.remove('hidden');
             chatViewContainer.classList.add('hidden');
             await fetchCustomPersonas();
@@ -659,13 +661,9 @@
                 console.error("Lỗi khi xóa persona:", error);
             }
         }
-
+        
         // --- CHAT LOGIC ---
         async function startNewChat(personaId, isCustom = false) {
-            welcomeScreen.classList.remove('hidden');
-            welcomeScreen.classList.add('flex');
-            chatContainer.classList.add('hidden');
-
             let selectedPersona;
             if (isCustom) {
                 selectedPersona = customPersonas.find(p => p.id === personaId);
@@ -677,11 +675,13 @@
             
             currentPersona = selectedPersona;
             
+            // UI Transition
             personaSelectionScreen.classList.add('hidden');
             chatViewContainer.classList.remove('hidden');
             chatViewContainer.classList.add('flex');
             updateChatHeader(currentPersona);
             
+            // Reset chat state
             currentChatId = null;
             chat = null;
             localHistory = [{
@@ -692,7 +692,11 @@
                 parts: [{ text: "Đã hiểu! Tôi đã sẵn sàng. Bạn cần tôi giúp gì?" }],
             }];
             
-            await renderAllChats();
+            // Update UI for new chat
+            chatContainer.innerHTML = '';
+            chatContainer.appendChild(notificationArea);
+            
+            await renderAllChats(); // Refresh the sidebar with chats for the new persona
             closeSidebar();
             if(speechSynthesis.speaking) speechSynthesis.cancel();
             
@@ -961,6 +965,10 @@
         
         async function generateWelcomeSuggestions() {
             if (!currentPersona) return;
+            welcomeScreen.classList.remove('hidden');
+            welcomeScreen.classList.add('flex');
+            chatContainer.classList.add('hidden');
+
             document.getElementById('welcome-persona-icon').textContent = currentPersona.icon;
             document.getElementById('welcome-persona-name').textContent = currentPersona.name;
             document.getElementById('welcome-persona-description').textContent = currentPersona.description;
@@ -1013,6 +1021,9 @@
         }
 
         function showHistorySkeleton() {
+            welcomeScreen.classList.add('hidden');
+            welcomeScreen.classList.remove('flex');
+            chatContainer.classList.remove('hidden');
             chatContainer.innerHTML = `<div class="w-full space-y-2">
                     <div class="flex items-center gap-2">
                         <div class="w-7 h-7 rounded-full skeleton-box"></div>
@@ -1331,6 +1342,32 @@
             }
         }
 
+        async function generateSystemPrompt() {
+            const name = personaNameInput.value.trim();
+            const description = personaDescriptionInput.value.trim();
+
+            if (!name || !description) {
+                alert('Vui lòng nhập Tên và Mô tả ngắn cho Persona trước khi nhận gợi ý.');
+                return;
+            }
+
+            const originalBtnContent = generatePromptBtn.innerHTML;
+            generatePromptBtn.innerHTML = `<svg class="w-5 h-5 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>`;
+            generatePromptBtn.disabled = true;
+
+            try {
+                const prompt = `Dựa trên một chuyên gia có tên là '${name}' và mô tả '${description}', hãy viết một Chỉ thị Hệ thống (System Prompt) chi tiết và chuyên nghiệp bằng tiếng Việt. Chỉ thị này cần bao gồm: phong cách, quy tắc hoạt động, và các yêu cầu về định dạng đầu ra.`;
+                const result = await fastModel.generateContent(prompt);
+                personaPromptInput.value = result.response.text();
+            } catch (error) {
+                console.error("Lỗi khi tạo gợi ý prompt:", error);
+                personaPromptInput.value = "Rất tiếc, không thể tạo gợi ý lúc này. Vui lòng thử lại.";
+            } finally {
+                generatePromptBtn.innerHTML = originalBtnContent;
+                generatePromptBtn.disabled = false;
+            }
+        }
+
 
         // EVENT LISTENERS
         createPersonaBtn.addEventListener('click', () => openPersonaModal());
@@ -1338,6 +1375,7 @@
         cancelPersonaBtn.addEventListener('click', closePersonaModal);
         personaModalOverlay.addEventListener('click', closePersonaModal);
         personaForm.addEventListener('submit', handleSavePersona);
+        generatePromptBtn.addEventListener('click', generateSystemPrompt);
         newChatBtn.addEventListener('click', showPersonaSelectionScreen);
         newTopicBtn.addEventListener('click', () => {
             if (currentPersona) {
@@ -1360,7 +1398,7 @@
 
         function resetActiveSpeechButton() {
             if (activeSpeech && activeSpeech.button) {
-                activeSpeech.button.innerHTML = '🔊';
+                activeSpeech.button.innerHTML = '�';
                 activeSpeech.button.dataset.state = 'idle';
                 activeSpeech.button.title = 'Đọc văn bản';
             }
@@ -1425,5 +1463,16 @@
 
 
     </script>
+    <script>
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", function () {
+      navigator.serviceWorker.register("./service-worker.js")
+        .then(reg => console.log("SW registered:", reg.scope))
+        .catch(err => console.error("SW registration failed:", err));
+    });
+  }
+</script>
+
 </body>
 </html>
+�
