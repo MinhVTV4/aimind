@@ -105,10 +105,11 @@
         .animate-spin {
           animation: spin 1s linear infinite;
         }
+        .persona-tag-container.collapsed {
+            max-height: 5.5rem; /* Adjust based on tag height and gap to show ~2 rows */
+            overflow: hidden;
+        }
     </style>
-    <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#2563eb">
-<link rel="icon" href="icon-192.png">
 </head>
 <body class="bg-gray-100 dark:bg-gray-900 font-sans overflow-x-hidden">
 
@@ -199,17 +200,15 @@
                 <p class="text-base sm:text-lg text-gray-600 dark:text-gray-400 mb-6 sm:mb-8">Bạn muốn bắt đầu với chuyên gia nào hôm nay?</p>
                 
                 <div class="w-full max-w-7xl">
-                    <div class="mb-6 sm:mb-8">
-                        <button id="create-persona-btn" class="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 sm:px-6 sm:py-3 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 transition-colors">
-                            <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" /></svg>
-                            Tạo Persona Mới
-                        </button>
-                    </div>
-
                     <div id="custom-personas-section" class="mb-10">
                         <h2 class="text-xl sm:text-2xl font-bold text-gray-700 dark:text-gray-300 mb-4 border-b pb-2 dark:border-gray-700">Persona của bạn</h2>
-                        <div id="custom-persona-grid" class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"></div>
-                         <p id="no-custom-persona-msg" class="text-gray-500 dark:text-gray-400 hidden">Bạn chưa tạo persona nào. Hãy tạo một chuyên gia AI cho riêng mình!</p>
+                        <div id="custom-persona-tags-container" class="flex flex-wrap gap-2 persona-tag-container collapsed">
+                        </div>
+                        <button id="show-more-personas-btn" class="hidden mt-2 text-sm text-blue-600 dark:text-blue-400 hover:underline">Xem thêm...</button>
+                        <p id="no-custom-persona-msg" class="text-gray-500 dark:text-gray-400 hidden mt-2">
+                            Bạn chưa tạo persona nào. 
+                            <button id="create-persona-shortcut-btn" class="font-semibold text-blue-600 dark:text-blue-400 hover:underline">Tạo ngay!</button>
+                        </p>
                     </div>
 
                     <div>
@@ -318,7 +317,7 @@
                     <div class="flex items-center justify-between">
                          <label for="persona-prompt" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Chỉ thị Hệ thống (System Prompt)</label>
                          <button type="button" id="generate-prompt-btn" class="p-1 rounded-full text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-slate-700" title="Gợi ý từ AI">
-                            <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 3a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 0110 3zM3.05 4.29a.75.75 0 010 1.06l-1.06 1.06a.75.75 0 11-1.06-1.06l1.06-1.06a.75.75 0 011.06 0zm12.84 1.06a.75.75 0 011.06 0l1.06 1.06a.75.75 0 11-1.06-1.06l-1.06-1.06a.75.75 0 010-1.06zM10 15a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 0110 15zM4.11 15.89a.75.75 0 011.06 0l1.06-1.06a.75.75 0 111.06 1.06l-1.06 1.06a.75.75 0 01-1.06 0l-1.06-1.06a.75.75 0 010-1.06zM15.89 15.89a.75.75 0 010 1.06l-1.06 1.06a.75.75 0 11-1.06-1.06l1.06-1.06a.75.75 0 011.06 0zM3 10a.75.75 0 01.75-.75h1.5a.75.75 0 010 1.5h-1.5A.75.75 0 013 10zM15 10a.75.75 0 01.75-.75h1.5a.75.75 0 010 1.5h-1.5A.75.75 0 0115 10zM10 6a4 4 0 100 8 4 4 0 000-8z" clip-rule="evenodd" /></svg>
+                            <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 3a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 0110 3zM3.05 4.29a.75.75 0 010 1.06l-1.06 1.06a.75.75 0 11-1.06-1.06l1.06-1.06a.75.75 0 011.06 0zm12.84 1.06a.75.75 0 011.06 0l1.06 1.06a.75.75 0 11-1.06 1.06l-1.06-1.06a.75.75 0 010-1.06zM10 15a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 0110 15zM4.11 15.89a.75.75 0 011.06 0l1.06-1.06a.75.75 0 111.06 1.06l-1.06 1.06a.75.75 0 01-1.06 0l-1.06-1.06a.75.75 0 010-1.06zM15.89 15.89a.75.75 0 010 1.06l-1.06 1.06a.75.75 0 11-1.06-1.06l1.06-1.06a.75.75 0 011.06 0zM3 10a.75.75 0 01.75-.75h1.5a.75.75 0 010 1.5h-1.5A.75.75 0 013 10zM15 10a.75.75 0 01.75-.75h1.5a.75.75 0 010 1.5h-1.5A.75.75 0 0115 10zM10 6a4 4 0 100 8 4 4 0 000-8z" clip-rule="evenodd" /></svg>
                          </button>
                     </div>
                     <textarea id="persona-prompt" rows="6" required class="block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm resize-y"></textarea>
@@ -372,7 +371,7 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
         const ai = getAI(app);
-        const model = getGenerativeModel(ai, { model: "gemini-2.5-flash" });
+        const model = getGenerativeModel(ai, { model: "gemini-1.5-flash" });
         const fastModel = getGenerativeModel(ai, { model: "gemini-1.5-flash" });
 
         let currentUserId = null;
@@ -393,119 +392,197 @@
         const CHATS_PER_PAGE = 15;
 
 
-        // Element Selectors
-        const authContainer = document.getElementById('auth-container');
-        const appContainer = document.getElementById('app-container');
-        const loginView = document.getElementById('login-view');
-        const registerView = document.getElementById('register-view');
-        const loginForm = document.getElementById('login-form');
-        const registerForm = document.getElementById('register-form');
-        const googleLoginBtn = document.getElementById('google-login-btn');
-        const showRegisterBtn = document.getElementById('show-register');
-        const showLoginBtn = document.getElementById('show-login');
-        const authError = document.getElementById('auth-error');
-        const personaSelectionScreen = document.getElementById('persona-selection-screen');
-        const welcomeUserName = document.getElementById('welcome-user-name');
-        const createPersonaBtn = document.getElementById('create-persona-btn');
-        const customPersonasSection = document.getElementById('custom-personas-section');
-        const customPersonaGrid = document.getElementById('custom-persona-grid');
-        const noCustomPersonaMsg = document.getElementById('no-custom-persona-msg');
-        const defaultPersonaGrid = document.getElementById('default-persona-grid');
-        const logoutBtnPersona = document.getElementById('logout-btn-persona');
-        const chatViewContainer = document.getElementById('chat-view-container');
-        const mainHeader = document.getElementById('main-header');
-        const menuBtn = document.getElementById('menu-btn');
-        const chatHeaderInfo = document.getElementById('chat-header-info');
-        const newTopicBtn = document.getElementById('new-topic-btn');
-        const themeToggle = document.getElementById('theme-toggle');
-        const themeToggleDarkIcon = document.getElementById('theme-toggle-dark-icon');
-        const themeToggleLightIcon = document.getElementById('theme-toggle-light-icon');
-        const logoutBtn = document.getElementById('logout-btn');
-        const sidebarOverlay = document.getElementById('sidebar-overlay');
-        const sidebar = document.getElementById('sidebar');
-        const closeSidebarBtn = document.getElementById('close-sidebar-btn');
-        const sidebarContent = document.getElementById('sidebar-content');
-        const newChatBtn = document.getElementById('new-chat-btn');
-        const pinnedChatsSection = document.getElementById('pinned-chats-section');
-        const pinnedChatsList = document.getElementById('pinned-chats-list');
-        const savedChatsList = document.getElementById('saved-chats-list');
-        const savedChatsSkeleton = document.getElementById('saved-chats-skeleton');
-        const mainContent = document.getElementById('main-content');
-        const welcomeScreen = document.getElementById('welcome-screen');
-        const chatContainer = document.getElementById('chat-container');
-        const notificationArea = document.getElementById('notification-area');
-        const suggestionArea = document.getElementById('suggestion-area');
-        const toggleSuggestionsBtn = document.getElementById('toggle-suggestions-btn');
-        const suggestionsContainer = document.getElementById('suggestions-container');
-        const inputAreaWrapper = document.getElementById('input-area-wrapper');
-        const inputArea = document.getElementById('input-area');
-        const referenceBtn = document.getElementById('reference-btn');
-        const promptInput = document.getElementById('prompt-input');
-        const recordBtn = document.getElementById('record-btn');
-        const sendBtn = document.getElementById('send-btn');
-        const personaModalOverlay = document.getElementById('persona-modal-overlay');
-        const personaModal = document.getElementById('persona-modal');
-        const personaModalTitle = document.getElementById('persona-modal-title');
-        const closePersonaModalBtn = document.getElementById('close-persona-modal-btn');
-        const personaForm = document.getElementById('persona-form');
-        const personaIdInput = document.getElementById('persona-id');
-        const personaNameInput = document.getElementById('persona-name');
-        const personaIconInput = document.getElementById('persona-icon');
-        const personaDescriptionInput = document.getElementById('persona-description');
-        const personaPromptInput = document.getElementById('persona-prompt');
-        const generatePromptBtn = document.getElementById('generate-prompt-btn');
-        const cancelPersonaBtn = document.getElementById('cancel-persona-btn');
-        const savePersonaBtn = document.getElementById('save-persona-btn');
-        const referenceModalOverlay = document.getElementById('reference-modal-overlay');
-        const referenceModal = document.getElementById('reference-modal');
-        const referenceHeader = document.getElementById('reference-header');
-        const referenceTitle = document.getElementById('reference-title');
-        const closeReferenceModalBtn = document.getElementById('close-reference-modal-btn');
-        const referenceContent = document.getElementById('reference-content');
-        const referenceInputArea = document.getElementById('reference-input-area');
-        const referencePromptInput = document.getElementById('reference-prompt-input');
-        const referenceSendBtn = document.getElementById('reference-send-btn');
-
-        const defaultPersonas = [
-            { id: 'general', name: 'Trợ lý Toàn năng', icon: '🧠', description: 'Kiến thức tổng quát, trả lời đa dạng các chủ đề.', systemPrompt: `**Chỉ thị hệ thống:** Mục tiêu chính của bạn là đưa ra câu trả lời rõ ràng, chi tiết và có cấu trúc tốt. Luôn sử dụng Markdown để định dạng (tiêu đề, danh sách, in đậm). Hãy giải thích các khái niệm từng bước, bắt đầu bằng tóm tắt rồi đi vào chi tiết và ví dụ. **Yêu cầu bổ sung:** Trong quá trình trả lời, khi bạn đề cập đến một thuật ngữ kỹ thuật, một khái niệm quan trọng, hoặc một tên riêng (ví dụ: tên một công nghệ, một phương pháp), hãy bọc thuật ngữ đó trong cặp dấu ngoặc vuông. Ví dụ: '...sử dụng ngôn ngữ [JavaScript] để tương tác với [DOM]...'. Chỉ bọc duy nhất thuật ngữ đó.` },
-            { id: 'programmer', name: 'Chuyên gia Lập trình', icon: '👨‍💻', description: 'Chuyên gia về mã nguồn, thuật toán, gỡ lỗi code.', systemPrompt: `**Chỉ thị hệ thống:** Bạn là một lập trình viên cao cấp với 10 năm kinh nghiệm. Luôn đưa ra câu trả lời dưới dạng mã nguồn được giải thích rõ ràng, tuân thủ các coding convention tốt nhất. Khi được yêu cầu, hãy phân tích ưu và nhược điểm của các giải pháp khác nhau. Hãy ưu tiên tính hiệu quả và khả năng bảo trì của mã nguồn. **Yêu cầu bổ sung:** Khi đề cập đến một hàm, thư viện, hoặc khái niệm lập trình, hãy bọc nó trong dấu ngoặc vuông, ví dụ: [React], [API], [useState].` },
-            { id: 'writer', name: 'Nhà văn Sáng tạo', icon: '✍️', description: 'Hỗ trợ viết lách, lên ý tưởng, xây dựng cốt truyện.', systemPrompt: `**Chỉ thị hệ thống:** Bạn là một nhà văn và biên tập viên chuyên nghiệp. Phong cách của bạn giàu cảm xúc, sử dụng từ ngữ phong phú và hình ảnh. Hãy giúp người dùng lên ý tưởng, phát triển nhân vật, xây dựng cốt truyện, hoặc viết các đoạn văn, bài thơ theo yêu cầu. Luôn giữ một giọng văn truyền cảm hứng.` },
-            { id: 'marketing', name: 'Chuyên gia Marketing', icon: '📈', description: 'Tư vấn chiến lược, phân tích thị trường, quảng cáo.', systemPrompt: `**Chỉ thị hệ thống:** Bạn là một giám đốc marketing dày dặn kinh nghiệm. Hãy cung cấp các phân tích thị trường sắc bén, đề xuất các chiến lược marketing sáng tạo, và giúp viết các nội dung quảng cáo (copywriting) hấp dẫn, tập trung vào lợi ích của khách hàng và lời kêu gọi hành động (CTA) rõ ràng.` }
-        ];
-
-        // --- AUTHENTICATION ---
+        // --- AUTHENTICATION & INITIALIZATION ---
         onAuthStateChanged(auth, async user => {
             if (user) {
                 currentUserId = user.uid;
                 const email = user.email || '';
                 currentUserName = user.displayName || email.split('@')[0];
                 
-                authContainer.classList.add('hidden');
-                appContainer.classList.remove('hidden');
+                document.getElementById('auth-container').classList.add('hidden');
+                document.getElementById('app-container').classList.remove('hidden');
 
+                initializeEventListeners();
                 await showPersonaSelectionScreen();
-                renderAllChats(); 
+                
             } else {
                 currentUserId = null;
                 currentUserName = '';
-                authContainer.classList.remove('hidden');
-                appContainer.classList.add('hidden');
-                chatViewContainer.classList.add('hidden');
-                personaSelectionScreen.classList.add('hidden');
+                document.getElementById('auth-container').classList.remove('hidden');
+                document.getElementById('app-container').classList.add('hidden');
             }
         });
 
-        loginForm.addEventListener('submit', async e => { e.preventDefault(); try { await signInWithEmailAndPassword(auth, loginForm['login-email'].value, loginForm['login-password'].value); authError.textContent = ''; } catch (error) { authError.textContent = "Email hoặc mật khẩu không đúng."; } });
-        registerForm.addEventListener('submit', async e => { e.preventDefault(); try { await createUserWithEmailAndPassword(auth, registerForm['register-email'].value, registerForm['register-password'].value); authError.textContent = ''; } catch (error) { authError.textContent = "Không thể tạo tài khoản. Vui lòng thử lại."; } });
-        googleLoginBtn.addEventListener('click', async () => { try { await signInWithPopup(auth, new GoogleAuthProvider()); authError.textContent = ''; } catch (error) { authError.textContent = "Đăng nhập Google thất bại."; } });
-        const handleSignOut = () => signOut(auth);
-        logoutBtn.addEventListener('click', handleSignOut);
-        logoutBtnPersona.addEventListener('click', handleSignOut);
-        showRegisterBtn.addEventListener('click', () => { loginView.classList.add('hidden'); registerView.classList.remove('hidden'); authError.textContent = ''; });
-        showLoginBtn.addEventListener('click', () => { registerView.classList.add('hidden'); loginView.classList.remove('hidden'); authError.textContent = ''; });
+        document.getElementById('login-form').addEventListener('submit', async e => { e.preventDefault(); try { await signInWithEmailAndPassword(auth, document.getElementById('login-email').value, document.getElementById('login-password').value); document.getElementById('auth-error').textContent = ''; } catch (error) { document.getElementById('auth-error').textContent = "Email hoặc mật khẩu không đúng."; } });
+        document.getElementById('register-form').addEventListener('submit', async e => { e.preventDefault(); try { await createUserWithEmailAndPassword(auth, document.getElementById('register-email').value, document.getElementById('register-password').value); document.getElementById('auth-error').textContent = ''; } catch (error) { document.getElementById('auth-error').textContent = "Không thể tạo tài khoản. Vui lòng thử lại."; } });
+        document.getElementById('google-login-btn').addEventListener('click', async () => { try { await signInWithPopup(auth, new GoogleAuthProvider()); document.getElementById('auth-error').textContent = ''; } catch (error) { document.getElementById('auth-error').textContent = "Đăng nhập Google thất bại."; } });
+        
+        // --- Element Selectors & Event Listeners (Initialized once after auth) ---
+        let initialized = false;
+        function initializeEventListeners() {
+            if (initialized) return;
+            initialized = true;
+
+            const welcomeUserName = document.getElementById('welcome-user-name');
+            const createPersonaBtn = document.getElementById('create-persona-btn');
+            const customPersonasSection = document.getElementById('custom-personas-section');
+            const customPersonaTagsContainer = document.getElementById('custom-persona-tags-container');
+            const noCustomPersonaMsg = document.getElementById('no-custom-persona-msg');
+            const defaultPersonaGrid = document.getElementById('default-persona-grid');
+            const logoutBtnPersona = document.getElementById('logout-btn-persona');
+            const chatViewContainer = document.getElementById('chat-view-container');
+            const mainHeader = document.getElementById('main-header');
+            const menuBtn = document.getElementById('menu-btn');
+            const chatHeaderInfo = document.getElementById('chat-header-info');
+            const newTopicBtn = document.getElementById('new-topic-btn');
+            const themeToggle = document.getElementById('theme-toggle');
+            const logoutBtn = document.getElementById('logout-btn');
+            const sidebarOverlay = document.getElementById('sidebar-overlay');
+            const sidebar = document.getElementById('sidebar');
+            const closeSidebarBtn = document.getElementById('close-sidebar-btn');
+            const sidebarContent = document.getElementById('sidebar-content');
+            const newChatBtn = document.getElementById('new-chat-btn');
+            const pinnedChatsSection = document.getElementById('pinned-chats-section');
+            const pinnedChatsList = document.getElementById('pinned-chats-list');
+            const savedChatsList = document.getElementById('saved-chats-list');
+            const savedChatsSkeleton = document.getElementById('saved-chats-skeleton');
+            const mainContent = document.getElementById('main-content');
+            const welcomeScreen = document.getElementById('welcome-screen');
+            const chatContainer = document.getElementById('chat-container');
+            const notificationArea = document.getElementById('notification-area');
+            const suggestionArea = document.getElementById('suggestion-area');
+            const toggleSuggestionsBtn = document.getElementById('toggle-suggestions-btn');
+            const suggestionsContainer = document.getElementById('suggestions-container');
+            const inputAreaWrapper = document.getElementById('input-area-wrapper');
+            const inputArea = document.getElementById('input-area');
+            const referenceBtn = document.getElementById('reference-btn');
+            const promptInput = document.getElementById('prompt-input');
+            const recordBtn = document.getElementById('record-btn');
+            const sendBtn = document.getElementById('send-btn');
+            const personaModalOverlay = document.getElementById('persona-modal-overlay');
+            const personaModal = document.getElementById('persona-modal');
+            const personaModalTitle = document.getElementById('persona-modal-title');
+            const closePersonaModalBtn = document.getElementById('close-persona-modal-btn');
+            const personaForm = document.getElementById('persona-form');
+            const personaIdInput = document.getElementById('persona-id');
+            const personaNameInput = document.getElementById('persona-name');
+            const personaIconInput = document.getElementById('persona-icon');
+            const personaDescriptionInput = document.getElementById('persona-description');
+            const personaPromptInput = document.getElementById('persona-prompt');
+            const generatePromptBtn = document.getElementById('generate-prompt-btn');
+            const cancelPersonaBtn = document.getElementById('cancel-persona-btn');
+            const savePersonaBtn = document.getElementById('save-persona-btn');
+            const referenceModalOverlay = document.getElementById('reference-modal-overlay');
+            const referenceModal = document.getElementById('reference-modal');
+            const referenceHeader = document.getElementById('reference-header');
+            const referenceTitle = document.getElementById('reference-title');
+            const closeReferenceModalBtn = document.getElementById('close-reference-modal-btn');
+            const referenceContent = document.getElementById('reference-content');
+            const referenceInputArea = document.getElementById('reference-input-area');
+            const referencePromptInput = document.getElementById('reference-prompt-input');
+            const referenceSendBtn = document.getElementById('reference-send-btn');
+            const createPersonaShortcutBtn = document.getElementById('create-persona-shortcut-btn');
+            const showMorePersonasBtn = document.getElementById('show-more-personas-btn');
+
+
+            const handleSignOut = () => signOut(auth);
+            logoutBtn.addEventListener('click', handleSignOut);
+            logoutBtnPersona.addEventListener('click', handleSignOut);
+            
+            updateThemeIcon();
+            themeToggle.addEventListener('click', () => {
+                document.documentElement.classList.toggle('dark');
+                localStorage.setItem('color-theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light');
+                updateThemeIcon();
+            });
+
+            createPersonaShortcutBtn.addEventListener('click', () => openPersonaModal());
+            closePersonaModalBtn.addEventListener('click', closePersonaModal);
+            cancelPersonaBtn.addEventListener('click', closePersonaModal);
+            personaModalOverlay.addEventListener('click', closePersonaModal);
+            personaForm.addEventListener('submit', handleSavePersona);
+            generatePromptBtn.addEventListener('click', generateSystemPrompt);
+            newChatBtn.addEventListener('click', showPersonaSelectionScreen);
+            newTopicBtn.addEventListener('click', () => {
+                if (currentPersona) {
+                    startNewChat(currentPersona.id, !!currentPersona.ownerId);
+                }
+            });
+            sendBtn.addEventListener('click', sendMessage);
+            promptInput.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } });
+            promptInput.addEventListener('input', adjustInputHeight);
+            menuBtn.addEventListener('click', openSidebar);
+            closeSidebarBtn.addEventListener('click', closeSidebar);
+            sidebarOverlay.addEventListener('click', closeSidebar);
+            toggleSuggestionsBtn.addEventListener('click', () => suggestionsContainer.classList.toggle('hidden'));
+            referenceBtn.addEventListener('click', () => showReferenceModal('Trợ lý Phụ', true));
+            closeReferenceModalBtn.addEventListener('click', closeReferenceModal);
+            referenceModalOverlay.addEventListener('click', closeReferenceModal);
+            referenceSendBtn.addEventListener('click', sendReferenceMessage);
+            referencePromptInput.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendReferenceMessage(); } });
+            showMorePersonasBtn.addEventListener('click', (e) => {
+                customPersonaTagsContainer.classList.toggle('collapsed');
+                e.target.textContent = customPersonaTagsContainer.classList.contains('collapsed') ? 'Xem thêm...' : 'Thu gọn';
+            });
+            chatContainer.addEventListener('click', (e) => {
+                const speakButton = e.target.closest('.speak-btn');
+                const termLink = e.target.closest('.term-link');
+
+                if (speakButton) {
+                    e.preventDefault(); e.stopPropagation();
+                    const currentState = speakButton.dataset.state;
+
+                    if (currentState === 'paused') {
+                        speechSynthesis.resume();
+                        speakButton.innerHTML = '⏸️'; speakButton.dataset.state = 'playing'; speakButton.title = 'Tạm dừng';
+                        return;
+                    }
+                    if (currentState === 'playing') {
+                        speechSynthesis.pause();
+                        speakButton.innerHTML = '▶️'; speakButton.dataset.state = 'paused'; speakButton.title = 'Tiếp tục';
+                        return;
+                    }
+                    if (speechSynthesis.speaking || speechSynthesis.paused) {
+                        speechSynthesis.cancel();
+                    }
+
+                    const utterance = new SpeechSynthesisUtterance(speakButton.dataset.text);
+                    utterance.lang = 'vi-VN';
+                    utterance.onend = () => { resetActiveSpeechButton(); activeSpeech = null; };
+                    utterance.onerror = () => { resetActiveSpeechButton(); activeSpeech = null; };
+                    speechSynthesis.speak(utterance);
+                    activeSpeech = { utterance, button: speakButton };
+                    speakButton.innerHTML = '⏸️'; speakButton.dataset.state = 'playing'; speakButton.title = 'Tạm dừng';
+                } else if (termLink) {
+                    e.preventDefault();
+                    const term = termLink.dataset.term;
+                    const messageContentElement = termLink.closest('.message-content');
+                    const context = messageContentElement ? messageContentElement.dataset.rawText : '';
+                    explainTerm(term, context);
+                }
+            });
+            sidebarContent.addEventListener('scroll', () => {
+                const isNearBottom = sidebarContent.scrollHeight - sidebarContent.scrollTop - sidebarContent.clientHeight < 100;
+                if (isNearBottom && !isFetchingChats && !allChatsLoaded) {
+                    fetchRecentChats(true);
+                }
+            });
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if(SpeechRecognition) {
+                const recognition = new SpeechRecognition();
+                recognition.continuous = false; recognition.lang = 'vi-VN'; recognition.interimResults = false;
+                recognition.onstart = () => { isRecording = true; recordBtn.classList.add('recording'); promptInput.placeholder = 'Đang lắng nghe...'; };
+                recognition.onend = () => { isRecording = false; recordBtn.classList.remove('recording'); promptInput.placeholder = 'Nhập câu hỏi...'; };
+                recognition.onresult = (event) => { promptInput.value = event.results[event.results.length - 1][0].transcript.trim(); adjustInputHeight(); };
+                recognition.onerror = (event) => { addMessage('ai', `**Lỗi ghi âm:** ${event.error}. Vui lòng thử lại.`); };
+                recordBtn.addEventListener('click', () => { isRecording ? recognition.stop() : recognition.start(); });
+            } else { recordBtn.classList.add('hidden'); }
+        }
 
         // --- THEME ---
-        const updateThemeIcon = () => {
+        function updateThemeIcon() {
+            const themeToggleDarkIcon = document.getElementById('theme-toggle-dark-icon');
+            const themeToggleLightIcon = document.getElementById('theme-toggle-light-icon');
             if (document.documentElement.classList.contains('dark')) {
                 themeToggleDarkIcon.classList.add('hidden');
                 themeToggleLightIcon.classList.remove('hidden');
@@ -514,19 +591,12 @@
                 themeToggleLightIcon.classList.add('hidden');
             }
         };
-        themeToggle.addEventListener('click', () => {
-            document.documentElement.classList.toggle('dark');
-            localStorage.setItem('color-theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light');
-            updateThemeIcon();
-        });
-        updateThemeIcon();
-        
+
         // --- PERSONA SELECTION ---
         async function showPersonaSelectionScreen() {
-            welcomeScreen.classList.add('hidden');
-            welcomeScreen.classList.remove('flex');
-            personaSelectionScreen.classList.remove('hidden');
-            chatViewContainer.classList.add('hidden');
+            document.getElementById('welcome-user-name').textContent = currentUserName;
+            document.getElementById('persona-selection-screen').classList.remove('hidden');
+            document.getElementById('chat-view-container').classList.add('hidden');
             await fetchCustomPersonas();
             renderDefaultPersonas();
             renderCustomPersonas();
@@ -535,31 +605,50 @@
         }
 
         function renderDefaultPersonas() {
+            const defaultPersonaGrid = document.getElementById('default-persona-grid');
             defaultPersonaGrid.innerHTML = '';
             defaultPersonas.forEach(persona => {
-                const card = createPersonaCard(persona, false);
+                const card = createPersonaCard(persona);
                 card.onclick = () => startNewChat(persona.id);
                 defaultPersonaGrid.appendChild(card);
             });
         }
         
         function renderCustomPersonas() {
-            customPersonaGrid.innerHTML = '';
+            const customPersonaTagsContainer = document.getElementById('custom-persona-tags-container');
+            const noCustomPersonaMsg = document.getElementById('no-custom-persona-msg');
+            const customPersonasSection = document.getElementById('custom-personas-section');
+            const showMorePersonasBtn = document.getElementById('show-more-personas-btn');
+            const createPersonaShortcutBtn = document.getElementById('create-persona-shortcut-btn');
+
+            customPersonaTagsContainer.innerHTML = '';
             if (customPersonas.length > 0) {
                 customPersonasSection.classList.remove('hidden');
                 noCustomPersonaMsg.classList.add('hidden');
                 customPersonas.forEach(persona => {
-                    const card = createPersonaCard(persona, true);
-                    card.onclick = () => startNewChat(persona.id, true);
-                    customPersonaGrid.appendChild(card);
+                    const tag = createCustomPersonaTag(persona);
+                    customPersonaTagsContainer.appendChild(tag);
                 });
+
+                const createBtn = document.createElement('button');
+                createBtn.className = 'px-3 py-1.5 border-2 border-dashed border-blue-400 text-blue-500 rounded-full text-sm font-semibold hover:bg-blue-50 dark:hover:bg-blue-900/50 transition-colors';
+                createBtn.textContent = '+ Tạo mới';
+                createBtn.onclick = () => openPersonaModal();
+                customPersonaTagsContainer.appendChild(createBtn);
+
+                setTimeout(() => {
+                    const containerHeight = customPersonaTagsContainer.scrollHeight;
+                    const collapsedHeight = parseFloat(getComputedStyle(customPersonaTagsContainer).maxHeight);
+                    showMorePersonasBtn.classList.toggle('hidden', containerHeight <= collapsedHeight);
+                }, 10);
+
             } else {
-                customPersonasSection.classList.remove('hidden');
+                customPersonasSection.classList.add('hidden');
                 noCustomPersonaMsg.classList.remove('hidden');
             }
         }
         
-        function createPersonaCard(persona, isCustom) {
+        function createPersonaCard(persona) {
             const card = document.createElement('div');
             card.className = 'persona-card cursor-pointer p-4 sm:p-5 bg-white dark:bg-slate-800 rounded-2xl shadow-md flex flex-col items-center text-center h-full';
             card.innerHTML = `
@@ -567,22 +656,37 @@
                 <h3 class="text-base sm:text-lg font-bold text-gray-800 dark:text-gray-100 mb-2">${persona.name}</h3>
                 <p class="text-xs sm:text-sm text-gray-600 dark:text-gray-400 flex-1">${persona.description}</p>
             `;
-            if (isCustom) {
-                const actionsWrapper = document.createElement('div');
-                actionsWrapper.className = 'custom-persona-actions flex items-center gap-1';
-                actionsWrapper.innerHTML = `
-                    <button class="edit-persona-btn p-1.5 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm rounded-full text-gray-600 dark:text-gray-300 hover:text-blue-500 dark:hover:text-blue-400" title="Chỉnh sửa"><svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z"></path><path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd"></path></svg></button>
-                    <button class="delete-persona-btn p-1.5 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm rounded-full text-gray-600 dark:text-gray-300 hover:text-red-500 dark:hover:text-red-400" title="Xóa"><svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"></path></svg></button>
-                `;
-                actionsWrapper.querySelector('.edit-persona-btn').onclick = (e) => { e.stopPropagation(); openPersonaModal(persona); };
-                actionsWrapper.querySelector('.delete-persona-btn').onclick = (e) => { e.stopPropagation(); deletePersona(persona.id, persona.name); };
-                card.appendChild(actionsWrapper);
-            }
             return card;
+        }
+
+        function createCustomPersonaTag(persona) {
+            const tag = document.createElement('button');
+            tag.className = 'persona-tag relative group px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-full text-sm font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors';
+            tag.innerHTML = `<span>${persona.name}</span>`;
+            
+            const actionsWrapper = document.createElement('div');
+            actionsWrapper.className = 'absolute -top-2 -right-2 flex items-center opacity-0 group-hover:opacity-100 transition-opacity';
+            actionsWrapper.innerHTML = `
+                <button class="edit-persona-btn p-1 bg-white dark:bg-slate-600 rounded-full shadow-md text-gray-600 dark:text-gray-300 hover:text-blue-500 dark:hover:text-blue-400" title="Chỉnh sửa"><svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z"></path><path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd"></path></svg></button>
+                <button class="delete-persona-btn p-1 bg-white dark:bg-slate-600 rounded-full shadow-md text-gray-600 dark:text-gray-300 hover:text-red-500 dark:hover:text-red-400" title="Xóa"><svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"></path></svg></button>
+            `;
+            actionsWrapper.querySelector('.edit-persona-btn').onclick = (e) => { e.stopPropagation(); openPersonaModal(persona); };
+            actionsWrapper.querySelector('.delete-persona-btn').onclick = (e) => { e.stopPropagation(); deletePersona(persona.id, persona.name); };
+            tag.appendChild(actionsWrapper);
+             tag.onclick = () => startNewChat(persona.id, true);
+            return tag;
         }
 
         // --- PERSONA MODAL ---
         function openPersonaModal(personaToEdit = null) {
+            const personaForm = document.getElementById('persona-form');
+            const personaModalTitle = document.getElementById('persona-modal-title');
+            const personaIdInput = document.getElementById('persona-id');
+            const personaNameInput = document.getElementById('persona-name');
+            const personaIconInput = document.getElementById('persona-icon');
+            const personaDescriptionInput = document.getElementById('persona-description');
+            const personaPromptInput = document.getElementById('persona-prompt');
+
             personaForm.reset();
             if (personaToEdit) {
                 personaModalTitle.textContent = 'Chỉnh sửa Persona';
@@ -595,14 +699,16 @@
                 personaModalTitle.textContent = 'Tạo Chuyên gia AI của bạn';
                 personaIdInput.value = '';
             }
-            personaModalOverlay.classList.remove('hidden');
-            personaModal.classList.remove('hidden');
+            document.getElementById('persona-modal-overlay').classList.remove('hidden');
+            document.getElementById('persona-modal').classList.remove('hidden');
             requestAnimationFrame(() => {
-                personaModal.classList.remove('scale-95', 'opacity-0');
+                document.getElementById('persona-modal').classList.remove('scale-95', 'opacity-0');
             });
         }
 
         function closePersonaModal() {
+             const personaModalOverlay = document.getElementById('persona-modal-overlay');
+             const personaModal = document.getElementById('persona-modal');
             personaModal.classList.add('scale-95', 'opacity-0');
             setTimeout(() => {
                 personaModalOverlay.classList.add('hidden');
