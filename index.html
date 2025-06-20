@@ -99,7 +99,12 @@
         .dark .welcome-suggestion-card:hover {
             background-color: #374151; /* gray-700 */
         }
-
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
+        .animate-spin {
+          animation: spin 1s linear infinite;
+        }
     </style>
 </head>
 <body class="bg-gray-100 dark:bg-gray-900 font-sans overflow-x-hidden">
@@ -309,7 +314,12 @@
                     <textarea id="persona-description" rows="2" required class="block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm resize-none"></textarea>
                 </div>
                 <div>
-                    <label for="persona-prompt" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Chỉ thị Hệ thống (System Prompt)</label>
+                    <div class="flex items-center justify-between">
+                         <label for="persona-prompt" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Chỉ thị Hệ thống (System Prompt)</label>
+                         <button type="button" id="generate-prompt-btn" class="p-1 rounded-full text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-slate-700" title="Gợi ý từ AI">
+                            <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 3a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 0110 3zM3.05 4.29a.75.75 0 010 1.06l-1.06 1.06a.75.75 0 11-1.06-1.06l1.06-1.06a.75.75 0 011.06 0zm12.84 1.06a.75.75 0 011.06 0l1.06 1.06a.75.75 0 11-1.06 1.06l-1.06-1.06a.75.75 0 010-1.06zM10 15a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 0110 15zM4.11 15.89a.75.75 0 011.06 0l1.06-1.06a.75.75 0 111.06 1.06l-1.06 1.06a.75.75 0 01-1.06 0l-1.06-1.06a.75.75 0 010-1.06zM15.89 15.89a.75.75 0 010 1.06l-1.06 1.06a.75.75 0 11-1.06-1.06l1.06-1.06a.75.75 0 011.06 0zM3 10a.75.75 0 01.75-.75h1.5a.75.75 0 010 1.5h-1.5A.75.75 0 013 10zM15 10a.75.75 0 01.75-.75h1.5a.75.75 0 010 1.5h-1.5A.75.75 0 0115 10zM10 6a4 4 0 100 8 4 4 0 000-8z" clip-rule="evenodd" /></svg>
+                         </button>
+                    </div>
                     <textarea id="persona-prompt" rows="6" required class="block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm resize-y"></textarea>
                     <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">Đây là chỉ dẫn cốt lõi cho AI, quyết định vai trò và phong cách của nó.</p>
                 </div>
@@ -361,7 +371,7 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
         const ai = getAI(app);
-        const model = getGenerativeModel(ai, { model: "gemini-2.5-flash" });
+        const model = getGenerativeModel(ai, { model: "gemini-1.5-flash" });
         const fastModel = getGenerativeModel(ai, { model: "gemini-1.5-flash" });
 
         let currentUserId = null;
@@ -442,6 +452,7 @@
         const personaIconInput = document.getElementById('persona-icon');
         const personaDescriptionInput = document.getElementById('persona-description');
         const personaPromptInput = document.getElementById('persona-prompt');
+        const generatePromptBtn = document.getElementById('generate-prompt-btn');
         const cancelPersonaBtn = document.getElementById('cancel-persona-btn');
         const savePersonaBtn = document.getElementById('save-persona-btn');
         const referenceModalOverlay = document.getElementById('reference-modal-overlay');
@@ -648,15 +659,12 @@
                 console.error("Lỗi khi xóa persona:", error);
             }
         }
-        
+
         // --- CHAT LOGIC ---
         async function startNewChat(personaId, isCustom = false) {
-            // First, clear the chat container and prepare the UI
-            chatContainer.innerHTML = '';
-            chatContainer.appendChild(notificationArea);
-            chatContainer.classList.add('hidden'); // Hide chat while welcome screen is active
             welcomeScreen.classList.remove('hidden');
             welcomeScreen.classList.add('flex');
+            chatContainer.classList.add('hidden');
 
             let selectedPersona;
             if (isCustom) {
@@ -684,11 +692,10 @@
                 parts: [{ text: "Đã hiểu! Tôi đã sẵn sàng. Bạn cần tôi giúp gì?" }],
             }];
             
-            await renderAllChats(); // Refresh the sidebar
+            await renderAllChats();
             closeSidebar();
             if(speechSynthesis.speaking) speechSynthesis.cancel();
             
-            // Now, populate and show the welcome screen
             await generateWelcomeSuggestions();
         }
         
@@ -1353,7 +1360,7 @@
 
         function resetActiveSpeechButton() {
             if (activeSpeech && activeSpeech.button) {
-                activeSpeech.button.innerHTML = '�';
+                activeSpeech.button.innerHTML = '🔊';
                 activeSpeech.button.dataset.state = 'idle';
                 activeSpeech.button.title = 'Đọc văn bản';
             }
@@ -1420,4 +1427,3 @@
     </script>
 </body>
 </html>
-�
