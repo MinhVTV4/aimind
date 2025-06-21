@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gemini Chat</title>
+    <title>Gemini Chat - Chế độ Học tập</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/dompurify@2.3.6/dist/purify.min.js"></script>
@@ -54,6 +54,8 @@
         .message-content ul { list-style-type: disc; }
         .message-content ol { list-style-type: decimal; }
         .message-content li { margin-bottom: 0.5rem; padding-left: 0.5rem; }
+        .message-content a { color: #3b82f6; text-decoration: underline; }
+        .dark .message-content a { color: #60a5fa; }
         .message-content blockquote { border-left: 4px solid #d1d5db; padding-left: 1rem; margin: 1rem 0; color: #4b5563; font-style: italic; }
         .dark .message-content blockquote { border-left-color: #4b5563; color: #9ca3af; }
         .note-wrapper { margin-top: 1rem; margin-bottom: 1rem; padding: 1rem; border-radius: 0.5rem; border-width: 1px; background-color: #fefce8; border-color: #fde68a; }
@@ -68,10 +70,10 @@
         .dark .summary-header { color: #c084fc; }
         .summary-content { color: #374151; }
         .dark .summary-content { color: #d1d5db; }
-        .term-link { color: #2563eb; font-weight: 600; border-bottom: 2px dotted #93c5fd; cursor: pointer; transition: color 0.2s, border-color 0.2s; }
-        .dark .term-link { color: #60a5fa; border-bottom-color: #3b82f6; }
-        .term-link:hover { color: #1d4ed8; border-bottom-color: #2563eb; }
-        .dark .term-link:hover { color: #93c5fd; border-bottom-color: #60a5fa; }
+        .term-link, .learning-link { color: #2563eb; font-weight: 600; border-bottom: 2px dotted #93c5fd; cursor: pointer; transition: color 0.2s, border-color 0.2s; text-decoration: none; }
+        .dark .term-link, .dark .learning-link { color: #60a5fa; border-bottom-color: #3b82f6; }
+        .term-link:hover, .learning-link:hover { color: #1d4ed8; border-bottom-color: #2563eb; background-color: #eef2ff; }
+        .dark .term-link:hover, .dark .learning-link:hover { color: #93c5fd; border-bottom-color: #60a5fa; background-color: #374151;}
         .ai-status { font-size: 0.875rem; line-height: 1.25rem; font-weight: 600; color: #2563eb; padding-right: 0.5rem; }
         .dark .ai-status { color: #60a5fa; }
         #persona-selection-screen { -ms-overflow-style: none; scrollbar-width: none; }
@@ -124,6 +126,54 @@
         .toast.hide {
             opacity: 0;
             transform: translateX(120%);
+        }
+        /* Learning Mode Toggle */
+        #learning-mode-toggle:checked + .block + .dot {
+            transform: translateX(1.5rem); /* 24px */
+            background-color: #3b82f6; /* bg-blue-600 */
+        }
+        #learning-mode-toggle:checked + .block {
+            background-color: #93c5fd; /* bg-blue-300 */
+        }
+        .dark #learning-mode-toggle:checked + .block + .dot {
+            background-color: #60a5fa; /* bg-blue-400 */
+        }
+        .dark #learning-mode-toggle:checked + .block {
+            background-color: #374151;
+        }
+
+        /* Scroll to Top Button Styles */
+        #scrollToTopBtn {
+            display: none; /* Hidden by default */
+            position: absolute; /* Changed from fixed to absolute */
+            bottom: 20px; /* Place at the bottom */
+            right: 20px; /* Place at the right */
+            z-index: 99; /* Make sure it does not overlap */
+            border: none; /* Remove borders */
+            outline: none; /* Remove outline */
+            background-color: #3b82f6; /* Blue background */
+            color: white; /* White text */
+            cursor: pointer; /* Add a mouse pointer on hover */
+            padding: 10px 15px; /* Some padding */
+            border-radius: 50%; /* Rounded corners */
+            font-size: 18px; /* Increase font size */
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2); /* Add a subtle shadow */
+            transition: background-color 0.3s, opacity 0.3s; /* Smooth transition */
+            opacity: 0; /* Start hidden */
+        }
+
+        #scrollToTopBtn:hover {
+            background-color: #2563eb; /* Darker blue on hover */
+        }
+        #scrollToTopBtn.show {
+            opacity: 1;
+            display: block;
+        }
+        .dark #scrollToTopBtn {
+            background-color: #60a5fa;
+        }
+        .dark #scrollToTopBtn:hover {
+            background-color: #3b82f6;
         }
     </style>
     <link rel="manifest" href="manifest.json">
@@ -260,6 +310,17 @@
                         <button id="new-topic-btn" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors" title="Trò chuyện mới">
                             <svg class="w-6 h-6 text-blue-600 dark:text-blue-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" /></svg>
                         </button>
+                        <!-- Learning Mode Toggle -->
+                        <div class="flex items-center border-l border-gray-200 dark:border-slate-600 ml-2 pl-2">
+                            <label for="learning-mode-toggle" class="flex items-center cursor-pointer" title="Bật/Tắt chế độ học tập tương tác">
+                                <span class="mr-2 text-sm font-medium text-gray-700 dark:text-gray-300">Học tập</span>
+                                <div class="relative">
+                                    <input type="checkbox" id="learning-mode-toggle" class="sr-only">
+                                    <div class="block bg-gray-200 dark:bg-slate-700 w-12 h-6 rounded-full transition-colors"></div>
+                                    <div class="dot absolute left-1 top-1 bg-white dark:bg-slate-500 w-4 h-4 rounded-full transition-transform"></div>
+                                </div>
+                            </label>
+                        </div>
                     </div>
                     
                     <div class="flex items-center gap-1 sm:gap-2">
@@ -288,6 +349,8 @@
                                 Đang tối ưu hóa cuộc trò chuyện...
                             </div>
                         </div>
+                        <!-- Scroll to Top Button (Moved Here) -->
+                        <button id="scrollToTopBtn" title="Cuộn lên đầu trang">&#8593;</button>
                     </div>
 
                     <div id="suggestion-area" class="px-4 pb-2">
@@ -404,6 +467,7 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
         const ai = getAI(app);
+        // Reverted model to gemini-1.5-flash as previously used.
         const model = getGenerativeModel(ai, { model: "gemini-2.5-flash" });
         const fastModel = getGenerativeModel(ai, { model: "gemini-1.5-flash" });
 
@@ -423,6 +487,18 @@
         let isFetchingChats = false;
         let allChatsLoaded = false;
         const CHATS_PER_PAGE = 15;
+        let isLearningMode = false;
+
+        const LEARNING_MODE_SYSTEM_PROMPT = `**CHỈ THỊ HỆ THỐNG - CHẾ ĐỘ HỌC TẬP ĐANG BẬT**
+Bạn là một người hướng dẫn học tập chuyên nghiệp. Khi người dùng yêu cầu một lộ trình học, hãy tuân thủ các quy tắc sau:
+1.  **Tạo Lộ trình:** Trả lời bằng một danh sách có cấu trúc (dùng Markdown với gạch đầu dòng).
+2.  **Tạo Liên kết Tương tác:** Đối với MỖI MỤC trong lộ trình, bạn PHẢI định dạng nó theo cú pháp đặc biệt sau: \`[Tên mục học]{"prompt":"Yêu cầu chi tiết để giải thích về mục học này"}\`
+    * **[Tên mục học]**: Là tiêu đề của bài học. QUAN TRỌNG: Bên trong "Tên mục học", bạn không được sử dụng thêm dấu ngoặc vuông \`[]\` để nhấn mạnh bất kỳ thuật ngữ nào khác. Hãy viết tên mục một cách tự nhiên.
+    * **{"prompt":"..."}**: Là một đối tượng JSON chứa một khóa "prompt". Giá trị của khóa này là một câu lệnh đầy đủ bạn tự tạo ra để yêu cầu chính bạn giải thích sâu về mục học đó. Prompt phải chi tiết và bằng tiếng Việt.
+**Ví dụ yêu cầu từ người dùng:** "Tạo cho tôi lộ trình học Javascript."
+**Ví dụ đầu ra MONG DUỐN từ bạn:**
+* [Giới thiệu về Javascript và Lịch sử]{"prompt":"Hãy giải thích chi tiết Javascript là gì, lịch sử và vai trò của nó trong phát triển web hiện đại."}
+* [Cú pháp cơ bản, Biến và Kiểu dữ liệu]{"prompt":"Trình bày bài học về cú pháp cơ bản của Javascript, cách khai báo biến với var, let, const, và các kiểu dữ liệu nguyên thủy như string, number, boolean, null, undefined."}`;
 
 
         // Element Selectors
@@ -498,6 +574,7 @@
         const referenceInputArea = document.getElementById('reference-input-area');
         const referencePromptInput = document.getElementById('reference-prompt-input');
         const referenceSendBtn = document.getElementById('reference-send-btn');
+        const learningModeToggle = document.getElementById('learning-mode-toggle'); 
 
         const defaultPersonas = [
             { id: 'general', name: 'Trợ lý Toàn năng', icon: '🧠', description: 'Kiến thức tổng quát, trả lời đa dạng các chủ đề.', systemPrompt: `**Chỉ thị hệ thống:** Mục tiêu chính của bạn là đưa ra câu trả lời rõ ràng, chi tiết và có cấu trúc tốt. Luôn sử dụng Markdown để định dạng (tiêu đề, danh sách, in đậm). Hãy giải thích các khái niệm từng bước, bắt đầu bằng tóm tắt rồi đi vào chi tiết và ví dụ. **Yêu cầu bổ sung:** Trong quá trình trả lời, khi bạn đề cập đến một thuật ngữ kỹ thuật, một khái niệm quan trọng, hoặc một tên riêng (ví dụ: tên một công nghệ, một phương pháp), hãy bọc thuật ngữ đó trong cặp dấu ngoặc vuông. Ví dụ: '...sử dụng ngôn ngữ [JavaScript] để tương tác với [DOM]...'. Chỉ bọc duy nhất thuật ngữ đó.` },
@@ -771,6 +848,49 @@
         }
         
         // --- CHAT LOGIC ---
+
+        // NEW: Smarter pre-processor function
+        function preprocessText(text) {
+            const learningLinkRegex = /\[([^\]]+?)\]\{"prompt":"([^"]+?)"\}/g;
+            const termLinkRegex = /\[([^\]]+?)\]/g;
+            
+            const parts = [];
+            let lastIndex = 0;
+            let match;
+
+            // Step 1: Find all learning links and replace them first
+            while ((match = learningLinkRegex.exec(text)) !== null) {
+                // Add the text before this match
+                parts.push(text.substring(lastIndex, match.index));
+                
+                const title = match[1];
+                const prompt = match[2];
+
+                // Create the learning link HTML. The title itself is NOT processed for term links.
+                const sanitizedPrompt = prompt.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+                parts.push(`<a href="#" class="learning-link" data-prompt="${sanitizedPrompt}">${title}</a>`);
+                
+                lastIndex = match.index + match[0].length;
+            }
+
+            // Add the remaining text after the last match
+            parts.push(text.substring(lastIndex));
+
+            // Step 2: Process the parts that are NOT learning links for term links.
+            const finalParts = parts.map(part => {
+                // Check if the part is already a generated HTML tag
+                if (part.startsWith('<a href="#" class="learning-link"')) {
+                    return part; // This is a learning link, don't touch it
+                } else {
+                    // This is regular text, process it for term links
+                    return part.replace(termLinkRegex, `<a href="#" class="term-link" data-term="$1">$1</a>`);
+                }
+            });
+
+            return finalParts.join('');
+        }
+
+
         async function startNewChat(personaId, isCustom = false) {
             let selectedPersona;
             if (isCustom) {
@@ -821,23 +941,23 @@
             }
         }
         
-        function addMessageActions(actionsContainer, text) {
-            if (!actionsContainer || !text || text.includes('blinking-cursor')) return;
+        function addMessageActions(actionsContainer, rawText) {
+             if (!actionsContainer || !rawText || rawText.includes('blinking-cursor')) return;
             
             actionsContainer.innerHTML = ''; // Clear previous
         
             const copyBtn = document.createElement('button');
             copyBtn.className = 'copy-btn p-1.5 text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 rounded-full transition-colors';
-            copyBtn.innerHTML = `<svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 0 1-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 0 1 1.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 0 0-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 0 1-1.125-1.125v-9.25m12 6.625v-1.875a3.375 3.375 0 0 0-3.375-3.375h-1.5a1.125 1.125 0 0 1-1.125-1.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H9.75" /></svg>`;
+            copyBtn.innerHTML = `<svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 0 1-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 0 1 1.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 0 0-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 0 1-1.125-1.125v-9.25m12 6.625v-1.875a3.375 3.375 0 0 0-3.375-3.375h-1.5a1.125 1.125 0 0 1-1.125-1.125v-1.5a3.375 3.375 0 00-3.375-3.375H9.75" /></svg>`;
             copyBtn.title = 'Sao chép nội dung';
-            copyBtn.dataset.text = text;
+            copyBtn.dataset.text = rawText;
             actionsContainer.appendChild(copyBtn);
             
             const speakBtn = document.createElement('button');
             speakBtn.className = 'speak-btn p-1.5 text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 rounded-full transition-colors';
             speakBtn.innerHTML = '🔊';
             speakBtn.title = 'Đọc văn bản';
-            speakBtn.dataset.text = text;
+            speakBtn.dataset.text = rawText;
             speakBtn.dataset.state = 'idle';
             actionsContainer.appendChild(speakBtn);
         }
@@ -846,7 +966,7 @@
             const messageWrapper = document.createElement('div');
             let contentElem;
             let statusElem;
-            let actionsContainer;
+            let actionsContainer = null; // Initialize actionsContainer here
 
             if (role === 'ai' || role === 'model') {
                 messageWrapper.className = 'w-full space-y-2';
@@ -893,17 +1013,21 @@
                 actionsContainer = messageWrapper.querySelector('.message-actions');
             }
             
-            const processedText = text.replace(/\[([^\]]+)\]/g, `<a href="#" class="term-link" data-term="$1">$1</a>`);
-            contentElem.innerHTML = DOMPurify.sanitize(marked.parse(processedText), { ADD_ATTR: ['target', 'data-term', 'data-raw-text'] });
+            const preprocessedText = preprocessText(text);
+            contentElem.innerHTML = DOMPurify.sanitize(marked.parse(preprocessedText), { ADD_ATTR: ['target', 'data-term', 'data-prompt'] });
 
-            addMessageActions(actionsContainer, text);
+            // Only add message actions if actionsContainer is not null (i.e., for AI/model messages or summaries)
+            if (actionsContainer) {
+                addMessageActions(actionsContainer, text);
+            }
 
             chatContainer.insertBefore(messageWrapper, notificationArea);
             if (shouldScroll) {
-                messageWrapper.scrollIntoView({ behavior: "smooth", block: "end" });
+                // Modified to scroll the chatContainer itself
+                chatContainer.scrollTop = chatContainer.scrollHeight;
             }
 
-            return { messageWrapper, contentElem, statusElem };
+            return { messageWrapper, contentElem, statusElem, actionsContainer }; // Return actionsContainer
         }
         
         async function handleSummary() {
@@ -944,60 +1068,134 @@
             }
         }
 
-        async function sendMessage() {
+        async function sendMessage(promptTextOverride = null) {
+            console.log("--- sendMessage called ---");
+            console.log("Initial localHistory length:", localHistory.length);
+
             welcomeScreen.classList.add('hidden');
             welcomeScreen.classList.remove('flex');
             chatContainer.classList.remove('hidden');
+        
+            const userDisplayedText = promptTextOverride ? (localHistory.find(m => m.role === 'model' && m.parts[0].text.includes(promptTextOverride)) ? null : promptTextOverride) : promptInput.value.trim();
+            const actualPromptToSend = promptTextOverride || promptInput.value.trim();
 
-            const promptText = promptInput.value.trim();
-            if (!promptText || isSummarizing) return;
-            
-            const filteredHistory = localHistory.filter(msg => msg.role !== 'note' && msg.role !== 'summary');
-            chat = model.startChat({ history: filteredHistory });
+            if (!actualPromptToSend || isSummarizing) return;
+
+            // If this is a direct user message, clear the input
+            if (!promptTextOverride) {
+                promptInput.value = '';
+                adjustInputHeight();
+            }
 
             sendBtn.disabled = true;
-            promptInput.value = '';
-            adjustInputHeight();
             clearSuggestions();
-            addMessage('user', promptText);
-            localHistory.push({ role: 'user', parts: [{ text: promptText }] });
 
-            const { messageWrapper, contentElem, statusElem } = addMessage('ai', '<span class="blinking-cursor"></span>');
+            // Display what the user *sees* as their message.
+            if(userDisplayedText) {
+                addMessage('user', userDisplayedText);
+                localHistory.push({ role: 'user', parts: [{ text: userDisplayedText }] });
+                console.log("localHistory after adding user message:", JSON.parse(JSON.stringify(localHistory)));
+            }
+        
+            // Capture the elements returned by addMessage for the AI response
+            const { messageWrapper, contentElem, statusElem, actionsContainer } = addMessage('ai', '<span class="blinking-cursor"></span>');
             if (statusElem) statusElem.textContent = 'Đang suy nghĩ...';
-            
+
             try {
-                const result = await chat.sendMessageStream(promptText);
+                // --- Start: History preparation for API call to enforce alternation ---
+                let historyForThisCall = [];
+                // Iterate over localHistory up to the current user's prompt (which is the last 'user' message)
+                // to build a valid chat history for the AI model.
+                const historyLength = localHistory.length;
+                for (let i = 0; i < historyLength; i++) {
+                    const message = localHistory[i];
+
+                    // Skip 'note' and 'summary' roles as they are not part of the AI conversation history
+                    if (message.role === 'note' || message.role === 'summary') {
+                        continue;
+                    }
+
+                    // If this is the current user's message (the last 'user' message in localHistory),
+                    // it will be passed as the 'prompt' argument to sendMessageStream, not as part of history.
+                    if (i === historyLength - 1 && message.role === 'user') {
+                        break; 
+                    }
+                    
+                    // Enforce strict alternation for user and model roles.
+                    // If the current message role is the same as the last added to historyForThisCall,
+                    // and it's a 'model' role, this indicates a malformed history (model followed by model).
+                    // This is the specific error we are fixing.
+                    if (historyForThisCall.length > 0 && historyForThisCall[historyForThisCall.length - 1].role === message.role) {
+                        if (message.role === 'model') {
+                            console.warn("Skipping consecutive 'model' message found in localHistory during history preparation:", message);
+                            // If a model message follows another model message, skip it.
+                            // This effectively "heals" the history for the API call.
+                            continue;
+                        }
+                        // For consecutive 'user' messages, we generally allow them to be passed to the SDK,
+                        // as it might treat them as a single user turn. If errors related to user-user appear,
+                        // this logic might need further refinement (e.g., concatenating user messages).
+                    }
+
+                    historyForThisCall.push(message);
+                }
+                // --- End: History preparation for API call ---
+
+                // Declare finalPrompt with an explicit assignment path for robustness.
+                let finalPrompt;
+                if (isLearningMode && !promptTextOverride) { // Apply learning mode prompt only for new requests, not for clicking links
+                    finalPrompt = `${LEARNING_MODE_SYSTEM_PROMPT}\n\nYêu cầu của người học: "${actualPromptToSend}"`;
+                } else {
+                    finalPrompt = actualPromptToSend;
+                }
+
+                console.log("History sent to startChat:", JSON.parse(JSON.stringify(historyForThisCall))); 
+                const chatSession = model.startChat({ history: historyForThisCall });
+                const result = await chatSession.sendMessageStream(finalPrompt);
+
                 let fullResponseText = "";
                 let isFirstChunk = true;
-
+        
                 for await (const chunk of result.stream) {
-                     if (isFirstChunk) {
+                    if (isFirstChunk) {
                         if (statusElem) statusElem.textContent = 'Đang viết...';
                         isFirstChunk = false;
                     }
                     fullResponseText += chunk.text();
-                    const processedChunk = fullResponseText.replace(/\[([^\]]+)\]/g, `<a href="#" class="term-link" data-term="$1">$1</a>`);
-                    contentElem.innerHTML = DOMPurify.sanitize(marked.parse(processedChunk)) + '<span class="blinking-cursor"></span>';
+                    
+                    const processedChunk = preprocessText(fullResponseText + '<span class="blinking-cursor"></span>');
+                    contentElem.innerHTML = DOMPurify.sanitize(marked.parse(processedChunk), {ADD_ATTR: ['target', 'data-term', 'data-prompt']});
                     messageWrapper.scrollIntoView({ behavior: "smooth", block: "end" });
                 }
                 
                 if (statusElem) statusElem.classList.add('hidden');
-                const finalProcessedText = fullResponseText.replace(/\[([^\]]+)\]/g, `<a href="#" class="term-link" data-term="$1">$1</a>`);
-                contentElem.innerHTML = DOMPurify.sanitize(marked.parse(finalProcessedText), { ADD_ATTR: ['target', 'data-term', 'data-raw-text'] });
+                
+                const finalProcessedText = preprocessText(fullResponseText);
+                contentElem.innerHTML = DOMPurify.sanitize(marked.parse(finalProcessedText), {ADD_ATTR: ['target', 'data-term', 'data-prompt']});
                 contentElem.dataset.rawText = fullResponseText;
                 
-                addMessageActions(messageWrapper.querySelector('.message-actions'), fullResponseText);
+                addMessageActions(actionsContainer, fullResponseText); 
                 
                 setTimeout(() => {
                      messageWrapper.scrollIntoView({ behavior: "smooth", block: "start" });
                 }, 100);
-
+        
                 localHistory.push({ role: 'model', parts: [{ text: fullResponseText }] });
+                console.log("localHistory after adding model message:", JSON.parse(JSON.stringify(localHistory)));
                 await updateConversationInDb();
-                await getFollowUpSuggestions(fullResponseText);
+                if(!isLearningMode && !promptTextOverride) await getFollowUpSuggestions(fullResponseText);
+
             } catch (error) {
+                console.error("Error during sendMessage:", error);
                 contentElem.innerHTML = `**Lỗi:** ${error.message}`;
-                localHistory.pop();
+                // If an error occurs, pop the last message (which was the user's prompt or the AI's pending message)
+                // to avoid malformed history for the next attempt.
+                if (localHistory.length > 0) {
+                    localHistory.pop(); 
+                    console.log("localHistory after error pop:", JSON.parse(JSON.stringify(localHistory)));
+                }
+                showToast(`Lỗi gửi tin nhắn: ${error.message}`, 'error');
+
             } finally {
                 sendBtn.disabled = false;
             }
@@ -1059,9 +1257,8 @@
                     updateChatHeader(currentPersona);
 
                     currentChatId = chatDoc.id;
-                    localHistory = data.history || [];
-                    const filteredHistory = localHistory.filter(msg => msg.role !== 'note' && msg.role !== 'summary');
-                    chat = model.startChat({ history: filteredHistory });
+                    localHistory = data.history || []; // HISTORY IS LOADED HERE
+                    console.log("Loaded localHistory:", JSON.parse(JSON.stringify(localHistory)));
                     
                     await renderAllChats();
                     welcomeScreen.classList.add('hidden');
@@ -1082,6 +1279,7 @@
                 }
             } catch (error) {
                 console.error("Lỗi khi tải cuộc trò chuyện:", error);
+                showToast('Lỗi khi tải cuộc trò chuyện.', 'error');
                 addMessage('ai', '**Lỗi:** Không thể tải cuộc trò chuyện.');
             }
         }
@@ -1095,7 +1293,7 @@
         async function getFollowUpSuggestions(lastResponse) {
             try {
                 const suggestionPrompt = `Dựa vào câu trả lời sau: "${lastResponse.substring(0, 500)}". Hãy đề xuất 3 câu hỏi tiếp theo ngắn gọn và thú vị mà người dùng có thể hỏi. QUAN TRỌNG: Chỉ trả về 3 câu hỏi, mỗi câu trên một dòng. Không đánh số, không dùng gạch đầu dòng, không thêm bất kỳ văn bản nào khác.`;
-                const result = await fastModel.generateContent(suggestionPrompt);
+                const result = await fastModel.generateContent(prompt);
                 const responseText = result.response.text();
                 const suggestions = responseText.split('\n').filter(s => s.trim() !== '');
                 displaySuggestions(suggestions);
@@ -1113,7 +1311,7 @@
                     chip.className = 'suggestion-chip border border-blue-200 dark:border-slate-600 bg-blue-50 dark:bg-slate-700 text-blue-700 dark:text-blue-400 rounded-full px-3 py-1 text-sm hover:bg-blue-100 dark:hover:bg-slate-600 transition-colors';
                     chip.textContent = suggestionText;
                     chip.onclick = () => { 
-                        getSuggestedAnswer(suggestionText);
+                        sendMessage(suggestionText);
                     };
                     suggestionsContainer.appendChild(chip);
                 });
@@ -1149,8 +1347,7 @@
                     card.className = 'w-full p-4 text-left border dark:border-gray-700 rounded-lg welcome-suggestion-card';
                     card.textContent = text;
                     card.onclick = () => {
-                        promptInput.value = text;
-                        sendMessage();
+                        sendMessage(text);
                     };
                     suggestionsContainer.appendChild(card);
                 });
@@ -1228,9 +1425,10 @@
                     const li = createChatItem(docSnap);
                     pinnedChatsList.appendChild(li);
                 });
-             } catch (error) {
-                console.error("Lỗi khi lấy chat đã ghim (cần tạo index trên Firebase):", error);
              }
+            catch (error) {
+                console.error("Lỗi khi lấy chat đã ghim (cần tạo index trên Firebase):", error);
+            }
         }
 
         async function fetchRecentChats(loadMore = false) {
@@ -1252,7 +1450,7 @@
                      savedChatsList.innerHTML = `
                         <li id="empty-chats-state" class="text-center p-4 space-y-2">
                             <div class="flex justify-center">
-                               <svg class="w-12 h-12 text-gray-300 dark:text-gray-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M20.25 8.511c.884.284 1.5 1.128 1.5 2.097v4.286c0 1.136-.847 2.1-1.98 2.193l-3.722.267c-.427.03-.848.06-1.274.089a7.5 7.5 0 0 1-6.044-2.258 7.5 7.5 0 0 1-6.044 2.258c-.427-.029-.848-.06-1.274-.089l-3.722-.267A2.101 2.101 0 0 1 2.25 14.894V10.607c0-.97.616-1.813 1.5-2.097L6.75 8.25m.75 12.75c.621 0 1.223-.041 1.824-.121a7.5 7.5 0 0 1 7.399 0A18.75 18.75 0 0 0 22.5 21V9.75l-3.75 1.5-3.75-1.5-3.75 1.5-3.75-1.5L2.25 9.75v11.25c.621 0 1.223-.041 1.824-.121a7.5 7.5 0 0 1 7.399 0A18.75 18.75 0 0 0 16.5 21z" /></svg>
+                               <svg class="w-12 h-12 text-gray-300 dark:text-gray-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M20.25 8.511c.884.284 1.5 1.128 1.5 2.097v4.286c0 1.136-.847 2.1-1.98 2.193l-3.722.267c-.427.03-.848.06-1.274.089a7.5 7.5 0 0 1-6.044-2.258 7.5 7.5 0 0 1-6.044 2.258c-.427-.029-.848-.06-1.274-.089l-3.722-.267A2.101 2.101 0 0 1 2.25 14.894V10.607c0-.97.616-1.813 1.5-2.097L6.75 8.25m.75 12.75c.621 0 1.223-.041 1.824-.121a7.5 7.5 0 017.399 0A18.75 18.75 0 0 0 22.5 21V9.75l-3.75 1.5-3.75-1.5-3.75 1.5-3.75-1.5L2.25 9.75v11.25c.621 0 1.223-.041 1.824-.121a7.5 7.5 0 017.399 0A18.75 18.75 0 0016.5 21z" /></svg>
                             </div>
                             <h4 class="font-semibold text-sm text-gray-600 dark:text-gray-300">Bắt đầu trò chuyện</h4>
                             <p class="text-xs text-gray-500 dark:text-gray-400">Các cuộc hội thoại với ${currentPersona.name} sẽ xuất hiện tại đây.</p>
@@ -1376,7 +1574,7 @@
             };
 
             titleInput.onkeydown = (e) => {
-                if (e.key === 'Enter') { e.preventDefault(); saveTitle(); } 
+                if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); saveTitle(); } 
                 else if (e.key === 'Escape') {
                     titleInput.value = chatItemData.title || 'Cuộc trò chuyện mới';
                     toggleEditMode(false);
@@ -1433,7 +1631,7 @@
             }
         }
         
-        // --- REFERENCE MODAL FUNCTIONS (Re-added) ---
+        // --- REFERENCE MODAL FUNCTIONS ---
         function showReferenceModal(title, showInput) {
             referenceTitle.textContent = title;
             referenceInputArea.style.display = showInput ? 'block' : 'none';
@@ -1522,44 +1720,6 @@
             showToast('Đã lưu ghi chú vào cuộc trò chuyện!', 'info');
         }
 
-        async function getSuggestedAnswer(promptText) {
-            showReferenceModal('Gợi ý', false);
-            referenceContent.innerHTML = '';
-            addMessageToReference('user', promptText, false);
-            const { messageWrapper, contentElem, statusElem } = addMessageToReference('ai', '<span class="blinking-cursor"></span>');
-            if (statusElem) statusElem.textContent = 'Đang suy nghĩ...';
-            
-            const filteredHistory = localHistory.filter(msg => msg.role !== 'note' && msg.role !== 'summary');
-            const tempChat = fastModel.startChat({ history: filteredHistory });
-            try {
-                const result = await tempChat.sendMessageStream(promptText);
-                let fullResponseText = "";
-                let isFirstChunk = true;
-                for await (const chunk of result.stream) {
-                     if (isFirstChunk) {
-                        if (statusElem) statusElem.textContent = 'Đang viết...';
-                        isFirstChunk = false;
-                    }
-                    fullResponseText += chunk.text();
-                    contentElem.innerHTML = DOMPurify.sanitize(marked.parse(fullResponseText)) + '<span class="blinking-cursor"></span>';
-                }
-                
-                if (statusElem) statusElem.classList.add('hidden');
-                contentElem.innerHTML = DOMPurify.sanitize(marked.parse(fullResponseText));
-                
-                const actionsContainer = messageWrapper.querySelector('.message-actions');
-                if (actionsContainer && fullResponseText.trim()) {
-                    const saveNoteBtn = document.createElement('button');
-                    saveNoteBtn.className = 'flex items-center gap-2 text-xs px-3 py-1 bg-yellow-200 dark:bg-slate-600 text-yellow-800 dark:text-yellow-200 rounded-full hover:bg-yellow-300 dark:hover:bg-slate-500 transition-colors';
-                    saveNoteBtn.innerHTML = `<svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M5.433 13.917l1.262-3.155A4 4 0 017.58 9.42l6.92-6.918a2.121 2.121 0 013 3l-6.92 6.918c-.383.383-.84.685-1.343.886l-3.154 1.262a.5.5 0 01-.65-.65z" /><path d="M3.5 5.75c0-.69.56-1.25 1.25-1.25H10A.75.75 0 0010 3H4.75A2.75 2.75 0 002 5.75v9.5A2.75 2.75 0 004.75 18h9.5A2.75 2.75 0 0017 15.25V10a.75.75 0 00-1.5 0v5.25c0 .69-.56 1.25-1.25 1.25h-9.5c-.69 0-1.25-.56-1.25-1.25v-9.5z" /></svg> <span>Lưu Ghi chú</span>`;
-                    saveNoteBtn.onclick = () => saveAsNote(promptText, fullResponseText);
-                    actionsContainer.appendChild(saveNoteBtn);
-                }
-            } catch (error) {
-                contentElem.innerHTML = `**Lỗi:** ${error.message}`;
-            }
-        }
-        
         async function explainTerm(term, context, isDeepDive = false) {
             if (!isDeepDive) {
                 showReferenceModal(`Giải thích: ${term}`, false);
@@ -1625,7 +1785,19 @@
                 generatePromptBtn.disabled = false;
             }
         }
+        
+        async function handleLearningPromptClick(linkElement) {
+            const promptForAI = linkElement.dataset.prompt;
+            if (!promptForAI) return;
 
+            // The user-facing text is the link's title
+            const titleForDisplay = linkElement.textContent;
+            
+            // Re-use the sendMessage function, passing the detailed prompt as an override
+            // This avoids code duplication. We pass the *title* as the first argument
+            // so it's what gets displayed as the "user" message.
+            await sendMessage(titleForDisplay, promptForAI);
+        }
 
         // EVENT LISTENERS
         createPersonaBtn.addEventListener('click', () => openPersonaModal());
@@ -1641,7 +1813,7 @@
             }
         });
         summarizeBtn.addEventListener('click', handleSummary);
-        sendBtn.addEventListener('click', sendMessage);
+        sendBtn.addEventListener('click', () => sendMessage());
         promptInput.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } });
         promptInput.addEventListener('input', adjustInputHeight);
         menuBtn.addEventListener('click', openSidebar);
@@ -1653,7 +1825,11 @@
         referenceModalOverlay.addEventListener('click', closeReferenceModal);
         referenceSendBtn.addEventListener('click', sendReferenceMessage);
         referencePromptInput.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendReferenceMessage(); } });
-
+        
+        learningModeToggle.addEventListener('change', (e) => {
+            isLearningMode = e.target.checked;
+            showToast(`Chế độ Học tập đã được ${isLearningMode ? 'bật' : 'tắt'}.`, 'info');
+        });
 
         function resetActiveSpeechButton() {
             if (activeSpeech && activeSpeech.button) {
@@ -1663,53 +1839,60 @@
             }
         }
 
-        chatContainer.addEventListener('click', (e) => {
-            const speakButton = e.target.closest('.speak-btn');
-            const termLink = e.target.closest('.term-link');
-            const copyButton = e.target.closest('.copy-btn');
+        // Main click handler for the chat container
+        chatContainer.addEventListener('click', async (e) => {
+            const link = e.target.closest('a');
+            const button = e.target.closest('button');
 
-            if(copyButton) {
-                e.preventDefault(); e.stopPropagation();
-                copyToClipboard(copyButton.dataset.text);
-            }
-            else if (speakButton) {
-                e.preventDefault(); e.stopPropagation();
-                if (speechSynthesis.speaking || speechSynthesis.paused) {
-                    if (activeSpeech && activeSpeech.button === speakButton) {
-                         const currentState = speakButton.dataset.state;
-                         if (currentState === 'paused') {
-                            speechSynthesis.resume();
-                            speakButton.innerHTML = '⏸️'; speakButton.dataset.state = 'playing'; speakButton.title = 'Tạm dừng';
-                            return;
-                        }
-                        if (currentState === 'playing') {
-                            speechSynthesis.pause();
-                            speakButton.innerHTML = '▶️'; speakButton.dataset.state = 'paused'; speakButton.title = 'Tiếp tục';
-                            return;
-                        }
-                    }
-                    speechSynthesis.cancel();
-                }
-
-                const utterance = new SpeechSynthesisUtterance(speakButton.dataset.text);
-                utterance.lang = 'vi-VN';
-                utterance.onstart = () => {
-                    resetActiveSpeechButton();
-                    activeSpeech = { utterance, button: speakButton };
-                    speakButton.innerHTML = '⏸️'; speakButton.dataset.state = 'playing'; speakButton.title = 'Tạm dừng';
-                };
-                utterance.onend = () => { resetActiveSpeechButton(); activeSpeech = null; };
-                utterance.onerror = () => { resetActiveSpeechButton(); activeSpeech = null; };
-                speechSynthesis.speak(utterance);
-            
-            } else if (termLink) {
+            if (link) {
                 e.preventDefault();
-                const term = termLink.dataset.term;
-                const messageContentElement = termLink.closest('.message-content');
-                const context = messageContentElement ? messageContentElement.dataset.rawText : '';
-                explainTerm(term, context);
+                e.stopPropagation();
+                if (link.classList.contains('learning-link')) {
+                    await handleLearningPromptClick(link);
+                } else if (link.classList.contains('term-link')) {
+                    const term = link.dataset.term;
+                    const messageContentElement = link.closest('.message-content');
+                    const context = messageContentElement ? messageContentElement.dataset.rawText : '';
+                    await explainTerm(term, context);
+                }
+            } else if (button) {
+                 if (button.classList.contains('copy-btn')) {
+                    e.preventDefault(); e.stopPropagation();
+                    copyToClipboard(button.dataset.text);
+                 } else if (button.classList.contains('speak-btn')) {
+                    e.preventDefault(); e.stopPropagation();
+                    // Handle Speech Synthesis
+                    if (speechSynthesis.speaking || speechSynthesis.paused) {
+                        if (activeSpeech && activeSpeech.button === button) {
+                            const currentState = button.dataset.state;
+                            if (currentState === 'paused') {
+                                speechSynthesis.resume();
+                                button.innerHTML = '⏸️'; button.dataset.state = 'playing'; button.title = 'Tạm dừng';
+                                return;
+                            }
+                            if (currentState === 'playing') {
+                                speechSynthesis.pause();
+                                button.innerHTML = '▶️'; button.dataset.state = 'Tiếp tục';
+                                return;
+                            }
+                        }
+                        speechSynthesis.cancel();
+                    }
+
+                    const utterance = new SpeechSynthesisUtterance(button.dataset.text);
+                    utterance.lang = 'vi-VN';
+                    utterance.onstart = () => {
+                        resetActiveSpeechButton();
+                        activeSpeech = { utterance, button: button };
+                        button.innerHTML = '⏸️'; button.dataset.state = 'playing'; button.title = 'Tạm dừng';
+                    };
+                    utterance.onend = () => { resetActiveSpeechButton(); activeSpeech = null; };
+                    utterance.onerror = () => { resetActiveSpeechButton(); activeSpeech = null; };
+                    speechSynthesis.speak(utterance);
+                 }
             }
         });
+
 
         sidebarContent.addEventListener('scroll', () => {
             const isNearBottom = sidebarContent.scrollHeight - sidebarContent.scrollTop - sidebarContent.clientHeight < 100;
@@ -1725,14 +1908,47 @@
             recognition.continuous = false; recognition.lang = 'vi-VN'; recognition.interimResults = false;
             recognition.onstart = () => { isRecording = true; recordBtn.classList.add('recording'); promptInput.placeholder = 'Đang lắng nghe...'; };
             recognition.onend = () => { isRecording = false; recordBtn.classList.remove('recording'); promptInput.placeholder = 'Nhập câu hỏi...'; };
-            recognition.onresult = (event) => { promptInput.value = event.results[event.results.length - 1][0].transcript.trim(); adjustInputHeight(); };
+            recognition.onresult = (event) => { promptInput.value = event.results[event.results.length - 1][0].transcript.trim(); adjustInputHeight(); sendMessage(); };
             recognition.onerror = (event) => { showToast(`Lỗi ghi âm: ${event.error}`, 'error'); };
             recordBtn.addEventListener('click', () => { isRecording ? recognition.stop() : recognition.start(); });
         } else { recordBtn.classList.add('hidden'); }
 
 
+        // --- Scroll to Top Button Logic (New JavaScript) ---
+        // Get the chat container element instead of window
+        const chatScrollContainer = document.getElementById("chat-container");
+        const scrollToTopBtn = document.getElementById("scrollToTopBtn");
+        const scrollThreshold = 300; // Show button after scrolling 300px
+
+        // Function to show/hide the button
+        function toggleScrollToTopButton() {
+            // Use scrollTop and scrollHeight of the chat container
+            if (chatScrollContainer && chatScrollContainer.scrollTop > scrollThreshold) {
+                scrollToTopBtn.classList.add('show');
+            } else {
+                scrollToTopBtn.classList.remove('show');
+            }
+        }
+
+        // Function to scroll to the top of the chat container
+        function scrollToTop() {
+            if (chatScrollContainer) {
+                chatScrollContainer.scrollTo({
+                    top: 0,
+                    behavior: "smooth" // Smooth scrolling
+                });
+            }
+        }
+
+        // Event listeners for scroll and button click on the chat container
+        if (chatScrollContainer) {
+            chatScrollContainer.addEventListener("scroll", toggleScrollToTopButton);
+        }
+        scrollToTopBtn.addEventListener("click", scrollToTop);
+
     </script>
-    <script>
+    <!-- Commented out Service Worker registration as it causes errors in this environment without a proper service-worker.js file. -->
+    <!-- <script>
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", function () {
       navigator.serviceWorker.register("./service-worker.js")
@@ -1740,15 +1956,6 @@
         .catch(err => console.error("SW registration failed:", err));
     });
   }
-</script>
-<script>
-  if ("serviceWorker" in navigator) {
-    window.addEventListener("load", function () {
-      navigator.serviceWorker.register("./service-worker.js")
-        .then(reg => console.log("SW registered:", reg.scope))
-        .catch(err => console.error("SW registration failed:", err));
-    });
-  }
-</script>
+</script> -->
 </body>
 </html>
