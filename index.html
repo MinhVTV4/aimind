@@ -372,7 +372,7 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
         const ai = getAI(app);
-        const model = getGenerativeModel(ai, { model: "gemini-2.5-flash" });
+        const model = getGenerativeModel(ai, { model: "gemini-1.5-flash" });
         const fastModel = getGenerativeModel(ai, { model: "gemini-1.5-flash" });
 
         let currentUserId = null;
@@ -479,6 +479,7 @@
                 currentUserId = user.uid;
                 const email = user.email || '';
                 currentUserName = user.displayName || email.split('@')[0];
+                welcomeUserName.textContent = currentUserName;
                 
                 authContainer.classList.add('hidden');
                 appContainer.classList.remove('hidden');
@@ -523,6 +524,9 @@
         
         // --- PERSONA SELECTION ---
         async function showPersonaSelectionScreen() {
+            // FIX: Clear suggestions when returning to the main menu
+            clearSuggestions();
+
             welcomeScreen.classList.add('hidden');
             welcomeScreen.classList.remove('flex');
             personaSelectionScreen.classList.remove('hidden');
@@ -673,6 +677,9 @@
 
             if (!selectedPersona) { return; }
             
+            // FIX: Clear previous suggestions right at the start
+            clearSuggestions();
+
             currentPersona = selectedPersona;
             
             // UI Transition
@@ -1408,29 +1415,37 @@
 
             if (speakButton) {
                 e.preventDefault(); e.stopPropagation();
-                const currentState = speakButton.dataset.state;
-
-                if (currentState === 'paused') {
-                    speechSynthesis.resume();
-                    speakButton.innerHTML = '⏸️'; speakButton.dataset.state = 'playing'; speakButton.title = 'Tạm dừng';
-                    return;
-                }
-                if (currentState === 'playing') {
-                    speechSynthesis.pause();
-                    speakButton.innerHTML = '▶️'; speakButton.dataset.state = 'paused'; speakButton.title = 'Tiếp tục';
-                    return;
-                }
+                // Stop any currently playing speech before starting a new one
                 if (speechSynthesis.speaking || speechSynthesis.paused) {
+                    // If clicking the same button that is playing/paused, toggle it
+                    if (activeSpeech && activeSpeech.button === speakButton) {
+                         const currentState = speakButton.dataset.state;
+                         if (currentState === 'paused') {
+                            speechSynthesis.resume();
+                            speakButton.innerHTML = '⏸️'; speakButton.dataset.state = 'playing'; speakButton.title = 'Tạm dừng';
+                            return;
+                        }
+                        if (currentState === 'playing') {
+                            speechSynthesis.pause();
+                            speakButton.innerHTML = '▶️'; speakButton.dataset.state = 'paused'; speakButton.title = 'Tiếp tục';
+                            return;
+                        }
+                    }
+                    // If a different speech is active, cancel it
                     speechSynthesis.cancel();
                 }
 
                 const utterance = new SpeechSynthesisUtterance(speakButton.dataset.text);
                 utterance.lang = 'vi-VN';
+                utterance.onstart = () => {
+                    resetActiveSpeechButton(); // Reset any other button
+                    activeSpeech = { utterance, button: speakButton };
+                    speakButton.innerHTML = '⏸️'; speakButton.dataset.state = 'playing'; speakButton.title = 'Tạm dừng';
+                };
                 utterance.onend = () => { resetActiveSpeechButton(); activeSpeech = null; };
                 utterance.onerror = () => { resetActiveSpeechButton(); activeSpeech = null; };
                 speechSynthesis.speak(utterance);
-                activeSpeech = { utterance, button: speakButton };
-                speakButton.innerHTML = '⏸️'; speakButton.dataset.state = 'playing'; speakButton.title = 'Tạm dừng';
+            
             } else if (termLink) {
                 e.preventDefault();
                 const term = termLink.dataset.term;
