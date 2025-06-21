@@ -1174,6 +1174,7 @@
              try {
                 const querySnapshot = await getDocs(q);
                 pinnedChatsSection.classList.toggle('hidden', querySnapshot.empty);
+                pinnedChatsList.innerHTML = ''; // Clear before adding new items
                 querySnapshot.forEach(docSnap => {
                     const li = createChatItem(docSnap);
                     pinnedChatsList.appendChild(li);
@@ -1219,47 +1220,130 @@
                 savedChatsSkeleton.classList.add('hidden');
             }
         }
+
+        async function updateChatTitle(chatId, newTitle) {
+            if (!currentUserId || !newTitle) return;
+            const docRef = doc(db, 'chats', currentUserId, 'conversations', chatId);
+            try {
+                await updateDoc(docRef, { title: newTitle });
+                showToast('Tiêu đề đã được cập nhật!', 'success');
+            } catch (error) {
+                console.error("Lỗi khi cập nhật tiêu đề:", error);
+                showToast('Lỗi khi cập nhật tiêu đề.', 'error');
+                // Re-render to revert optimistic UI change on error
+                await renderAllChats();
+            }
+        }
         
         function createChatItem(docSnap) {
             const chatItemData = docSnap.data();
+            const chatId = docSnap.id;
             const li = document.createElement('li');
-            li.className = "p-2 hover:bg-gray-100 dark:hover:bg-slate-700 cursor-pointer flex justify-between items-center rounded-md group";
-            li.dataset.chatId = docSnap.id;
-
+            li.className = "p-2 hover:bg-gray-100 dark:hover:bg-slate-700 flex justify-between items-center rounded-md group";
+            li.dataset.chatId = chatId;
+        
+            const titleContainer = document.createElement('div');
+            titleContainer.className = "flex-1 truncate pr-2";
+        
             const titleSpan = document.createElement('span');
             titleSpan.textContent = chatItemData.title || 'Cuộc trò chuyện mới';
-            titleSpan.className = "flex-1 truncate pr-2 text-gray-800 dark:text-gray-200";
-            li.appendChild(titleSpan);
-
+            titleSpan.className = "text-gray-800 dark:text-gray-200 text-sm";
+            titleContainer.appendChild(titleSpan);
+        
+            const titleInput = document.createElement('input');
+            titleInput.type = 'text';
+            titleInput.value = chatItemData.title || 'Cuộc trò chuyện mới';
+            titleInput.className = "w-full bg-slate-200 dark:bg-slate-600 rounded px-1 text-sm hidden";
+            titleContainer.appendChild(titleInput);
+        
+            li.appendChild(titleContainer);
+        
             const buttonsWrapper = document.createElement('div');
             buttonsWrapper.className = 'flex items-center opacity-0 group-hover:opacity-100 transition-opacity';
+        
+            const editBtn = document.createElement('button');
+            editBtn.className = 'p-1 text-gray-400 hover:text-blue-500 rounded-full';
+            editBtn.title = "Sửa tiêu đề";
+            editBtn.innerHTML = `<svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" /><path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd" /></svg>`;
+            
+            const saveBtnIcon = `<svg class="w-4 h-4 text-green-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" /></svg>`;
+            const editBtnIcon = editBtn.innerHTML;
 
             const pinBtn = document.createElement('button');
-            pinBtn.className = 'p-1 text-gray-400 hover:text-blue-500 rounded-full';
+            pinBtn.className = 'p-1 text-gray-400 hover:text-yellow-500 rounded-full';
             pinBtn.title = chatItemData.isPinned ? "Bỏ ghim" : "Ghim";
-            pinBtn.innerHTML = chatItemData.isPinned ? 
-                `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-500" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM7 8a1 1 0 011-1h4a1 1 0 110 2H8a1 1 0 01-1-1zm1 5a1 1 0 100 2h6a1 1 0 100-2H8z" clip-rule="evenodd" /></svg>` : 
-                `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.428a1 1 0 00.475 0l5 1.428a1 1 0 001.17-1.409l-7-14z" /></svg>`;
-            pinBtn.onclick = (e) => {
-                e.stopPropagation();
-                togglePinChat(docSnap.id, chatItemData.isPinned || false);
-            };
-
+            pinBtn.innerHTML = chatItemData.isPinned ?
+                `<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-yellow-500" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5 2a1 1 0 011 1v1.586l4.707 4.707a1 1 0 010 1.414l-4.707 4.707V17a1 1 0 11-2 0v-1.586l-4.707-4.707a1 1 0 010-1.414L4 6.586V5a1 1 0 011-1zm10 0a1 1 0 011 1v1.586l4.707 4.707a1 1 0 010 1.414l-4.707 4.707V17a1 1 0 11-2 0v-1.586l-4.707-4.707a1 1 0 010-1.414L14 6.586V5a1 1 0 011-1z" clip-rule="evenodd" /></svg>` :
+                `<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.428a1 1 0 00.475 0l5 1.428a1 1 0 001.17-1.409l-7-14z" /></svg>`;
+            
             const deleteBtn = document.createElement('button');
             deleteBtn.className = 'p-1 text-gray-400 hover:text-red-600 rounded-full';
-            deleteBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>';
-            deleteBtn.onclick = (e) => {
-                e.stopPropagation();
-                deleteChat(docSnap.id);
-            };
+            deleteBtn.title = "Xóa cuộc trò chuyện";
+            deleteBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>';
             
+            buttonsWrapper.appendChild(editBtn);
             buttonsWrapper.appendChild(pinBtn);
             buttonsWrapper.appendChild(deleteBtn);
             li.appendChild(buttonsWrapper);
+
+            const toggleEditMode = (isEditing) => {
+                titleSpan.classList.toggle('hidden', isEditing);
+                titleInput.classList.toggle('hidden', !isEditing);
+                if (isEditing) {
+                    editBtn.innerHTML = saveBtnIcon;
+                    editBtn.title = 'Lưu';
+                    titleInput.focus();
+                    titleInput.select();
+                } else {
+                    editBtn.innerHTML = editBtnIcon;
+                    editBtn.title = 'Sửa tiêu đề';
+                }
+            };
+
+            const saveTitle = async () => {
+                const newTitle = titleInput.value.trim();
+                const originalTitle = chatItemData.title || 'Cuộc trò chuyện mới';
+                if (newTitle && newTitle !== originalTitle) {
+                    // Optimistic UI update
+                    titleSpan.textContent = newTitle;
+                    await updateChatTitle(chatId, newTitle);
+                }
+                toggleEditMode(false);
+            };
             
-            li.onclick = () => loadChat(docSnap.id);
+            editBtn.onclick = (e) => {
+                e.stopPropagation();
+                const isEditing = !titleInput.classList.contains('hidden');
+                if (isEditing) {
+                    saveTitle();
+                } else {
+                    toggleEditMode(true);
+                }
+            };
+
+            titleInput.onkeydown = (e) => {
+                if (e.key === 'Enter') { e.preventDefault(); saveTitle(); } 
+                else if (e.key === 'Escape') {
+                    titleInput.value = chatItemData.title || 'Cuộc trò chuyện mới';
+                    toggleEditMode(false);
+                }
+            };
+
+            titleInput.addEventListener('blur', () => {
+                 setTimeout(saveTitle, 100); // Timeout to allow button clicks to register
+            });
+
+            pinBtn.onclick = (e) => { e.stopPropagation(); togglePinChat(chatId, chatItemData.isPinned || false); };
+            deleteBtn.onclick = (e) => { e.stopPropagation(); deleteChat(chatId); };
+            
+            li.onclick = (e) => {
+                if (e.target === titleInput || titleInput.classList.contains('hidden') === false) return;
+                loadChat(chatId);
+            };
+
             return li;
         }
+
 
         async function togglePinChat(chatId, isCurrentlyPinned) {
             if (!currentUserId) return;
@@ -1445,7 +1529,7 @@
                     if(actionsContainer){
                         const deepDiveBtn = document.createElement('button');
                         deepDiveBtn.className = 'flex items-center gap-2 text-xs px-3 py-1 bg-blue-100 dark:bg-slate-600 text-blue-800 dark:text-blue-200 rounded-full hover:bg-blue-200 dark:hover:bg-slate-500 transition-colors';
-                        deepDiveBtn.innerHTML = `<span>Tìm hiểu sâu hơn</span> 📖`;
+                        deepDiveBtn.innerHTML = `<span>Tìm hiểu sâu hơn</span> �`;
                         deepDiveBtn.onclick = () => explainTerm(term, context, true);
                         actionsContainer.appendChild(deepDiveBtn);
                     }
@@ -1604,3 +1688,4 @@
 
 </body>
 </html>
+�
