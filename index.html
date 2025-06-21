@@ -28,17 +28,17 @@
         body {
             overflow-x: hidden;
         }
-        #chat-container::-webkit-scrollbar, #reference-content::-webkit-scrollbar, #sidebar-content::-webkit-scrollbar {
+        #chat-container::-webkit-scrollbar, #reference-content::-webkit-scrollbar, #sidebar-content::-webkit-scrollbar, #summary-content::-webkit-scrollbar {
             width: 6px;
         }
-        #chat-container::-webkit-scrollbar-track, #reference-content::-webkit-scrollbar-track, #sidebar-content::-webkit-scrollbar-track {
+        #chat-container::-webkit-scrollbar-track, #reference-content::-webkit-scrollbar-track, #sidebar-content::-webkit-scrollbar-track, #summary-content::-webkit-scrollbar-track {
             background: var(--scrollbar-track-bg);
         }
-        #chat-container::-webkit-scrollbar-thumb, #reference-content::-webkit-scrollbar-thumb, #sidebar-content::-webkit-scrollbar-thumb {
+        #chat-container::-webkit-scrollbar-thumb, #reference-content::-webkit-scrollbar-thumb, #sidebar-content::-webkit-scrollbar-thumb, #summary-content::-webkit-scrollbar-thumb {
             background: var(--scrollbar-thumb-bg);
             border-radius: 6px;
         }
-        #chat-container::-webkit-scrollbar-thumb:hover, #reference-content::-webkit-scrollbar-thumb:hover, #sidebar-content::-webkit-scrollbar-thumb:hover {
+        #chat-container::-webkit-scrollbar-thumb:hover, #reference-content::-webkit-scrollbar-thumb:hover, #sidebar-content::-webkit-scrollbar-thumb:hover, #summary-content::-webkit-scrollbar-thumb:hover {
             background: var(--scrollbar-thumb-hover-bg);
         }
         .message-content pre { background-color: #1e293b; color: #e2e8f0; padding: 1rem; border-radius: 0.5rem; overflow-x: auto; font-family: 'Courier New', Courier, monospace; }
@@ -62,6 +62,12 @@
         .dark .note-header { color: #fcd34d; }
         .note-content { color: #374151; }
         .dark .note-content { color: #d1d5db; }
+        .summary-wrapper { margin-top: 1rem; margin-bottom: 1rem; padding: 1rem; border-radius: 0.5rem; border-width: 1px; background-color: #faf5ff; border-color: #e9d5ff; }
+        .dark .summary-wrapper { background-color: #3b0764; border-color: #5b21b6; }
+        .summary-header { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; font-size: 0.875rem; line-height: 1.25rem; font-weight: 600; color: #7e22ce; }
+        .dark .summary-header { color: #c084fc; }
+        .summary-content { color: #374151; }
+        .dark .summary-content { color: #d1d5db; }
         .term-link { color: #2563eb; font-weight: 600; border-bottom: 2px dotted #93c5fd; cursor: pointer; transition: color 0.2s, border-color 0.2s; }
         .dark .term-link { color: #60a5fa; border-bottom-color: #3b82f6; }
         .term-link:hover { color: #1d4ed8; border-bottom-color: #2563eb; }
@@ -242,6 +248,9 @@
                             <svg class="w-6 h-6 text-gray-600 dark:text-gray-300" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="currentColor"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
                         </button>
                         <div id="chat-header-info" class="flex items-center gap-3"></div>
+                        <button id="summarize-btn" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors" title="Tóm tắt cuộc trò chuyện">
+                           <svg class="w-6 h-6 text-gray-600 dark:text-gray-300" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M2 4.75A.75.75 0 012.75 4h14.5a.75.75 0 010 1.5H2.75A.75.75 0 012 4.75zM2 10a.75.75 0 01.75-.75h14.5a.75.75 0 010 1.5H2.75A.75.75 0 012 10zm0 5.25a.75.75 0 01.75-.75h9.5a.75.75 0 010 1.5h-9.5a.75.75 0 01-.75-.75z" clip-rule="evenodd" /></svg>
+                        </button>
                         <button id="new-topic-btn" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors" title="Trò chuyện mới">
                             <svg class="w-6 h-6 text-blue-600 dark:text-blue-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" /></svg>
                         </button>
@@ -434,6 +443,7 @@
         const menuBtn = document.getElementById('menu-btn');
         const chatHeaderInfo = document.getElementById('chat-header-info');
         const newTopicBtn = document.getElementById('new-topic-btn');
+        const summarizeBtn = document.getElementById('summarize-btn');
         const themeToggle = document.getElementById('theme-toggle');
         const themeToggleDarkIcon = document.getElementById('theme-toggle-dark-icon');
         const themeToggleLightIcon = document.getElementById('theme-toggle-light-icon');
@@ -714,7 +724,7 @@
 
             const personaData = {
                 name: personaNameInput.value.trim(),
-                icon: personaIconInput.value.trim() || '🤖',
+                icon: personaIconInput.value.trim() || '�',
                 description: personaDescriptionInput.value.trim(),
                 systemPrompt: personaPromptInput.value.trim(),
                 ownerId: currentUserId
@@ -766,18 +776,15 @@
 
             if (!selectedPersona) { return; }
             
-            // FIX: Clear previous suggestions right at the start
             clearSuggestions();
 
             currentPersona = selectedPersona;
             
-            // UI Transition
             personaSelectionScreen.classList.add('hidden');
             chatViewContainer.classList.remove('hidden');
             chatViewContainer.classList.add('flex');
             updateChatHeader(currentPersona);
             
-            // Reset chat state
             currentChatId = null;
             chat = null;
             localHistory = [{
@@ -788,11 +795,10 @@
                 parts: [{ text: "Đã hiểu! Tôi đã sẵn sàng. Bạn cần tôi giúp gì?" }],
             }];
             
-            // Update UI for new chat
             chatContainer.innerHTML = '';
             chatContainer.appendChild(notificationArea);
             
-            await renderAllChats(); // Refresh the sidebar with chats for the new persona
+            await renderAllChats();
             closeSidebar();
             if(speechSynthesis.speaking) speechSynthesis.cancel();
             
@@ -809,11 +815,33 @@
                 chatHeaderInfo.innerHTML = '';
             }
         }
+        
+        function addMessageActions(actionsContainer, text) {
+            if (!actionsContainer || !text || text.includes('blinking-cursor')) return;
+            
+            actionsContainer.innerHTML = ''; // Clear previous
+        
+            const copyBtn = document.createElement('button');
+            copyBtn.className = 'copy-btn p-1.5 text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 rounded-full transition-colors';
+            copyBtn.innerHTML = `<svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 0 1-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 0 1 1.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 0 0-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 0 1-1.125-1.125v-9.25m12 6.625v-1.875a3.375 3.375 0 0 0-3.375-3.375h-1.5a1.125 1.125 0 0 1-1.125-1.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H9.75" /></svg>`;
+            copyBtn.title = 'Sao chép nội dung';
+            copyBtn.dataset.text = text;
+            actionsContainer.appendChild(copyBtn);
+            
+            const speakBtn = document.createElement('button');
+            speakBtn.className = 'speak-btn p-1.5 text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 rounded-full transition-colors';
+            speakBtn.innerHTML = '🔊';
+            speakBtn.title = 'Đọc văn bản';
+            speakBtn.dataset.text = text;
+            speakBtn.dataset.state = 'idle';
+            actionsContainer.appendChild(speakBtn);
+        }
 
         function addMessage(role, text, shouldScroll = true) {
             const messageWrapper = document.createElement('div');
             let contentElem;
             let statusElem;
+            let actionsContainer;
 
             if (role === 'ai' || role === 'model') {
                 messageWrapper.className = 'w-full space-y-2';
@@ -830,7 +858,8 @@
                     <div class="message-content text-gray-800 dark:text-gray-200" data-raw-text="${text.replace(/"/g, '&quot;')}"></div>
                     <div class="message-actions mt-1 flex justify-end items-center gap-2"></div>`;
                 contentElem = messageWrapper.querySelector('.message-content');
-                 statusElem = messageWrapper.querySelector('.ai-status');
+                statusElem = messageWrapper.querySelector('.ai-status');
+                actionsContainer = messageWrapper.querySelector('.message-actions');
             } else if (role === 'user') {
                 messageWrapper.className = 'flex justify-end';
                 messageWrapper.innerHTML = `<div class="message-content px-4 py-2 rounded-2xl bg-blue-600 dark:bg-blue-700 text-white max-w-xs sm:max-w-md lg:max-w-2xl"></div>`;
@@ -845,29 +874,24 @@
                     <div class="note-content message-content" data-raw-text="${text.replace(/"/g, '&quot;')}"></div>
                 `;
                 contentElem = messageWrapper.querySelector('.note-content');
+            } else if (role === 'summary') {
+                messageWrapper.className = 'summary-wrapper';
+                messageWrapper.innerHTML = `
+                    <div class="summary-header">
+                        <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M2 4.75A.75.75 0 012.75 4h14.5a.75.75 0 010 1.5H2.75A.75.75 0 012 4.75zM2 10a.75.75 0 01.75-.75h14.5a.75.75 0 010 1.5H2.75A.75.75 0 012 10zm0 5.25a.75.75 0 01.75-.75h9.5a.75.75 0 010 1.5h-9.5a.75.75 0 01-.75-.75z" clip-rule="evenodd" /></svg>
+                        <span>Tóm tắt cuộc trò chuyện</span>
+                    </div>
+                    <div class="summary-content message-content" data-raw-text="${text.replace(/"/g, '&quot;')}"></div>
+                    <div class="message-actions mt-1 flex justify-end items-center gap-2"></div>
+                `;
+                contentElem = messageWrapper.querySelector('.summary-content');
+                actionsContainer = messageWrapper.querySelector('.message-actions');
             }
             
             const processedText = text.replace(/\[([^\]]+)\]/g, `<a href="#" class="term-link" data-term="$1">$1</a>`);
             contentElem.innerHTML = DOMPurify.sanitize(marked.parse(processedText), { ADD_ATTR: ['target', 'data-term', 'data-raw-text'] });
 
-            if ((role === 'ai' || role === 'model') && text.trim().length > 0 && !text.includes('blinking-cursor')) {
-                const actionsContainer = messageWrapper.querySelector('.message-actions');
-                
-                const copyBtn = document.createElement('button');
-                copyBtn.className = 'copy-btn p-1.5 text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 rounded-full transition-colors';
-                copyBtn.innerHTML = `<svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 0 1-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 0 1 1.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 0 0-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 0 1-1.125-1.125v-9.25m12 6.625v-1.875a3.375 3.375 0 0 0-3.375-3.375h-1.5a1.125 1.125 0 0 1-1.125-1.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H9.75" /></svg>`;
-                copyBtn.title = 'Sao chép nội dung';
-                copyBtn.dataset.text = text;
-                actionsContainer.appendChild(copyBtn);
-                
-                const speakBtn = document.createElement('button');
-                speakBtn.className = 'speak-btn p-1.5 text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 rounded-full transition-colors';
-                speakBtn.innerHTML = '🔊';
-                speakBtn.title = 'Đọc văn bản';
-                speakBtn.dataset.text = text;
-                speakBtn.dataset.state = 'idle';
-                actionsContainer.appendChild(speakBtn);
-            }
+            addMessageActions(actionsContainer, text);
 
             chatContainer.insertBefore(messageWrapper, notificationArea);
             if (shouldScroll) {
@@ -875,6 +899,44 @@
             }
 
             return { messageWrapper, contentElem, statusElem };
+        }
+        
+        async function handleSummary() {
+            if (isSummarizing) return;
+            
+            const conversationToSummarize = localHistory
+                .filter(msg => ['user', 'model'].includes(msg.role))
+                .map(msg => `${msg.role === 'user' ? 'User' : 'AI'}: ${msg.parts[0].text}`)
+                .join('\n\n');
+
+            if (conversationToSummarize.length < 100) { // Check for minimum length
+                showToast('Chưa có đủ nội dung để tóm tắt.', 'info');
+                return;
+            }
+
+            isSummarizing = true;
+            const originalIcon = summarizeBtn.innerHTML;
+            summarizeBtn.innerHTML = `<svg class="w-6 h-6 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>`;
+            summarizeBtn.disabled = true;
+
+            try {
+                const prompt = `Dựa vào cuộc trò chuyện sau, hãy tóm tắt lại các ý chính một cách súc tích, rõ ràng theo từng gạch đầu dòng:\n\n---\n${conversationToSummarize}\n---`;
+                const result = await fastModel.generateContent(prompt);
+                const summaryText = result.response.text();
+
+                addMessage('summary', summaryText);
+                
+                localHistory.push({ role: 'summary', parts: [{ text: summaryText }] });
+                await updateConversationInDb();
+
+            } catch (error) {
+                console.error("Lỗi khi tóm tắt:", error);
+                showToast('Không thể tạo bản tóm tắt lúc này.', 'error');
+            } finally {
+                isSummarizing = false;
+                summarizeBtn.innerHTML = originalIcon;
+                summarizeBtn.disabled = false;
+            }
         }
 
         async function sendMessage() {
@@ -885,7 +947,7 @@
             const promptText = promptInput.value.trim();
             if (!promptText || isSummarizing) return;
             
-            const filteredHistory = localHistory.filter(msg => msg.role !== 'note');
+            const filteredHistory = localHistory.filter(msg => msg.role !== 'note' && msg.role !== 'summary');
             chat = model.startChat({ history: filteredHistory });
 
             sendBtn.disabled = true;
@@ -919,25 +981,7 @@
                 contentElem.innerHTML = DOMPurify.sanitize(marked.parse(finalProcessedText), { ADD_ATTR: ['target', 'data-term', 'data-raw-text'] });
                 contentElem.dataset.rawText = fullResponseText;
                 
-                const actionsContainer = messageWrapper.querySelector('.message-actions');
-                if (actionsContainer && fullResponseText.trim().length > 0) {
-                    actionsContainer.innerHTML = ''; // Clear previous buttons if any
-
-                    const copyBtn = document.createElement('button');
-                    copyBtn.className = 'copy-btn p-1.5 text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 rounded-full transition-colors';
-                    copyBtn.innerHTML = `<svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 0 1-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 0 1 1.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 0 0-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 0 1-1.125-1.125v-9.25m12 6.625v-1.875a3.375 3.375 0 0 0-3.375-3.375h-1.5a1.125 1.125 0 0 1-1.125-1.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H9.75" /></svg>`;
-                    copyBtn.title = 'Sao chép nội dung';
-                    copyBtn.dataset.text = fullResponseText;
-                    actionsContainer.appendChild(copyBtn);
-
-                    const speakBtn = document.createElement('button');
-                    speakBtn.className = 'speak-btn p-1.5 text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 rounded-full transition-colors';
-                    speakBtn.innerHTML = '🔊';
-                    speakBtn.title = 'Đọc văn bản';
-                    speakBtn.dataset.text = fullResponseText;
-                    speakBtn.dataset.state = 'idle';
-                    actionsContainer.appendChild(speakBtn);
-                }
+                addMessageActions(messageWrapper.querySelector('.message-actions'), fullResponseText);
                 
                 setTimeout(() => {
                      messageWrapper.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -1011,7 +1055,7 @@
 
                     currentChatId = chatDoc.id;
                     localHistory = data.history || [];
-                    const filteredHistory = localHistory.filter(msg => msg.role !== 'note');
+                    const filteredHistory = localHistory.filter(msg => msg.role !== 'note' && msg.role !== 'summary');
                     chat = model.startChat({ history: filteredHistory });
                     
                     await renderAllChats();
@@ -1230,7 +1274,6 @@
             } catch (error) {
                 console.error("Lỗi khi cập nhật tiêu đề:", error);
                 showToast('Lỗi khi cập nhật tiêu đề.', 'error');
-                // Re-render to revert optimistic UI change on error
                 await renderAllChats();
             }
         }
@@ -1304,7 +1347,6 @@
                 const newTitle = titleInput.value.trim();
                 const originalTitle = chatItemData.title || 'Cuộc trò chuyện mới';
                 if (newTitle && newTitle !== originalTitle) {
-                    // Optimistic UI update
                     titleSpan.textContent = newTitle;
                     await updateChatTitle(chatId, newTitle);
                 }
@@ -1330,7 +1372,11 @@
             };
 
             titleInput.addEventListener('blur', () => {
-                 setTimeout(saveTitle, 100); // Timeout to allow button clicks to register
+                 setTimeout(()=> {
+                     if(!titleInput.classList.contains('hidden')) {
+                         saveTitle();
+                     }
+                 }, 100);
             });
 
             pinBtn.onclick = (e) => { e.stopPropagation(); togglePinChat(chatId, chatItemData.isPinned || false); };
@@ -1471,7 +1517,7 @@
             const { messageWrapper, contentElem, statusElem } = addMessageToReference('ai', '<span class="blinking-cursor"></span>');
             if (statusElem) statusElem.textContent = 'Đang suy nghĩ...';
             
-            const filteredHistory = localHistory.filter(msg => msg.role !== 'note');
+            const filteredHistory = localHistory.filter(msg => msg.role !== 'note' && msg.role !== 'summary');
             const tempChat = fastModel.startChat({ history: filteredHistory });
             try {
                 const result = await tempChat.sendMessageStream(promptText);
@@ -1529,7 +1575,7 @@
                     if(actionsContainer){
                         const deepDiveBtn = document.createElement('button');
                         deepDiveBtn.className = 'flex items-center gap-2 text-xs px-3 py-1 bg-blue-100 dark:bg-slate-600 text-blue-800 dark:text-blue-200 rounded-full hover:bg-blue-200 dark:hover:bg-slate-500 transition-colors';
-                        deepDiveBtn.innerHTML = `<span>Tìm hiểu sâu hơn</span> �`;
+                        deepDiveBtn.innerHTML = `<span>Tìm hiểu sâu hơn</span> 📖`;
                         deepDiveBtn.onclick = () => explainTerm(term, context, true);
                         actionsContainer.appendChild(deepDiveBtn);
                     }
@@ -1582,6 +1628,7 @@
                 startNewChat(currentPersona.id, !!currentPersona.ownerId);
             }
         });
+        summarizeBtn.addEventListener('click', handleSummary);
         sendBtn.addEventListener('click', sendMessage);
         promptInput.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } });
         promptInput.addEventListener('input', adjustInputHeight);
@@ -1615,9 +1662,7 @@
             }
             else if (speakButton) {
                 e.preventDefault(); e.stopPropagation();
-                // Stop any currently playing speech before starting a new one
                 if (speechSynthesis.speaking || speechSynthesis.paused) {
-                    // If clicking the same button that is playing/paused, toggle it
                     if (activeSpeech && activeSpeech.button === speakButton) {
                          const currentState = speakButton.dataset.state;
                          if (currentState === 'paused') {
@@ -1631,14 +1676,13 @@
                             return;
                         }
                     }
-                    // If a different speech is active, cancel it
                     speechSynthesis.cancel();
                 }
 
                 const utterance = new SpeechSynthesisUtterance(speakButton.dataset.text);
                 utterance.lang = 'vi-VN';
                 utterance.onstart = () => {
-                    resetActiveSpeechButton(); // Reset any other button
+                    resetActiveSpeechButton();
                     activeSpeech = { utterance, button: speakButton };
                     speakButton.innerHTML = '⏸️'; speakButton.dataset.state = 'playing'; speakButton.title = 'Tạm dừng';
                 };
