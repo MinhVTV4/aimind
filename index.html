@@ -105,6 +105,20 @@
         .animate-spin {
           animation: spin 1s linear infinite;
         }
+        /* Toast styles */
+        .toast {
+            transition: all 0.4s ease-in-out;
+            opacity: 0;
+            transform: translateX(100%);
+        }
+        .toast.show {
+            opacity: 1;
+            transform: translateX(0);
+        }
+        .toast.hide {
+            opacity: 0;
+            transform: translateX(120%);
+        }
     </style>
     <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#2563eb">
@@ -351,6 +365,9 @@
             </div>
         </div>
     </div>
+    
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="fixed top-5 right-5 z-[100] space-y-2"></div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
@@ -473,6 +490,74 @@
             { id: 'marketing', name: 'Chuyên gia Marketing', icon: '📈', description: 'Tư vấn chiến lược, phân tích thị trường, quảng cáo.', systemPrompt: `**Chỉ thị hệ thống:** Bạn là một giám đốc marketing dày dặn kinh nghiệm. Hãy cung cấp các phân tích thị trường sắc bén, đề xuất các chiến lược marketing sáng tạo, và giúp viết các nội dung quảng cáo (copywriting) hấp dẫn, tập trung vào lợi ích của khách hàng và lời kêu gọi hành động (CTA) rõ ràng.` }
         ];
 
+        // --- UTILITY FUNCTIONS ---
+        function showToast(message, type = 'info') {
+            const toastContainer = document.getElementById('toast-container');
+            if (!toastContainer) return;
+            const toast = document.createElement('div');
+            
+            let bgColor, textColor, icon;
+
+            switch (type) {
+                case 'success':
+                    bgColor = 'bg-green-100 dark:bg-green-900';
+                    textColor = 'text-green-700 dark:text-green-200';
+                    icon = `<svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>`;
+                    break;
+                case 'error':
+                    bgColor = 'bg-red-100 dark:bg-red-900';
+                    textColor = 'text-red-700 dark:text-red-200';
+                    icon = `<svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path></svg>`;
+                    break;
+                default: // info
+                    bgColor = 'bg-blue-100 dark:bg-blue-900';
+                    textColor = 'text-blue-700 dark:text-blue-200';
+                    icon = `<svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path></svg>`;
+                    break;
+            }
+
+            toast.className = `toast max-w-xs w-full ${bgColor} ${textColor} p-4 rounded-lg shadow-lg flex items-center space-x-3`;
+            toast.innerHTML = `
+                <div class="flex-shrink-0">${icon}</div>
+                <div class="flex-1 text-sm font-medium">${message}</div>
+            `;
+
+            toastContainer.appendChild(toast);
+            
+            requestAnimationFrame(() => {
+                toast.classList.add('show');
+            });
+
+            const hideToast = () => {
+                toast.classList.remove('show');
+                toast.classList.add('hide');
+                toast.addEventListener('transitionend', () => {
+                    if (toast.parentNode) {
+                        toast.remove();
+                    }
+                }, { once: true });
+            };
+
+            toast.addEventListener('click', hideToast);
+            setTimeout(hideToast, 4000);
+        }
+        
+        function copyToClipboard(text) {
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            textarea.style.position = 'absolute';
+            textarea.style.left = '-9999px';
+            document.body.appendChild(textarea);
+            textarea.select();
+            try {
+                document.execCommand('copy');
+                showToast('Đã sao chép vào bộ nhớ đệm!', 'success');
+            } catch (err) {
+                showToast('Không thể sao chép.', 'error');
+            }
+            document.body.removeChild(textarea);
+        }
+
         // --- AUTHENTICATION ---
         onAuthStateChanged(auth, async user => {
             if (user) {
@@ -496,9 +581,9 @@
             }
         });
 
-        loginForm.addEventListener('submit', async e => { e.preventDefault(); try { await signInWithEmailAndPassword(auth, loginForm['login-email'].value, loginForm['login-password'].value); authError.textContent = ''; } catch (error) { authError.textContent = "Email hoặc mật khẩu không đúng."; } });
-        registerForm.addEventListener('submit', async e => { e.preventDefault(); try { await createUserWithEmailAndPassword(auth, registerForm['register-email'].value, registerForm['register-password'].value); authError.textContent = ''; } catch (error) { authError.textContent = "Không thể tạo tài khoản. Vui lòng thử lại."; } });
-        googleLoginBtn.addEventListener('click', async () => { try { await signInWithPopup(auth, new GoogleAuthProvider()); authError.textContent = ''; } catch (error) { authError.textContent = "Đăng nhập Google thất bại."; } });
+        loginForm.addEventListener('submit', async e => { e.preventDefault(); try { await signInWithEmailAndPassword(auth, loginForm['login-email'].value, loginForm['login-password'].value); authError.textContent = ''; } catch (error) { authError.textContent = "Email hoặc mật khẩu không đúng."; showToast('Email hoặc mật khẩu không đúng.', 'error'); } });
+        registerForm.addEventListener('submit', async e => { e.preventDefault(); try { await createUserWithEmailAndPassword(auth, registerForm['register-email'].value, registerForm['register-password'].value); authError.textContent = ''; } catch (error) { authError.textContent = "Không thể tạo tài khoản. Vui lòng thử lại."; showToast('Không thể tạo tài khoản. Vui lòng thử lại.', 'error'); } });
+        googleLoginBtn.addEventListener('click', async () => { try { await signInWithPopup(auth, new GoogleAuthProvider()); authError.textContent = ''; } catch (error) { authError.textContent = "Đăng nhập Google thất bại."; showToast('Đăng nhập Google thất bại.', 'error');} });
         const handleSignOut = () => signOut(auth);
         logoutBtn.addEventListener('click', handleSignOut);
         logoutBtnPersona.addEventListener('click', handleSignOut);
@@ -647,9 +732,11 @@
                     await addDoc(collectionRef, personaData);
                 }
                 closePersonaModal();
+                showToast('Persona đã được lưu thành công!', 'success');
                 await showPersonaSelectionScreen(); // Refresh the list
             } catch (error) {
                 console.error("Lỗi khi lưu persona:", error);
+                showToast('Lỗi khi lưu persona.', 'error');
             } finally {
                 savePersonaBtn.disabled = false;
             }
@@ -660,9 +747,11 @@
 
             try {
                 await deleteDoc(doc(db, 'users', currentUserId, 'customPersonas', personaId));
+                showToast(`Persona "${personaName}" đã được xóa.`, 'success');
                 await showPersonaSelectionScreen(); // Refresh the list
             } catch (error) {
                 console.error("Lỗi khi xóa persona:", error);
+                showToast('Lỗi khi xóa persona.', 'error');
             }
         }
         
@@ -763,6 +852,14 @@
 
             if ((role === 'ai' || role === 'model') && text.trim().length > 0 && !text.includes('blinking-cursor')) {
                 const actionsContainer = messageWrapper.querySelector('.message-actions');
+                
+                const copyBtn = document.createElement('button');
+                copyBtn.className = 'copy-btn p-1.5 text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 rounded-full transition-colors';
+                copyBtn.innerHTML = `<svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 0 1-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 0 1 1.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 0 0-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 0 1-1.125-1.125v-9.25m12 6.625v-1.875a3.375 3.375 0 0 0-3.375-3.375h-1.5a1.125 1.125 0 0 1-1.125-1.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H9.75" /></svg>`;
+                copyBtn.title = 'Sao chép nội dung';
+                copyBtn.dataset.text = text;
+                actionsContainer.appendChild(copyBtn);
+                
                 const speakBtn = document.createElement('button');
                 speakBtn.className = 'speak-btn p-1.5 text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 rounded-full transition-colors';
                 speakBtn.innerHTML = '🔊';
@@ -824,7 +921,15 @@
                 
                 const actionsContainer = messageWrapper.querySelector('.message-actions');
                 if (actionsContainer && fullResponseText.trim().length > 0) {
-                    actionsContainer.innerHTML = '';
+                    actionsContainer.innerHTML = ''; // Clear previous buttons if any
+
+                    const copyBtn = document.createElement('button');
+                    copyBtn.className = 'copy-btn p-1.5 text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 rounded-full transition-colors';
+                    copyBtn.innerHTML = `<svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 0 1-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 0 1 1.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 0 0-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 0 1-1.125-1.125v-9.25m12 6.625v-1.875a3.375 3.375 0 0 0-3.375-3.375h-1.5a1.125 1.125 0 0 1-1.125-1.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H9.75" /></svg>`;
+                    copyBtn.title = 'Sao chép nội dung';
+                    copyBtn.dataset.text = fullResponseText;
+                    actionsContainer.appendChild(copyBtn);
+
                     const speakBtn = document.createElement('button');
                     speakBtn.className = 'speak-btn p-1.5 text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 rounded-full transition-colors';
                     speakBtn.innerHTML = '🔊';
@@ -1161,9 +1266,11 @@
             const docRef = doc(db, 'chats', currentUserId, 'conversations', chatId);
             try {
                 await updateDoc(docRef, { isPinned: !isCurrentlyPinned });
+                showToast(isCurrentlyPinned ? 'Đã bỏ ghim cuộc trò chuyện.' : 'Đã ghim cuộc trò chuyện.', 'info');
                 await renderAllChats(); 
             } catch(error) {
                 console.error("Lỗi khi ghim cuộc trò chuyện:", error);
+                showToast('Lỗi khi ghim/bỏ ghim.', 'error');
             }
         }
 
@@ -1172,6 +1279,7 @@
             if (!currentUserId) return;
             try {
                 await deleteDoc(doc(db, 'chats', currentUserId, 'conversations', chatId));
+                showToast('Cuộc trò chuyện đã được xóa.', 'success');
                 if(chatId === currentChatId) {
                     await showPersonaSelectionScreen();
                 } else {
@@ -1179,6 +1287,7 @@
                 }
             } catch (error) {
                 console.error("Lỗi khi xóa cuộc trò chuyện:", error);
+                showToast('Lỗi khi xóa cuộc trò chuyện.', 'error');
             }
         }
         
@@ -1268,6 +1377,7 @@
             addMessage('note', fullNoteText);
             await updateConversationInDb();
             closeReferenceModal();
+            showToast('Đã lưu ghi chú vào cuộc trò chuyện!', 'info');
         }
 
         async function getSuggestedAnswer(promptText) {
@@ -1352,7 +1462,7 @@
             const description = personaDescriptionInput.value.trim();
 
             if (!name || !description) {
-                alert('Vui lòng nhập Tên và Mô tả ngắn cho Persona trước khi nhận gợi ý.');
+                showToast('Vui lòng nhập Tên và Mô tả ngắn.', 'error');
                 return;
             }
 
@@ -1367,6 +1477,7 @@
             } catch (error) {
                 console.error("Lỗi khi tạo gợi ý prompt:", error);
                 personaPromptInput.value = "Rất tiếc, không thể tạo gợi ý lúc này. Vui lòng thử lại.";
+                showToast('Không thể tạo gợi ý prompt.', 'error');
             } finally {
                 generatePromptBtn.innerHTML = originalBtnContent;
                 generatePromptBtn.disabled = false;
@@ -1412,8 +1523,13 @@
         chatContainer.addEventListener('click', (e) => {
             const speakButton = e.target.closest('.speak-btn');
             const termLink = e.target.closest('.term-link');
+            const copyButton = e.target.closest('.copy-btn');
 
-            if (speakButton) {
+            if(copyButton) {
+                e.preventDefault(); e.stopPropagation();
+                copyToClipboard(copyButton.dataset.text);
+            }
+            else if (speakButton) {
                 e.preventDefault(); e.stopPropagation();
                 // Stop any currently playing speech before starting a new one
                 if (speechSynthesis.speaking || speechSynthesis.paused) {
@@ -1470,7 +1586,7 @@
             recognition.onstart = () => { isRecording = true; recordBtn.classList.add('recording'); promptInput.placeholder = 'Đang lắng nghe...'; };
             recognition.onend = () => { isRecording = false; recordBtn.classList.remove('recording'); promptInput.placeholder = 'Nhập câu hỏi...'; };
             recognition.onresult = (event) => { promptInput.value = event.results[event.results.length - 1][0].transcript.trim(); adjustInputHeight(); };
-            recognition.onerror = (event) => { addMessage('ai', `**Lỗi ghi âm:** ${event.error}. Vui lòng thử lại.`); };
+            recognition.onerror = (event) => { showToast(`Lỗi ghi âm: ${event.error}`, 'error'); };
             recordBtn.addEventListener('click', () => { isRecording ? recognition.stop() : recognition.start(); });
         } else { recordBtn.classList.add('hidden'); }
 
