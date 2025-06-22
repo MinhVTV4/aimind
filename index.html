@@ -8,6 +8,7 @@
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/dompurify@2.3.6/dist/purify.min.js"></script>
     <script>
+        // Set theme based on localStorage or system preference
         if (localStorage.getItem('color-theme') === 'dark' || (!('color-theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
             document.documentElement.classList.add('dark');
         } else {
@@ -15,6 +16,7 @@
         }
     </script>
     <style>
+        /* Custom scrollbar styles */
         :root {
             --scrollbar-track-bg: #f1f1f1;
             --scrollbar-thumb-bg: #888;
@@ -41,6 +43,7 @@
         #chat-container::-webkit-scrollbar-thumb:hover, #reference-content::-webkit-scrollbar-thumb:hover, #sidebar-content::-webkit-scrollbar-thumb:hover, #summary-content::-webkit-scrollbar-thumb:hover {
             background: var(--scrollbar-thumb-hover-bg);
         }
+        /* Markdown rendering styles */
         .message-content pre { background-color: #1e293b; color: #e2e8f0; padding: 1rem; border-radius: 0.5rem; overflow-x: auto; font-family: 'Courier New', Courier, monospace; }
         .dark .message-content pre { background-color: #0f172a; }
         .message-content code:not(pre > code) { background-color: #e2e8f0; color: #1e293b; padding: 0.2em 0.4em; margin: 0; font-size: 85%; border-radius: 3px; }
@@ -58,6 +61,7 @@
         .dark .message-content a { color: #60a5fa; }
         .message-content blockquote { border-left: 4px solid #d1d5db; padding-left: 1rem; margin: 1rem 0; color: #4b5563; font-style: italic; }
         .dark .message-content blockquote { border-left-color: #4b5563; color: #9ca3af; }
+        /* Note and Summary specific styles */
         .note-wrapper { margin-top: 1rem; margin-bottom: 1rem; padding: 1rem; border-radius: 0.5rem; border-width: 1px; background-color: #fefce8; border-color: #fde68a; }
         .dark .note-wrapper { background-color: #1e293b; border-color: #334155; }
         .note-header { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; font-size: 0.875rem; line-height: 1.25rem; font-weight: 600; color: #92400e; }
@@ -70,12 +74,14 @@
         .dark .summary-header { color: #c084fc; }
         .summary-content { color: #374151; }
         .dark .summary-content { color: #d1d5db; }
+        /* Interactive links for learning mode and terms */
         .term-link, .learning-link { color: #2563eb; font-weight: 600; border-bottom: 2px dotted #93c5fd; cursor: pointer; transition: color 0.2s, border-color 0.2s; text-decoration: none; }
         .dark .term-link, .dark .learning-link { color: #60a5fa; border-bottom-color: #3b82f6; }
         .term-link:hover, .learning-link:hover { color: #1d4ed8; border-bottom-color: #2563eb; background-color: #eef2ff; }
         .dark .term-link:hover, .dark .learning-link:hover { color: #93c5fd; border-bottom-color: #60a5fa; background-color: #374151;}
         .ai-status { font-size: 0.875rem; line-height: 1.25rem; font-weight: 600; color: #2563eb; padding-right: 0.5rem; }
         .dark .ai-status { color: #60a5fa; }
+        /* Persona selection screen improvements */
         #persona-selection-screen { -ms-overflow-style: none; scrollbar-width: none; }
         #persona-selection-screen::-webkit-scrollbar { display: none; }
         .persona-card { transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out; position: relative; }
@@ -85,19 +91,24 @@
         .blinking-cursor { display: inline-block; width: 8px; height: 1.2em; background-color: #333; animation: blink 1s step-end infinite; vertical-align: text-bottom; }
         .dark .blinking-cursor { background-color: #ccc; }
         @keyframes blink { from, to { background-color: transparent; } 50% { background-color: inherit; } }
+        /* Sidebar transitions */
         #sidebar { transition: transform 0.3s ease-in-out; overflow: hidden; }
         #sidebar-overlay { transition: opacity 0.3s ease-in-out; }
+        /* Record button animation */
         #record-btn.recording { animation: pulse-red 1s infinite; background-color: #ef4444; color: white; }
         @keyframes pulse-red { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); transform: scale(1); } 70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); transform: scale(1.05); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); transform: scale(1); } }
+        /* Input area styling */
         .p-4 > #input-area-wrapper { box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04); border-radius: 9999px; padding: 4px; background-color: white; transition: box-shadow 0.2s ease-in-out; }
         .p-4 > #input-area-wrapper:focus-within { box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08); }
         .dark .p-4 > #input-area-wrapper { background-color: #1f2937; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2); }
         .dark .p-4 > #input-area-wrapper:focus-within { box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3); }
         #sidebar-content { overflow-y: scroll; overflow-x: hidden; }
+        /* Persona modal transitions */
         #persona-modal-overlay { transition: opacity 0.3s ease-in-out; }
         #persona-modal { transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out; max-height: 90vh; }
         .custom-persona-actions { position: absolute; top: 0.5rem; right: 0.5rem; opacity: 0; transition: opacity 0.2s ease-in-out; }
         .persona-card:hover .custom-persona-actions { opacity: 1; }
+        /* Welcome suggestion card hover effect */
         .welcome-suggestion-card {
             transition: background-color 0.2s ease-in-out;
         }
@@ -107,13 +118,14 @@
         .dark .welcome-suggestion-card:hover {
             background-color: #374151; /* gray-700 */
         }
+        /* Spin animation for loading indicators */
         @keyframes spin {
           to { transform: rotate(360deg); }
         }
         .animate-spin {
           animation: spin 1s linear infinite;
         }
-        /* Toast styles */
+        /* Toast notification styles */
         .toast {
             transition: all 0.4s ease-in-out;
             opacity: 0;
@@ -127,7 +139,7 @@
             opacity: 0;
             transform: translateX(120%);
         }
-        /* Learning Mode Toggle */
+        /* Learning Mode Toggle styling */
         #learning-mode-toggle:checked + .block + .dot {
             transform: translateX(1.5rem); /* 24px */
             background-color: #3b82f6; /* bg-blue-600 */
@@ -145,7 +157,7 @@
         /* Scroll to Top Button Styles */
         #scrollToTopBtn {
             display: none; /* Hidden by default */
-            position: absolute; /* Changed from fixed to absolute */
+            position: absolute; /* Changed from fixed to absolute to contain within chat-container */
             bottom: 20px; /* Place at the bottom */
             right: 20px; /* Place at the right */
             z-index: 99; /* Make sure it does not overlap */
@@ -177,8 +189,8 @@
         }
     </style>
     <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#2563eb">
-<link rel="icon" href="icon-192.png">
+    <meta name="theme-color" content="#2563eb">
+    <link rel="icon" href="icon-192.png">
 </head>
 <body class="bg-gray-100 dark:bg-gray-900 font-sans overflow-x-hidden">
 
@@ -303,7 +315,9 @@
                         <button id="menu-btn" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors lg:hidden" title="Menu">
                             <svg class="w-6 h-6 text-gray-600 dark:text-gray-300" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="currentColor"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
                         </button>
-                        <div id="chat-header-info" class="flex items-center gap-3"></div>
+                        <div id="chat-header-info" class="flex items-center gap-3">
+                            <!-- Learning Mode Indicator is dynamically added here by JS -->
+                        </div>
                         <button id="summarize-btn" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors" title="Tóm tắt cuộc trò chuyện">
                            <svg class="w-6 h-6 text-gray-600 dark:text-gray-300" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M2 4.75A.75.75 0 012.75 4h14.5a.75.75 0 010 1.5H2.75A.75.75 0 012 4.75zM2 10a.75.75 0 01.75-.75h14.5a.75.75 0 010 1.5H2.75A.75.75 0 012 10zm0 5.25a.75.75 0 01.75-.75h9.5a.75.75 0 010 1.5h-9.5a.75.75 0 01-.75-.75z" clip-rule="evenodd" /></svg>
                         </button>
@@ -334,12 +348,13 @@
                     </div>
                 </header>
 
-                <div id="main-content" class="flex-1 flex flex-col overflow-hidden relative"> <!-- Added relative here -->
+                <div id="main-content" class="flex-1 flex flex-col overflow-hidden relative"> <!-- Added relative here for scroll to top button positioning -->
                     <div id="welcome-screen" class="flex-1 flex-col items-center justify-center p-4 text-center hidden">
                         <div id="welcome-persona-icon" class="text-6xl mb-4"></div>
                         <h2 id="welcome-persona-name" class="text-2xl font-bold text-gray-800 dark:text-gray-200"></h2>
                         <p id="welcome-persona-description" class="max-w-md mt-2 text-gray-600 dark:text-gray-400"></p>
                         <div id="welcome-suggestions-container" class="mt-8 w-full max-w-2xl mx-auto space-y-3">
+                            <!-- Welcome suggestions will be rendered here -->
                         </div>
                     </div>
                     
@@ -349,6 +364,10 @@
                                 Đang tối ưu hóa cuộc trò chuyện...
                             </div>
                         </div>
+                        <!-- Scroll to Top Button -->
+                        <button id="scrollToTopBtn" title="Cuộn lên đầu">
+                            <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l7.5-7.5 7.5 7.5m-15 6l7.5-7.5 7.5 7.5" /></svg>
+                        </button>
                     </div>
 
                     <div id="suggestion-area" class="px-4 pb-2">
@@ -376,8 +395,6 @@
                         </div>
                     </div>
                 </div>
-                <!-- Scroll to Top Button (Moved to main-content) -->
-                <button id="scrollToTopBtn" title="Cuộn lên đầu trang">&#8593;</button>
             </div>
         </div>
     </div>
@@ -453,7 +470,7 @@
         import { getAI, getGenerativeModel } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-ai.js";
         import { getFirestore, collection, doc, addDoc, updateDoc, getDoc, getDocs, deleteDoc, serverTimestamp, query, orderBy, limit, startAfter, where } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
 
-        // Firebase config
+        // Firebase config - Replace with your actual Firebase project configuration
         const firebaseConfig = {
              apiKey: "AIzaSyBDUBufnsk1PQZTLYCJDqASMX8hEVHqkDc",
              authDomain: "aimind-2362a.firebaseapp.com",
@@ -467,41 +484,43 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
         const ai = getAI(app);
-        // Reverted model to gemini-1.5-flash as previously used.
+        // Using gemini-2.5-flash for main and gemini-1.5-flash for faster, secondary tasks
         const model = getGenerativeModel(ai, { model: "gemini-2.5-flash" });
         const fastModel = getGenerativeModel(ai, { model: "gemini-1.5-flash" });
 
+        // Global state variables
         let currentUserId = null;
         let currentUserName = '';
         let currentChatId = null;
-        let chat;
-        let localHistory = [];
+        let chat; // Main chat session
+        let localHistory = []; // Stores the full conversation history
         let isRecording = false;
-        let referenceChat;
+        let referenceChat; // Reference chat session for the assistant modal
         let referenceHistory = [];
         let isSummarizing = false;
-        let currentPersona = null;
-        let customPersonas = [];
-        let activeSpeech = null;
-        let lastVisibleChat = null;
-        let isFetchingChats = false;
-        let allChatsLoaded = false;
-        const CHATS_PER_PAGE = 15;
-        let isLearningMode = false;
+        let currentPersona = null; // Currently selected persona
+        let customPersonas = []; // User-defined personas
+        let activeSpeech = null; // Tracks current speech synthesis utterance
+        let lastVisibleChat = null; // For infinite scrolling of chat history
+        let isFetchingChats = false; // Flag to prevent multiple fetches
+        let allChatsLoaded = false; // Flag to indicate all chats have been loaded
+        const CHATS_PER_PAGE = 15; // Number of chats to load per page
+        let isLearningMode = false; // State for learning mode
 
+        // System prompt for learning mode. This is prepended to user prompts when learning mode is active.
         const LEARNING_MODE_SYSTEM_PROMPT = `**CHỈ THỊ HỆ THỐNG - CHẾ ĐỘ HỌC TẬP ĐANG BẬT**
 Bạn là một người hướng dẫn học tập chuyên nghiệp. Khi người dùng yêu cầu một lộ trình học, hãy tuân thủ các quy tắc sau:
 1.  **Tạo Lộ trình:** Trả lời bằng một danh sách có cấu trúc (dùng Markdown với gạch đầu dòng).
 2.  **Tạo Liên kết Tương tác:** Đối với MỖI MỤC trong lộ trình, bạn PHẢI định dạng nó theo cú pháp đặc biệt sau: \`[Tên mục học]{"prompt":"Yêu cầu chi tiết để giải thích về mục học này"}\`
-    * **[Tên mục học]**: Là tiêu đề của bài học. QUAN TRỌNG: Bên trong "Tên mục học", bạn không được sử dụng thêm dấu ngoặc vuông \`[]\` để nhấn mạnh bất kỳ thuật ngữ nào khác. Hãy viết tên mục một cách tự nhiên.
+    * **[Tên mục học]**: Là tiêu đề của bài học. QUAN TRỌNG: Bên trong "Tên mục học", bạn không được sử dụng thêm dấu ngoặc vuông \`[]\` để nhấn mạnh bất kỳ thuật ngữ nào nào khác. Hãy viết tên mục một cách tự nhiên.
     * **{"prompt":"..."}**: Là một đối tượng JSON chứa một khóa "prompt". Giá trị của khóa này là một câu lệnh đầy đủ bạn tự tạo ra để yêu cầu chính bạn giải thích sâu về mục học đó. Prompt phải chi tiết và bằng tiếng Việt.
 **Ví dụ yêu cầu từ người dùng:** "Tạo cho tôi lộ trình học Javascript."
-**Ví dụ đầu ra MONG DUỐN từ bạn:**
+**Ví dụ đầu ra MONG MUỐN từ bạn:**
 * [Giới thiệu về Javascript và Lịch sử]{"prompt":"Hãy giải thích chi tiết Javascript là gì, lịch sử và vai trò của nó trong phát triển web hiện đại."}
 * [Cú pháp cơ bản, Biến và Kiểu dữ liệu]{"prompt":"Trình bày bài học về cú pháp cơ bản của Javascript, cách khai báo biến với var, let, const, và các kiểu dữ liệu nguyên thủy như string, number, boolean, null, undefined."}`;
 
 
-        // Element Selectors
+        // Element Selectors (Cached DOM elements for efficiency)
         const authContainer = document.getElementById('auth-container');
         const appContainer = document.getElementById('app-container');
         const loginView = document.getElementById('login-view');
@@ -575,15 +594,24 @@ Bạn là một người hướng dẫn học tập chuyên nghiệp. Khi ngư�
         const referencePromptInput = document.getElementById('reference-prompt-input');
         const referenceSendBtn = document.getElementById('reference-send-btn');
         const learningModeToggle = document.getElementById('learning-mode-toggle'); 
+        const learningModeIndicator = document.getElementById('learning-mode-indicator');
+        const chatScrollContainer = document.getElementById("chat-container"); // Re-caching for clarity
+        const scrollToTopBtn = document.getElementById("scrollToTopBtn"); // Re-caching for clarity
 
+        // Pre-defined default personas
         const defaultPersonas = [
             { id: 'general', name: 'Trợ lý Toàn năng', icon: '🧠', description: 'Kiến thức tổng quát, trả lời đa dạng các chủ đề.', systemPrompt: `**Chỉ thị hệ thống:** Mục tiêu chính của bạn là đưa ra câu trả lời rõ ràng, chi tiết và có cấu trúc tốt. Luôn sử dụng Markdown để định dạng (tiêu đề, danh sách, in đậm). Hãy giải thích các khái niệm từng bước, bắt đầu bằng tóm tắt rồi đi vào chi tiết và ví dụ. **Yêu cầu bổ sung:** Trong quá trình trả lời, khi bạn đề cập đến một thuật ngữ kỹ thuật, một khái niệm quan trọng, hoặc một tên riêng (ví dụ: tên một công nghệ, một phương pháp), hãy bọc thuật ngữ đó trong cặp dấu ngoặc vuông. Ví dụ: '...sử dụng ngôn ngữ [JavaScript] để tương tác với [DOM]...'. Chỉ bọc duy nhất thuật ngữ đó.` },
             { id: 'programmer', name: 'Chuyên gia Lập trình', icon: '👨‍💻', description: 'Chuyên gia về mã nguồn, thuật toán, gỡ lỗi code.', systemPrompt: `**Chỉ thị hệ thống:** Bạn là một lập trình viên cao cấp với 10 năm kinh nghiệm. Luôn đưa ra câu trả lời dưới dạng mã nguồn được giải thích rõ ràng, tuân thủ các coding convention tốt nhất. Khi được yêu cầu, hãy phân tích ưu và nhược điểm của các giải pháp khác nhau. Hãy ưu tiên tính hiệu quả và khả năng bảo trì của mã nguồn. **Yêu cầu bổ sung:** Khi đề cập đến một hàm, thư viện, hoặc khái niệm lập trình, hãy bọc nó trong dấu ngoặc vuông, ví dụ: [React], [API], [useState].` },
             { id: 'writer', name: 'Nhà văn Sáng tạo', icon: '✍️', description: 'Hỗ trợ viết lách, lên ý tưởng, xây dựng cốt truyện.', systemPrompt: `**Chỉ thị hệ thống:** Bạn là một nhà văn và biên tập viên chuyên nghiệp. Phong cách của bạn giàu cảm xúc, sử dụng từ ngữ phong phú và hình ảnh. Hãy giúp người dùng lên ý tưởng, phát triển nhân vật, xây dựng cốt truyện, hoặc viết các đoạn văn, bài thơ theo yêu cầu. Luôn giữ một giọng văn truyền cảm hứng.` },
-            { id: 'marketing', name: 'Chuyên gia Marketing', icon: '📈', description: 'Tư vấn chiến lược, phân tích thị trường, quảng cáo.', systemPrompt: `**Chỉ thị hệ thống:** Bạn là một giám đốc marketing dày dặn kinh nghiệm. Hãy cung cấp các phân tích thị trường sắc bén, đề xuất các chiến lược marketing sáng tạo, và giúp viết các nội dung quảng cáo (copywriting) hấp dẫn, tập trung vào lợi ích của khách hàng và lời kêu gọi hành động (CTA) rõ ràng.` }
+            { id: 'marketing', name: 'Chuyên gia Marketing', icon: '📈', description: 'Tư vấn chiến lược, phân tích thị trường, quảng cáo.', systemPrompt: `**Chỉ thị hệ thống:** Bạn là một giám đốc marketing dày dặn kinh nghiệm. Hãy cung cấp các phân tích thị trường sắc bén, đề xuất các chiến lược marketing marketing sáng tạo, và giúp viết các nội dung quảng cáo (copywriting) hấp dẫn, tập trung vào lợi ích của khách hàng và lời kêu gọi hành động (CTA) rõ ràng.` }
         ];
 
         // --- UTILITY FUNCTIONS ---
+        /**
+         * Displays a toast notification message to the user.
+         * @param {string} message - The message to display.
+         * @param {'info'|'success'|'error'} type - The type of toast (determines color and icon).
+         */
         function showToast(message, type = 'info') {
             const toastContainer = document.getElementById('toast-container');
             if (!toastContainer) return;
@@ -617,6 +645,7 @@ Bạn là một người hướng dẫn học tập chuyên nghiệp. Khi ngư�
 
             toastContainer.appendChild(toast);
             
+            // Trigger reflow to enable CSS transition
             requestAnimationFrame(() => {
                 toast.classList.add('show');
             });
@@ -631,10 +660,14 @@ Bạn là một người hướng dẫn học tập chuyên nghiệp. Khi ngư�
                 }, { once: true });
             };
 
-            toast.addEventListener('click', hideToast);
-            setTimeout(hideToast, 4000);
+            toast.addEventListener('click', hideToast); // Allow dismissing by clicking
+            setTimeout(hideToast, 4000); // Auto-hide after 4 seconds
         }
         
+        /**
+         * Copies text to the clipboard.
+         * @param {string} text - The text to copy.
+         */
         function copyToClipboard(text) {
             const textarea = document.createElement('textarea');
             textarea.value = text;
@@ -652,19 +685,24 @@ Bạn là một người hướng dẫn học tập chuyên nghiệp. Khi ngư�
         }
 
         // --- AUTHENTICATION ---
+        // Listens for Firebase authentication state changes
         onAuthStateChanged(auth, async user => {
             if (user) {
                 currentUserId = user.uid;
                 const email = user.email || '';
-                currentUserName = user.displayName || email.split('@')[0];
+                // Use user display name or derive from email
+                currentUserName = user.displayName || email.split('@')[0]; 
                 welcomeUserName.textContent = currentUserName;
                 
+                // Show app UI and hide auth UI
                 authContainer.classList.add('hidden');
                 appContainer.classList.remove('hidden');
 
+                // Load personas and chats
                 await showPersonaSelectionScreen();
-                renderAllChats(); 
+                await renderAllChats(); // Initial render of chat list
             } else {
+                // User is signed out, reset state and show auth UI
                 currentUserId = null;
                 currentUserName = '';
                 authContainer.classList.remove('hidden');
@@ -674,16 +712,52 @@ Bạn là một người hướng dẫn học tập chuyên nghiệp. Khi ngư�
             }
         });
 
-        loginForm.addEventListener('submit', async e => { e.preventDefault(); try { await signInWithEmailAndPassword(auth, loginForm['login-email'].value, loginForm['login-password'].value); authError.textContent = ''; } catch (error) { authError.textContent = "Email hoặc mật khẩu không đúng."; showToast('Email hoặc mật khẩu không đúng.', 'error'); } });
-        registerForm.addEventListener('submit', async e => { e.preventDefault(); try { await createUserWithEmailAndPassword(auth, registerForm['register-email'].value, registerForm['register-password'].value); authError.textContent = ''; } catch (error) { authError.textContent = "Không thể tạo tài khoản. Vui lòng thử lại."; showToast('Không thể tạo tài khoản. Vui lòng thử lại.', 'error'); } });
-        googleLoginBtn.addEventListener('click', async () => { try { await signInWithPopup(auth, new GoogleAuthProvider()); authError.textContent = ''; } catch (error) { authError.textContent = "Đăng nhập Google thất bại."; showToast('Đăng nhập Google thất bại.', 'error');} });
+        // Event listeners for authentication forms and buttons
+        loginForm.addEventListener('submit', async e => { 
+            e.preventDefault(); 
+            try { 
+                await signInWithEmailAndPassword(auth, loginForm['login-email'].value, loginForm['login-password'].value); 
+                authError.textContent = ''; 
+            } catch (error) { 
+                authError.textContent = "Email hoặc mật khẩu không đúng."; 
+                showToast('Email hoặc mật khẩu không đúng.', 'error'); 
+            } 
+        });
+        registerForm.addEventListener('submit', async e => { 
+            e.preventDefault(); 
+            try { 
+                await createUserWithEmailAndPassword(auth, registerForm['register-email'].value, registerForm['register-password'].value); 
+                authError.textContent = ''; 
+            } catch (error) { 
+                authError.textContent = "Không thể tạo tài khoản. Vui lòng thử lại."; 
+                showToast('Không thể tạo tài khoản. Vui lòng thử lại.', 'error'); 
+            } 
+        });
+        googleLoginBtn.addEventListener('click', async () => { 
+            try { 
+                await signInWithPopup(auth, new GoogleAuthProvider()); 
+                authError.textContent = ''; 
+            } catch (error) { 
+                authError.textContent = "Đăng nhập Google thất bại."; 
+                showToast('Đăng nhập Google thất bại.', 'error');
+            } 
+        });
         const handleSignOut = () => signOut(auth);
         logoutBtn.addEventListener('click', handleSignOut);
         logoutBtnPersona.addEventListener('click', handleSignOut);
-        showRegisterBtn.addEventListener('click', () => { loginView.classList.add('hidden'); registerView.classList.remove('hidden'); authError.textContent = ''; });
-        showLoginBtn.addEventListener('click', () => { registerView.classList.add('hidden'); loginView.classList.remove('hidden'); authError.textContent = ''; });
+        showRegisterBtn.addEventListener('click', () => { 
+            loginView.classList.add('hidden'); 
+            registerView.classList.remove('hidden'); 
+            authError.textContent = ''; 
+        });
+        showLoginBtn.addEventListener('click', () => { 
+            registerView.classList.add('hidden'); 
+            loginView.classList.remove('hidden'); 
+            authError.textContent = ''; 
+        });
 
         // --- THEME ---
+        /** Updates the theme toggle icon based on the current theme. */
         const updateThemeIcon = () => {
             if (document.documentElement.classList.contains('dark')) {
                 themeToggleDarkIcon.classList.add('hidden');
@@ -698,32 +772,46 @@ Bạn là một người hướng dẫn học tập chuyên nghiệp. Khi ngư�
             localStorage.setItem('color-theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light');
             updateThemeIcon();
         });
-        updateThemeIcon();
+        updateThemeIcon(); // Initial call to set the correct icon on load
         
         // --- PERSONA SELECTION ---
+        /** Shows the persona selection screen and refreshes persona lists. */
         async function showPersonaSelectionScreen() {
-            clearSuggestions();
+            clearSuggestions(); // Clear any existing suggestions
 
             welcomeScreen.classList.add('hidden');
-            welcomeScreen.classList.remove('flex');
-            personaSelectionScreen.classList.remove('hidden');
-            chatViewContainer.classList.add('hidden');
-            await fetchCustomPersonas();
-            renderDefaultPersonas();
-            renderCustomPersonas();
-            if(speechSynthesis.speaking) speechSynthesis.cancel();
-            closeSidebar(); 
+            welcomeScreen.classList.remove('flex'); // Ensure welcome screen is hidden
+            personaSelectionScreen.classList.remove('hidden'); // Show persona selection
+            chatViewContainer.classList.add('hidden'); // Hide chat view
+
+            await fetchCustomPersonas(); // Fetch user-created personas
+            renderDefaultPersonas(); // Render static default personas
+            renderCustomPersonas(); // Render fetched custom personas
+            
+            if(speechSynthesis.speaking) speechSynthesis.cancel(); // Stop any ongoing speech
+            closeSidebar(); // Ensure sidebar is closed
+
+            // If a persona was previously selected, generate welcome suggestions for it
+            if (currentPersona) {
+                await generateWelcomeSuggestions();
+            } else {
+                // If no persona selected yet, ensure welcome suggestions are cleared or default message shown
+                document.getElementById('welcome-suggestions-container').innerHTML = '';
+            }
         }
 
+        /** Renders the default personas to the grid. */
         function renderDefaultPersonas() {
             defaultPersonaGrid.innerHTML = '';
             defaultPersonas.forEach(persona => {
                 const card = createPersonaCard(persona, false);
+                // When a default persona is clicked, start a new chat with it
                 card.onclick = () => startNewChat(persona.id);
                 defaultPersonaGrid.appendChild(card);
             });
         }
         
+        /** Renders the custom personas to the grid, showing empty state if none exist. */
         function renderCustomPersonas() {
             customPersonaGrid.innerHTML = '';
             if (customPersonas.length > 0) {
@@ -731,6 +819,7 @@ Bạn là một người hướng dẫn học tập chuyên nghiệp. Khi ngư�
                 emptyCustomPersonaState.classList.add('hidden');
                 customPersonas.forEach(persona => {
                     const card = createPersonaCard(persona, true);
+                    // For custom personas, also indicate if it's custom when starting chat
                     card.onclick = () => startNewChat(persona.id, true);
                     customPersonaGrid.appendChild(card);
                 });
@@ -740,6 +829,12 @@ Bạn là một người hướng dẫn học tập chuyên nghiệp. Khi ngư�
             }
         }
         
+        /**
+         * Creates an HTML card element for a given persona.
+         * @param {object} persona - The persona data.
+         * @param {boolean} isCustom - True if it's a custom persona, to add edit/delete buttons.
+         * @returns {HTMLElement} The created persona card element.
+         */
         function createPersonaCard(persona, isCustom) {
             const card = document.createElement('div');
             card.className = 'persona-card cursor-pointer p-4 sm:p-5 bg-white dark:bg-slate-800 rounded-2xl shadow-md flex flex-col items-center text-center h-full';
@@ -763,8 +858,12 @@ Bạn là một người hướng dẫn học tập chuyên nghiệp. Khi ngư�
         }
 
         // --- PERSONA MODAL ---
+        /**
+         * Opens the persona creation/edit modal.
+         * @param {object} [personaToEdit=null] - Optional persona object to pre-fill the form for editing.
+         */
         function openPersonaModal(personaToEdit = null) {
-            personaForm.reset();
+            personaForm.reset(); // Clear form fields
             if (personaToEdit) {
                 personaModalTitle.textContent = 'Chỉnh sửa Persona';
                 personaIdInput.value = personaToEdit.id;
@@ -774,73 +873,85 @@ Bạn là một người hướng dẫn học tập chuyên nghiệp. Khi ngư�
                 personaPromptInput.value = personaToEdit.systemPrompt;
             } else {
                 personaModalTitle.textContent = 'Tạo Chuyên gia AI của bạn';
-                personaIdInput.value = '';
+                personaIdInput.value = ''; // Clear ID for new persona
             }
             personaModalOverlay.classList.remove('hidden');
             personaModal.classList.remove('hidden');
+            // Animate modal entry
             requestAnimationFrame(() => {
                 personaModal.classList.remove('scale-95', 'opacity-0');
             });
         }
 
+        /** Closes the persona creation/edit modal with animation. */
         function closePersonaModal() {
             personaModal.classList.add('scale-95', 'opacity-0');
             setTimeout(() => {
                 personaModalOverlay.classList.add('hidden');
                 personaModal.classList.add('hidden');
-            }, 300);
+            }, 300); // Match CSS transition duration
         }
 
         // --- PERSONA CRUD ---
+        /** Fetches custom personas for the current user from Firestore. */
         async function fetchCustomPersonas() {
             if (!currentUserId) return;
             const personasCol = collection(db, 'users', currentUserId, 'customPersonas');
-            const q = query(personasCol, orderBy('createdAt', 'desc'));
+            const q = query(personasCol, orderBy('createdAt', 'desc')); // Order by creation time
             const snapshot = await getDocs(q);
             customPersonas = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         }
 
+        /**
+         * Handles saving a new or updated persona to Firestore.
+         * @param {Event} e - The form submission event.
+         */
         async function handleSavePersona(e) {
             e.preventDefault();
             if (!currentUserId) return;
 
             const personaData = {
                 name: personaNameInput.value.trim(),
-                icon: personaIconInput.value.trim() || '🤖',
+                icon: personaIconInput.value.trim() || '🤖', // Default icon if none provided
                 description: personaDescriptionInput.value.trim(),
                 systemPrompt: personaPromptInput.value.trim(),
-                ownerId: currentUserId
+                ownerId: currentUserId // Link persona to the creating user
             };
 
             const personaId = personaIdInput.value;
-            savePersonaBtn.disabled = true;
+            savePersonaBtn.disabled = true; // Disable button to prevent double submission
             try {
-                if (personaId) { // Update existing
+                if (personaId) { // Update existing persona
                     const docRef = doc(db, 'users', currentUserId, 'customPersonas', personaId);
                     await updateDoc(docRef, personaData);
-                } else { // Create new
-                    personaData.createdAt = serverTimestamp();
+                } else { // Create new persona
+                    personaData.createdAt = serverTimestamp(); // Add timestamp for ordering
                     const collectionRef = collection(db, 'users', currentUserId, 'customPersonas');
                     await addDoc(collectionRef, personaData);
                 }
                 closePersonaModal();
                 showToast('Persona đã được lưu thành công!', 'success');
-                await showPersonaSelectionScreen(); // Refresh the list
+                await showPersonaSelectionScreen(); // Refresh the persona list after saving
             } catch (error) {
                 console.error("Lỗi khi lưu persona:", error);
                 showToast('Lỗi khi lưu persona.', 'error');
             } finally {
-                savePersonaBtn.disabled = false;
+                savePersonaBtn.disabled = false; // Re-enable button
             }
         }
         
+        /**
+         * Deletes a custom persona from Firestore.
+         * @param {string} personaId - The ID of the persona to delete.
+         * @param {string} personaName - The name of the persona (for confirmation message).
+         */
         async function deletePersona(personaId, personaName) {
             if (!confirm(`Bạn có chắc chắn muốn xóa persona "${personaName}" không? Hành động này không thể hoàn tác.`)) return;
 
             try {
                 await deleteDoc(doc(db, 'users', currentUserId, 'customPersonas', personaId));
                 showToast(`Persona "${personaName}" đã được xóa.`, 'success');
-                await showPersonaSelectionScreen(); // Refresh the list
+                await showPersonaSelectionScreen(); // Refresh the persona list after deletion
             } catch (error) {
                 console.error("Lỗi khi xóa persona:", error);
                 showToast('Lỗi khi xóa persona.', 'error');
@@ -849,7 +960,12 @@ Bạn là một người hướng dẫn học tập chuyên nghiệp. Khi ngư�
         
         // --- CHAT LOGIC ---
 
-        // NEW: Smarter pre-processor function
+        /**
+         * Pre-processes the text from the AI response to create interactive links
+         * for learning mode and term explanations.
+         * @param {string} text - The raw text from the AI response.
+         * @returns {string} The HTML string with interactive links.
+         */
         function preprocessText(text) {
             const learningLinkRegex = /\[([^\]]+?)\]\{"prompt":"([^"]+?)"\}/g;
             const termLinkRegex = /\[([^\]]+?)\]/g;
@@ -859,6 +975,7 @@ Bạn là một người hướng dẫn học tập chuyên nghiệp. Khi ngư�
             let match;
 
             // Step 1: Find all learning links and replace them first
+            // This prioritizes learning links over term links to prevent double-processing
             while ((match = learningLinkRegex.exec(text)) !== null) {
                 // Add the text before this match
                 parts.push(text.substring(lastIndex, match.index));
@@ -867,6 +984,7 @@ Bạn là một người hướng dẫn học tập chuyên nghiệp. Khi ngư�
                 const prompt = match[2];
 
                 // Create the learning link HTML. The title itself is NOT processed for term links.
+                // Sanitize prompt for use in data-attribute
                 const sanitizedPrompt = prompt.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
                 parts.push(`<a href="#" class="learning-link" data-prompt="${sanitizedPrompt}">${title}</a>`);
                 
@@ -878,9 +996,9 @@ Bạn là một người hướng dẫn học tập chuyên nghiệp. Khi ngư�
 
             // Step 2: Process the parts that are NOT learning links for term links.
             const finalParts = parts.map(part => {
-                // Check if the part is already a generated HTML tag
+                // Check if the part is already a generated HTML tag (a learning link)
                 if (part.startsWith('<a href="#" class="learning-link"')) {
-                    return part; // This is a learning link, don't touch it
+                    return part; // This is a learning link, don't process it further
                 } else {
                     // This is regular text, process it for term links
                     return part.replace(termLinkRegex, `<a href="#" class="term-link" data-term="$1">$1</a>`);
@@ -891,6 +1009,11 @@ Bạn là một người hướng dẫn học tập chuyên nghiệp. Khi ngư�
         }
 
 
+        /**
+         * Starts a new chat session with a selected persona.
+         * @param {string} personaId - The ID of the persona.
+         * @param {boolean} [isCustom=false] - Whether the persona is custom or default.
+         */
         async function startNewChat(personaId, isCustom = false) {
             let selectedPersona;
             if (isCustom) {
@@ -899,74 +1022,103 @@ Bạn là một người hướng dẫn học tập chuyên nghiệp. Khi ngư�
                 selectedPersona = defaultPersonas.find(p => p.id === personaId);
             }
 
-            if (!selectedPersona) { return; }
+            if (!selectedPersona) { 
+                showToast('Không tìm thấy Persona.', 'error');
+                return; 
+            }
             
-            clearSuggestions();
-
-            currentPersona = selectedPersona;
+            clearSuggestions(); // Clear existing suggestions
+            currentPersona = selectedPersona; // Set the current persona
             
+            // Show chat view and hide persona selection
             personaSelectionScreen.classList.add('hidden');
             chatViewContainer.classList.remove('hidden');
-            chatViewContainer.classList.add('flex');
-            updateChatHeader(currentPersona);
+            chatViewContainer.classList.add('flex'); // Ensure flex display
+
+            updateChatHeader(currentPersona); // Update header with persona info
+            updateLearningModeIndicator(); // Update learning mode indicator in header
             
+            // Reset chat state for a new conversation
             currentChatId = null;
-            chat = null;
+            chat = null; // Clear main chat session
             localHistory = [{
                 role: "user",
-                parts: [{ text: currentPersona.systemPrompt }],
+                parts: [{ text: currentPersona.systemPrompt }], // Initial system prompt
             }, {
                 role: "model",
-                parts: [{ text: "Đã hiểu! Tôi đã sẵn sàng. Bạn cần tôi giúp gì?" }],
+                parts: [{ text: "Đã hiểu! Tôi đã sẵn sàng. Bạn cần tôi giúp gì?" }], // Initial AI greeting
             }];
             
+            // Clear chat display and add notification area
             chatContainer.innerHTML = '';
             chatContainer.appendChild(notificationArea);
             
-            await renderAllChats();
-            closeSidebar();
-            if(speechSynthesis.speaking) speechSynthesis.cancel();
+            await renderAllChats(); // Re-render sidebar chat list
+            closeSidebar(); // Close sidebar
+            if(speechSynthesis.speaking) speechSynthesis.cancel(); // Stop any speech
             
-            await generateWelcomeSuggestions();
+            await generateWelcomeSuggestions(); // Generate welcome suggestions for the new chat
         }
         
+        /**
+         * Updates the chat header with the current persona's information.
+         * @param {object} persona - The current persona object.
+         */
         function updateChatHeader(persona) {
             if(persona) {
                 chatHeaderInfo.innerHTML = `
                     <span class="text-2xl">${persona.icon}</span>
                     <span class="text-lg font-bold text-gray-800 dark:text-gray-100">${persona.name}</span>
+                    <!-- Learning Mode Indicator is dynamically managed by updateLearningModeIndicator -->
                 `;
+                updateLearningModeIndicator(); // Ensure indicator state is correct
             } else {
-                chatHeaderInfo.innerHTML = '';
+                chatHeaderInfo.innerHTML = ''; // Clear header if no persona is selected
             }
         }
         
+        /**
+         * Adds action buttons (copy, speak) to a message.
+         * @param {HTMLElement} actionsContainer - The container for the action buttons.
+         * @param {string} rawText - The raw text content of the message.
+         */
         function addMessageActions(actionsContainer, rawText) {
+             // Only add actions if container exists and text is not empty or a blinking cursor
              if (!actionsContainer || !rawText || rawText.includes('blinking-cursor')) return;
             
-            actionsContainer.innerHTML = ''; // Clear previous
-        
+            actionsContainer.innerHTML = ''; // Clear previous actions
+
+            // Copy button
             const copyBtn = document.createElement('button');
             copyBtn.className = 'copy-btn p-1.5 text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 rounded-full transition-colors';
             copyBtn.innerHTML = `<svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 0 1-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 0 1 1.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 0 0-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 0 1-1.125-1.125v-9.25m12 6.625v-1.875a3.375 3.375 0 00-3.375-3.375h-1.5a1.125 1.125 0 01-1.125-1.125v-1.5a3.375 3.375 0 00-3.375-3.375H9.75" /></svg>`;
             copyBtn.title = 'Sao chép nội dung';
-            copyBtn.dataset.text = rawText;
+            copyBtn.dataset.text = rawText; // Store raw text for copying
             actionsContainer.appendChild(copyBtn);
             
+            // Speak button
             const speakBtn = document.createElement('button');
             speakBtn.className = 'speak-btn p-1.5 text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 rounded-full transition-colors';
             speakBtn.innerHTML = '🔊';
             speakBtn.title = 'Đọc văn bản';
-            speakBtn.dataset.text = rawText;
-            speakBtn.dataset.state = 'idle';
+            speakBtn.dataset.text = rawText; // Store raw text for speech
+            speakBtn.dataset.state = 'idle'; // Initial state for speech
             actionsContainer.appendChild(speakBtn);
         }
 
+        /**
+         * Adds a message to the chat display.
+         * @param {'user'|'ai'|'model'|'note'|'summary'} role - The role of the message sender.
+         * @param {string} text - The content of the message.
+         * @param {boolean} [shouldScroll=true] - Whether to scroll the chat to the bottom after adding the message.
+         * @returns {{messageWrapper: HTMLElement, contentElem: HTMLElement, statusElem?: HTMLElement, actionsContainer?: HTMLElement}}
+         * References to the created message elements.
+         */
         function addMessage(role, text, shouldScroll = true) {
             const messageWrapper = document.createElement('div');
             let contentElem;
             let statusElem;
-            let actionsContainer = null; // Initialize actionsContainer here
+            let actionsContainer = null; // Initialize actionsContainer
 
             if (role === 'ai' || role === 'model') {
                 messageWrapper.className = 'w-full space-y-2';
@@ -993,7 +1145,7 @@ Bạn là một người hướng dẫn học tập chuyên nghiệp. Khi ngư�
                 messageWrapper.className = 'note-wrapper';
                 messageWrapper.innerHTML = `
                     <div class="note-header">
-                        <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M5.433 13.917l1.262-3.155A4 4 0 017.58 9.42l6.92-6.918a2.121 2.121 0 013 3l-6.92 6.918c-.383.383-.84.685-1.343.886l-3.154 1.262a.5.5 0 01-.65-.65z" /><path d="M3.5 5.75c0-.69.56-1.25 1.25-1.25H10A.75.75 0 0010 3H4.75A2.75 2.75 0 002 5.75v9.5A2.75 2.75 0 004.75 18h9.5A2.75 2.75 0 0017 15.25V10a.75.75 0 00-1.5 0v5.25c0 .69-.56 1.25-1.25 1.25h-9.5c-.69 0-1.25-.56-1.25-1.25v-9.5z" /></svg>
+                        <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M5.433 13.917l1.262-3.155A4 0 017.58 9.42l6.92-6.918a2.121 2.121 0 013 3l-6.92 6.918c-.383.383-.84.685-1.343.886l-3.154 1.262a.5.5 0 01-.65-.65z" /><path d="M3.5 5.75c0-.69.56-1.25 1.25-1.25H10A.75.75 0 0010 3H4.75A2.75 2.75 0 002 5.75v9.5A2.75 2.75 0 004.75 18h9.5A2.75 2.75 0 0017 15.25V10a.75.75 0 00-1.5 0v5.25c0 .69-.56 1.25-1.25 1.25h-9.5c-.69 0-1.25-.56-1.25-1.25v-9.5z" /></svg>
                         <span>Ghi chú</span>
                     </div>
                     <div class="note-content message-content" data-raw-text="${text.replace(/"/g, '&quot;')}"></div>
@@ -1013,6 +1165,7 @@ Bạn là một người hướng dẫn học tập chuyên nghiệp. Khi ngư�
                 actionsContainer = messageWrapper.querySelector('.message-actions');
             }
             
+            // Process text for interactive links and sanitize before rendering Markdown
             const preprocessedText = preprocessText(text);
             contentElem.innerHTML = DOMPurify.sanitize(marked.parse(preprocessedText), { ADD_ATTR: ['target', 'data-term', 'data-prompt'] });
 
@@ -1021,24 +1174,28 @@ Bạn là một người hướng dẫn học tập chuyên nghiệp. Khi ngư�
                 addMessageActions(actionsContainer, text);
             }
 
+            // Insert message into chat container before the notification area
             chatContainer.insertBefore(messageWrapper, notificationArea);
             if (shouldScroll) {
-                // Modified to scroll the chatContainer itself
+                // Scroll the chatContainer itself to the bottom
                 chatContainer.scrollTop = chatContainer.scrollHeight;
             }
 
-            return { messageWrapper, contentElem, statusElem, actionsContainer }; // Return actionsContainer
+            return { messageWrapper, contentElem, statusElem, actionsContainer }; // Return elements for further manipulation
         }
         
+        /** Summarizes the current conversation history. */
         async function handleSummary() {
             if (isSummarizing) return;
             
+            // Filter out 'note' and 'summary' messages and format for the summary prompt
             const conversationToSummarize = localHistory
                 .filter(msg => ['user', 'model'].includes(msg.role))
                 .map(msg => `${msg.role === 'user' ? 'User' : 'AI'}: ${msg.parts[0].text}`)
                 .join('\n\n');
 
-            if (conversationToSummarize.length < 100) { // Check for minimum length
+            // Prevent summarizing very short conversations
+            if (conversationToSummarize.length < 100) { 
                 showToast('Chưa có đủ nội dung để tóm tắt.', 'info');
                 return;
             }
@@ -1053,8 +1210,9 @@ Bạn là một người hướng dẫn học tập chuyên nghiệp. Khi ngư�
                 const result = await fastModel.generateContent(prompt);
                 const summaryText = result.response.text();
 
-                addMessage('summary', summaryText);
+                addMessage('summary', summaryText); // Display the summary in chat
                 
+                // Add summary to local history and update in DB
                 localHistory.push({ role: 'summary', parts: [{ text: summaryText }] });
                 await updateConversationInDb();
 
@@ -1063,46 +1221,50 @@ Bạn là một người hướng dẫn học tập chuyên nghiệp. Khi ngư�
                 showToast('Không thể tạo bản tóm tắt lúc này.', 'error');
             } finally {
                 isSummarizing = false;
-                summarizeBtn.innerHTML = originalIcon;
+                summarizeBtn.innerHTML = originalIcon; // Restore button icon
                 summarizeBtn.disabled = false;
             }
         }
 
+        /**
+         * Sends a message to the AI model and displays the response.
+         * @param {string} [promptTextOverride=null] - Optional text to use as the user's prompt, overriding the input field.
+         * Used for learning links where the display text might differ from the prompt sent to AI.
+         */
         async function sendMessage(promptTextOverride = null) {
             console.log("--- sendMessage called ---");
             console.log("Initial localHistory length:", localHistory.length);
 
+            // Ensure chat view is visible
             welcomeScreen.classList.add('hidden');
             welcomeScreen.classList.remove('flex');
             chatContainer.classList.remove('hidden');
         
-            const userDisplayedText = promptTextOverride ? (localHistory.find(m => m.role === 'model' && m.parts[0].text.includes(promptTextOverride)) ? null : promptTextOverride) : promptInput.value.trim();
+            // Determine the text to display for the user's message and the actual prompt to send
+            const userDisplayedText = promptTextOverride ? promptTextOverride : promptInput.value.trim(); 
             const actualPromptToSend = promptTextOverride || promptInput.value.trim();
 
-            if (!actualPromptToSend || isSummarizing) return;
+            if (!actualPromptToSend || isSummarizing) return; // Prevent sending empty messages or during summarization
 
-            // If this is a direct user message, clear the input
+            // If this is a direct user message from input, clear the input
             if (!promptTextOverride) {
                 promptInput.value = '';
                 adjustInputHeight();
             }
 
-            sendBtn.disabled = true;
-            clearSuggestions();
+            sendBtn.disabled = true; // Disable send button
+            clearSuggestions(); // Always clear suggestions before AI responds
 
             // Display what the user *sees* as their message.
-            if(userDisplayedText) {
-                addMessage('user', userDisplayedText);
-                localHistory.push({ role: 'user', parts: [{ text: userDisplayedText }] });
-                console.log("localHistory after adding user message:", JSON.parse(JSON.stringify(localHistory)));
-            }
+            addMessage('user', userDisplayedText);
+            localHistory.push({ role: 'user', parts: [{ text: userDisplayedText }] });
+            console.log("localHistory after adding user message:", JSON.parse(JSON.stringify(localHistory)));
         
-            // Capture the elements returned by addMessage for the AI response
+            // Add a placeholder message for AI response with a blinking cursor
             const { messageWrapper, contentElem, statusElem, actionsContainer } = addMessage('ai', '<span class="blinking-cursor"></span>');
             if (statusElem) statusElem.textContent = 'Đang suy nghĩ...';
 
             try {
-                // --- Start: History preparation for API call to enforce alternation ---
                 let historyForThisCall = [];
                 // Iterate over localHistory up to the current user's prompt (which is the last 'user' message)
                 // to build a valid chat history for the AI model.
@@ -1117,14 +1279,13 @@ Bạn là một người hướng dẫn học tập chuyên nghiệp. Khi ngư�
 
                     // If this is the current user's message (the last 'user' message in localHistory),
                     // it will be passed as the 'prompt' argument to sendMessageStream, not as part of history.
+                    // So we break before adding the very last user message.
                     if (i === historyLength - 1 && message.role === 'user') {
                         break; 
                     }
                     
-                    // Enforce strict alternation for user and model roles.
-                    // If the current message role is the same as the last added to historyForThisCall,
-                    // and it's a 'model' role, this indicates a malformed history (model followed by model).
-                    // This is the specific error we are fixing.
+                    // Enforce strict alternation for user and model roles for the API call.
+                    // This is crucial for models that require an alternating history.
                     if (historyForThisCall.length > 0 && historyForThisCall[historyForThisCall.length - 1].role === message.role) {
                         if (message.role === 'model') {
                             console.warn("Skipping consecutive 'model' message found in localHistory during history preparation:", message);
@@ -1132,18 +1293,15 @@ Bạn là một người hướng dẫn học tập chuyên nghiệp. Khi ngư�
                             // This effectively "heals" the history for the API call.
                             continue;
                         }
-                        // For consecutive 'user' messages, we generally allow them to be passed to the SDK,
-                        // as it might treat them as a single user turn. If errors related to user-user appear,
-                        // this logic might need further refinement (e.g., concatenating user messages).
                     }
 
                     historyForThisCall.push(message);
                 }
-                // --- End: History preparation for API call ---
 
-                // Declare finalPrompt with an explicit assignment path for robustness.
+                // Apply learning mode prompt if active and it's a new user prompt (not from clicking a learning link)
                 let finalPrompt;
-                if (isLearningMode && !promptTextOverride) { // Apply learning mode prompt only for new requests, not for clicking links
+                // If promptTextOverride is used, it means a learning link was clicked, so no need to wrap with learning mode prompt.
+                if (isLearningMode && !promptTextOverride) { 
                     finalPrompt = `${LEARNING_MODE_SYSTEM_PROMPT}\n\nYêu cầu của người học: "${actualPromptToSend}"`;
                 } else {
                     finalPrompt = actualPromptToSend;
@@ -1156,6 +1314,7 @@ Bạn là một người hướng dẫn học tập chuyên nghiệp. Khi ngư�
                 let fullResponseText = "";
                 let isFirstChunk = true;
         
+                // Stream response chunks
                 for await (const chunk of result.stream) {
                     if (isFirstChunk) {
                         if (statusElem) statusElem.textContent = 'Đang viết...';
@@ -1163,32 +1322,43 @@ Bạn là một người hướng dẫn học tập chuyên nghiệp. Khi ngư�
                     }
                     fullResponseText += chunk.text();
                     
+                    // Update content with blinking cursor until stream ends
                     const processedChunk = preprocessText(fullResponseText + '<span class="blinking-cursor"></span>');
                     contentElem.innerHTML = DOMPurify.sanitize(marked.parse(processedChunk), {ADD_ATTR: ['target', 'data-term', 'data-prompt']});
-                    messageWrapper.scrollIntoView({ behavior: "smooth", block: "end" });
+                    // Scroll to bottom as new content arrives
+                    chatContainer.scrollTop = chatContainer.scrollHeight;
                 }
                 
-                if (statusElem) statusElem.classList.add('hidden');
+                if (statusElem) statusElem.classList.add('hidden'); // Hide status when done
                 
+                // Final render without blinking cursor and store raw text for actions
                 const finalProcessedText = preprocessText(fullResponseText);
                 contentElem.innerHTML = DOMPurify.sanitize(marked.parse(finalProcessedText), {ADD_ATTR: ['target', 'data-term', 'data-prompt']});
                 contentElem.dataset.rawText = fullResponseText;
                 
-                addMessageActions(actionsContainer, fullResponseText); 
+                addMessageActions(actionsContainer, fullResponseText); // Add copy/speak buttons
                 
+                // Scroll to the start of the message after a small delay for smoother effect
                 setTimeout(() => {
                      messageWrapper.scrollIntoView({ behavior: "smooth", block: "start" });
                 }, 100);
         
                 localHistory.push({ role: 'model', parts: [{ text: fullResponseText }] });
                 console.log("localHistory after adding model message:", JSON.parse(JSON.stringify(localHistory)));
-                await updateConversationInDb();
-                if(!isLearningMode && !promptTextOverride) await getFollowUpSuggestions(fullResponseText);
+                await updateConversationInDb(); // Save updated conversation to DB
+                
+                // Only get follow-up suggestions if NOT in learning mode.
+                // In learning mode, structured links are the "suggestions".
+                if (!isLearningMode) {
+                    await getFollowUpSuggestions(fullResponseText);
+                } else {
+                    clearSuggestions(); // Ensure suggestions are cleared if learning mode is on
+                }
 
             } catch (error) {
                 console.error("Error during sendMessage:", error);
                 contentElem.innerHTML = `**Lỗi:** ${error.message}`;
-                // If an error occurs, pop the last message (which was the user's prompt or the AI's pending message)
+                // If an error occurs, remove the last message (user's prompt or AI's pending message)
                 // to avoid malformed history for the next attempt.
                 if (localHistory.length > 0) {
                     localHistory.pop(); 
@@ -1197,42 +1367,53 @@ Bạn là một người hướng dẫn học tập chuyên nghiệp. Khi ngư�
                 showToast(`Lỗi gửi tin nhắn: ${error.message}`, 'error');
 
             } finally {
-                sendBtn.disabled = false;
+                sendBtn.disabled = false; // Re-enable send button
             }
         }
         
+        /** Saves or updates the current conversation in Firestore. */
         async function updateConversationInDb() {
-            if (!currentUserId || localHistory.length <= 2) return;
+            // Only save if there's a user and at least a user prompt + AI response
+            if (!currentUserId || localHistory.length <= 2) return; 
             const chatData = { 
                 history: localHistory, 
                 updatedAt: serverTimestamp(), 
-                personaId: currentPersona?.id || 'general'
+                personaId: currentPersona?.id || 'general' // Save current persona ID
             };
             try {
                 if (currentChatId) {
+                    // Update existing chat document
                     await updateDoc(doc(db, 'chats', currentUserId, 'conversations', currentChatId), chatData);
                 } else {
+                    // Create new chat document
+                    // Use the first actual user prompt as the chat title
                     const firstUserPrompt = localHistory[2];
                     chatData.title = firstUserPrompt?.parts[0].text.substring(0, 40) || "Cuộc trò chuyện mới";
                     chatData.createdAt = serverTimestamp();
-                    chatData.isPinned = false; 
+                    chatData.isPinned = false; // Default to not pinned
                     const docRef = await addDoc(collection(db, 'chats', currentUserId, 'conversations'), chatData);
-                    currentChatId = docRef.id;
+                    currentChatId = docRef.id; // Store the new chat ID
                 }
-                await renderAllChats();
+                await renderAllChats(); // Re-render sidebar chat list to show new/updated chat
             } catch (error) {
                 console.error("Lỗi khi cập nhật cuộc trò chuyện:", error);
+                // Consider adding a toast here if saving fails
             }
         }
         
+        /**
+         * Loads a specific chat conversation from Firestore.
+         * @param {string} chatId - The ID of the chat to load.
+         */
         async function loadChat(chatId) {
-            if (speechSynthesis.speaking) speechSynthesis.cancel();
+            if (speechSynthesis.speaking) speechSynthesis.cancel(); // Stop any ongoing speech
             
+            // Show loading state
             personaSelectionScreen.classList.add('hidden');
             chatViewContainer.classList.remove('hidden');
             chatViewContainer.classList.add('flex');
-            showHistorySkeleton(); 
-            closeSidebar();
+            showHistorySkeleton(); // Show skeleton while loading
+            closeSidebar(); // Close sidebar
 
             try {
                 const chatDocRef = doc(db, 'chats', currentUserId, 'conversations', chatId);
@@ -1242,8 +1423,8 @@ Bạn là một người hướng dẫn học tập chuyên nghiệp. Khi ngư�
                     const data = chatDoc.data();
                     const loadedPersonaId = data.personaId || 'general';
                     
+                    // Find the persona, or create a placeholder if it was deleted
                     let foundPersona = defaultPersonas.find(p => p.id === loadedPersonaId);
-                    
                     if (!foundPersona) {
                         const personaDocRef = doc(db, 'users', currentUserId, 'customPersonas', loadedPersonaId);
                         const personaDoc = await getDoc(personaDocRef);
@@ -1253,29 +1434,45 @@ Bạn là một người hướng dẫn học tập chuyên nghiệp. Khi ngư�
                             foundPersona = { id: 'deleted', name: 'Persona đã xóa', icon: '❓', description: '', systemPrompt: 'Hãy trả lời một cách bình thường.' };
                         }
                     }
-                    currentPersona = foundPersona;
-                    updateChatHeader(currentPersona);
+                    currentPersona = foundPersona; // Set the loaded persona
+                    updateChatHeader(currentPersona); // Update chat header
+                    updateLearningModeIndicator(); // Update learning mode indicator based on chat
 
                     currentChatId = chatDoc.id;
-                    localHistory = data.history || []; // HISTORY IS LOADED HERE
+                    localHistory = data.history || []; // Load history from DB
                     console.log("Loaded localHistory:", JSON.parse(JSON.stringify(localHistory)));
                     
-                    await renderAllChats();
+                    await renderAllChats(); // Re-render sidebar chat list
                     welcomeScreen.classList.add('hidden');
                     welcomeScreen.classList.remove('flex');
                     chatContainer.classList.remove('hidden');
                     chatContainer.innerHTML = ''; 
                     chatContainer.appendChild(notificationArea);
 
-                    clearSuggestions();
+                    clearSuggestions(); // Clear existing suggestions when loading a chat
+
+                    // Display all messages from the loaded history (skipping initial system/model messages)
                     const messagesToDisplay = localHistory.slice(2);
                     messagesToDisplay.forEach(msg => {
-                        addMessage(msg.role, msg.parts[0].text, false);
+                        addMessage(msg.role, msg.parts[0].text, false); // Don't scroll for each individual message
                     });
-                    setTimeout(() => chatContainer.scrollTop = chatContainer.scrollHeight, 0);
+                    setTimeout(() => chatContainer.scrollTop = chatContainer.scrollHeight, 0); // Scroll to bottom once all messages are rendered
+
+                    // If not in learning mode, try to get suggestions for the last AI response in the loaded chat
+                    if (!isLearningMode) {
+                        const lastModelMessage = localHistory.slice().reverse().find(msg => msg.role === 'model');
+                        if (lastModelMessage) {
+                            await getFollowUpSuggestions(lastModelMessage.parts[0].text);
+                        } else {
+                            clearSuggestions(); // No AI response in history, so clear suggestions
+                        }
+                    } else {
+                        clearSuggestions(); // In learning mode, suppress general suggestions
+                    }
 
                 } else {
                     addMessage('ai', '**Lỗi:** Không tìm thấy cuộc trò chuyện.');
+                    showToast('Cuộc trò chuyện không tồn tại.', 'error');
                 }
             } catch (error) {
                 console.error("Lỗi khi tải cuộc trò chuyện:", error);
@@ -1284,44 +1481,76 @@ Bạn là một người hướng dẫn học tập chuyên nghiệp. Khi ngư�
             }
         }
         
+        /** Clears the suggestion chips. */
         function clearSuggestions() {
             suggestionsContainer.innerHTML = '';
             suggestionsContainer.classList.add('hidden');
             toggleSuggestionsBtn.classList.add('hidden');
         }
 
+        /**
+         * Generates and displays follow-up suggestions based on the last AI response.
+         * @param {string} lastResponse - The text of the last AI response.
+         */
         async function getFollowUpSuggestions(lastResponse) {
             try {
+                // Prompt for generating short, simple follow-up questions
                 const suggestionPrompt = `Dựa vào câu trả lời sau: "${lastResponse.substring(0, 500)}". Hãy đề xuất 3 câu hỏi tiếp theo ngắn gọn và thú vị mà người dùng có thể hỏi. QUAN TRỌNG: Chỉ trả về 3 câu hỏi, mỗi câu trên một dòng. Không đánh số, không dùng gạch đầu dòng, không thêm bất kỳ văn bản nào khác.`;
-                const result = await fastModel.generateContent(prompt);
+                const result = await fastModel.generateContent(suggestionPrompt);
                 const responseText = result.response.text();
+                // Filter out any empty lines
                 const suggestions = responseText.split('\n').filter(s => s.trim() !== '');
                 displaySuggestions(suggestions);
             } catch (error) {
                 console.error("Error getting suggestions:", error);
+                // Do not show toast for this, as it's a background process
             }
         }
 
+        /**
+         * Handles clicking on a welcome suggestion or a follow-up suggestion.
+         * Opens the reference modal and sends the suggestion text to the auxiliary assistant.
+         * @param {string} suggestionText - The text of the suggestion.
+         */
+        async function handleSuggestionClickAndSendToReference(suggestionText) {
+            // Open the reference modal and show its input area
+            showReferenceModal('Trợ lý Phụ', true); 
+            // Allow a tiny delay for modal to become visible before setting value to prevent race conditions
+            await new Promise(resolve => setTimeout(resolve, 50)); 
+            if (referencePromptInput) {
+                referencePromptInput.value = suggestionText; // Set the input field
+            }
+            await sendReferenceMessage(suggestionText); // Send the message to the reference assistant
+        }
+
+
+        /**
+         * Displays the generated suggestions as clickable chips.
+         * @param {string[]} suggestions - An array of suggestion strings.
+         */
         function displaySuggestions(suggestions) {
-            suggestionsContainer.innerHTML = '';
+            suggestionsContainer.innerHTML = ''; // Clear previous suggestions
             if(suggestions.length > 0) {
-                toggleSuggestionsBtn.classList.remove('hidden');
+                toggleSuggestionsBtn.classList.remove('hidden'); // Show toggle button
                 suggestions.forEach(suggestionText => {
                     const chip = document.createElement('button');
                     chip.className = 'suggestion-chip border border-blue-200 dark:border-slate-600 bg-blue-50 dark:bg-slate-700 text-blue-700 dark:text-blue-400 rounded-full px-3 py-1 text-sm hover:bg-blue-100 dark:hover:bg-slate-600 transition-colors';
                     chip.textContent = suggestionText;
+                    // Call the new helper function to handle the click
                     chip.onclick = () => { 
-                        sendMessage(suggestionText);
+                        handleSuggestionClickAndSendToReference(suggestionText);
                     };
                     suggestionsContainer.appendChild(chip);
                 });
             } else {
-                 toggleSuggestionsBtn.classList.add('hidden');
+                 toggleSuggestionsBtn.classList.add('hidden'); // Hide toggle if no suggestions
             }
         }
         
+        /** Generates and displays welcome suggestions on the persona selection screen. */
         async function generateWelcomeSuggestions() {
-            if (!currentPersona) return;
+            if (!currentPersona) return; // Need a persona to generate suggestions
+            // Show welcome screen and hide chat
             welcomeScreen.classList.remove('hidden');
             welcomeScreen.classList.add('flex');
             chatContainer.classList.add('hidden');
@@ -1331,51 +1560,65 @@ Bạn là một người hướng dẫn học tập chuyên nghiệp. Khi ngư�
             document.getElementById('welcome-persona-description').textContent = currentPersona.description;
             
             const suggestionsContainer = document.getElementById('welcome-suggestions-container');
-            suggestionsContainer.innerHTML = `<div class="w-full p-4 border border-dashed dark:border-gray-700 rounded-lg animate-pulse h-12"></div>
-                                            <div class="w-full p-4 border border-dashed dark:border-gray-700 rounded-lg animate-pulse h-12"></div>
-                                            <div class="w-full p-4 border border-dashed dark:border-gray-700 rounded-lg animate-pulse h-12"></div>`;
+            // Show loading skeleton for welcome suggestions
+            suggestionsContainer.innerHTML = `
+                <div class="w-full p-4 border border-dashed dark:border-gray-700 rounded-lg animate-pulse h-12"></div>
+                <div class="w-full p-4 border border-dashed dark:border-gray-700 rounded-lg animate-pulse h-12"></div>
+                <div class="w-full p-4 border border-dashed dark:border-gray-700 rounded-lg animate-pulse h-12"></div>
+            `;
             
             try {
-                const prompt = `Bạn là chuyên gia về ${currentPersona.name}. Hãy tạo ra 3 câu hỏi gợi ý, ngắn gọn và thú vị mà người dùng có thể hỏi bạn để bắt đầu. Mỗi câu hỏi trên một dòng. Không dùng định dạng markdown, không đánh số hay gạch đầu dòng.`;
-                const result = await fastModel.generateContent(prompt);
-                const responseText = result.response.text();
-                const suggestions = responseText.split('\n').filter(s => s.trim() !== '');
-                
-                suggestionsContainer.innerHTML = ''; // Clear skeleton
-                suggestions.forEach(text => {
-                    const card = document.createElement('button');
-                    card.className = 'w-full p-4 text-left border dark:border-gray-700 rounded-lg welcome-suggestion-card';
-                    card.textContent = text;
-                    card.onclick = () => {
-                        sendMessage(text);
-                    };
-                    suggestionsContainer.appendChild(card);
-                });
+                // Only generate welcome suggestions if NOT in learning mode
+                if (!isLearningMode) { 
+                    const prompt = `Bạn là chuyên gia về ${currentPersona.name}. Hãy tạo ra 3 câu hỏi gợi ý, ngắn gọn và thú vị mà người dùng có thể hỏi bạn để bắt đầu. Mỗi câu hỏi trên một dòng. Không dùng định dạng markdown, không đánh số hay gạch đầu dòng.`;
+                    const result = await fastModel.generateContent(prompt);
+                    const responseText = result.response.text();
+                    const suggestions = responseText.split('\n').filter(s => s.trim() !== '');
+                    
+                    suggestionsContainer.innerHTML = ''; // Clear skeleton
+                    suggestions.forEach(text => {
+                        const card = document.createElement('button');
+                        card.className = 'w-full p-4 text-left border dark:border-gray-700 rounded-lg welcome-suggestion-card';
+                        card.textContent = text;
+                        // Call the new helper function to handle the click
+                        card.onclick = () => {
+                            handleSuggestionClickAndSendToReference(text);
+                        };
+                        suggestionsContainer.appendChild(card);
+                    });
+                } else {
+                    // In learning mode, show a specific message instead of suggestions
+                    suggestionsContainer.innerHTML = '<p class="text-sm text-gray-500 dark:text-gray-400">Ở Chế độ Học tập, bạn sẽ nhận được các liên kết tương tác thay vì gợi ý.</p>';
+                }
 
             } catch (error) {
                 console.error("Error generating welcome suggestions:", error);
-                suggestionsContainer.innerHTML = '<p class="text-sm text-gray-500">Không thể tải gợi ý. Vui lòng bắt đầu bằng cách nhập câu hỏi của bạn.</p>';
+                suggestionsContainer.innerHTML = '<p class="text-sm text-gray-500 dark:text-gray-400">Không thể tải gợi ý. Vui lòng bắt đầu bằng cách nhập câu hỏi của bạn.</p>';
             }
         }
 
+        /** Adjusts the height of the prompt input textarea based on its content. */
         function adjustInputHeight() {
             promptInput.style.height = 'auto';
             promptInput.style.height = promptInput.scrollHeight + 'px';
         }
         
         // --- Sidebar & Chat History Functions ---
+        /** Opens the sidebar. */
         function openSidebar() {
             sidebar.classList.remove('-translate-x-full');
             sidebarOverlay.classList.remove('hidden');
             setTimeout(() => sidebarOverlay.classList.add('opacity-100'), 10);
         }
 
+        /** Closes the sidebar. */
         function closeSidebar() {
             sidebar.classList.add('-translate-x-full');
             sidebarOverlay.classList.remove('opacity-100');
             setTimeout(() => sidebarOverlay.classList.add('hidden'), 300);
         }
 
+        /** Shows a skeleton loading state in the chat area. */
         function showHistorySkeleton() {
             welcomeScreen.classList.add('hidden');
             welcomeScreen.classList.remove('flex');
@@ -1395,32 +1638,37 @@ Bạn là một người hướng dẫn học tập chuyên nghiệp. Khi ngư�
                         <div class="h-16 skeleton-box rounded-2xl"></div>
                     </div>
                 </div>`;
-            chatContainer.appendChild(notificationArea);
+            chatContainer.appendChild(notificationArea); // Ensure notification area is still present
         }
 
+        /** Renders all chats in the sidebar, fetching pinned and recent chats. */
         async function renderAllChats() {
+            // Only render if a user and persona are selected
             if (!currentUserId || !currentPersona) {
                 savedChatsList.innerHTML = '';
                 pinnedChatsList.innerHTML = '';
                 pinnedChatsSection.classList.add('hidden');
                 return;
             };
-            isFetchingChats = false;
-            allChatsLoaded = false;
-            lastVisibleChat = null;
-            pinnedChatsList.innerHTML = '';
+            isFetchingChats = false; // Reset fetching flag
+            allChatsLoaded = false; // Reset loaded flag
+            lastVisibleChat = null; // Reset for new fetch
+            pinnedChatsList.innerHTML = ''; // Clear lists
             savedChatsList.innerHTML = '';
             await fetchPinnedChats();
             await fetchRecentChats();
         }
 
+        /** Fetches pinned chats for the current persona. */
         async function fetchPinnedChats() {
              const chatsCollection = collection(db, 'chats', currentUserId, 'conversations');
+             // Query for chats pinned to the current persona
              const q = query(chatsCollection, where('personaId', '==', currentPersona.id), where('isPinned', '==', true), orderBy('updatedAt', 'desc'));
              try {
                 const querySnapshot = await getDocs(q);
+                // Show/hide pinned section based on results
                 pinnedChatsSection.classList.toggle('hidden', querySnapshot.empty);
-                pinnedChatsList.innerHTML = ''; // Clear before adding new items
+                pinnedChatsList.innerHTML = ''; 
                 querySnapshot.forEach(docSnap => {
                     const li = createChatItem(docSnap);
                     pinnedChatsList.appendChild(li);
@@ -1428,25 +1676,33 @@ Bạn là một người hướng dẫn học tập chuyên nghiệp. Khi ngư�
              }
             catch (error) {
                 console.error("Lỗi khi lấy chat đã ghim (cần tạo index trên Firebase):", error);
+                // Note: Firebase often requires composite indexes for queries with multiple 'where' clauses.
+                // The console will provide a link to create the necessary index if missing.
             }
         }
 
+        /**
+         * Fetches recent chats for the current persona, with infinite scrolling support.
+         * @param {boolean} [loadMore=false] - True to load more chats, false to load initial set.
+         */
         async function fetchRecentChats(loadMore = false) {
             if (isFetchingChats || allChatsLoaded) return;
             isFetchingChats = true;
-            if (!loadMore) savedChatsSkeleton.classList.remove('hidden');
+            if (!loadMore) savedChatsSkeleton.classList.remove('hidden'); // Show skeleton for initial load
 
             const chatsCollection = collection(db, 'chats', currentUserId, 'conversations');
+            // Base query constraints for non-pinned chats of the current persona
             const constraints = [where('personaId', '==', currentPersona.id), where('isPinned', '==', false), orderBy('updatedAt', 'desc'), limit(CHATS_PER_PAGE)];
             if (lastVisibleChat && loadMore) {
-                constraints.push(startAfter(lastVisibleChat));
+                constraints.push(startAfter(lastVisibleChat)); // Start after the last visible document for pagination
             }
             const q = query(chatsCollection, ...constraints);
 
             try {
                 const querySnapshot = await getDocs(q);
-                if (!loadMore) savedChatsList.innerHTML = '';
+                if (!loadMore) savedChatsList.innerHTML = ''; // Clear list for initial load
                 if (querySnapshot.empty && !loadMore) {
+                    // Display message if no chats found and it's the initial load
                      savedChatsList.innerHTML = `
                         <li id="empty-chats-state" class="text-center p-4 space-y-2">
                             <div class="flex justify-center">
@@ -1461,9 +1717,11 @@ Bạn là một người hướng dẫn học tập chuyên nghiệp. Khi ngư�
                     savedChatsList.appendChild(li);
                 });
 
+                // Update lastVisibleChat for next pagination
                 if (querySnapshot.docs.length > 0) {
                     lastVisibleChat = querySnapshot.docs[querySnapshot.docs.length - 1];
                 }
+                // If fewer docs than page size were returned, all chats are loaded
                 if (querySnapshot.docs.length < CHATS_PER_PAGE) {
                     allChatsLoaded = true;
                 }
@@ -1471,29 +1729,42 @@ Bạn là một người hướng dẫn học tập chuyên nghiệp. Khi ngư�
                 console.error("Lỗi khi lấy lịch sử trò chuyện (cần tạo index trên Firebase):", error);
             } finally {
                 isFetchingChats = false;
-                savedChatsSkeleton.classList.add('hidden');
+                savedChatsSkeleton.classList.add('hidden'); // Hide skeleton
             }
         }
 
+        /**
+         * Updates the title of a chat conversation in Firestore.
+         * @param {string} chatId - The ID of the chat to update.
+         * @param {string} newTitle - The new title for the chat.
+         */
         async function updateChatTitle(chatId, newTitle) {
             if (!currentUserId || !newTitle) return;
             const docRef = doc(db, 'chats', currentUserId, 'conversations', chatId);
             try {
                 await updateDoc(docRef, { title: newTitle });
                 showToast('Tiêu đề đã được cập nhật!', 'success');
+                // Re-render all chats to reflect title change and maintain order
+                await renderAllChats(); 
             } catch (error) {
                 console.error("Lỗi khi cập nhật tiêu đề:", error);
                 showToast('Lỗi khi cập nhật tiêu đề.', 'error');
-                await renderAllChats();
+                await renderAllChats(); // Re-render in case of error to reset UI
             }
         }
         
+        /**
+         * Creates an HTML list item for a chat entry in the sidebar.
+         * Includes logic for editing, pinning, and deleting chats.
+         * @param {DocumentSnapshot} docSnap - The Firestore DocumentSnapshot of the chat.
+         * @returns {HTMLElement} The created list item element.
+         */
         function createChatItem(docSnap) {
             const chatItemData = docSnap.data();
             const chatId = docSnap.id;
             const li = document.createElement('li');
             li.className = "p-2 hover:bg-gray-100 dark:hover:bg-slate-700 flex justify-between items-center rounded-md group";
-            li.dataset.chatId = chatId;
+            li.dataset.chatId = chatId; // Store chat ID for easy access
         
             const titleContainer = document.createElement('div');
             titleContainer.className = "flex-1 truncate pr-2";
@@ -1514,14 +1785,16 @@ Bạn là một người hướng dẫn học tập chuyên nghiệp. Khi ngư�
             const buttonsWrapper = document.createElement('div');
             buttonsWrapper.className = 'flex items-center opacity-0 group-hover:opacity-100 transition-opacity';
         
+            // Edit button
             const editBtn = document.createElement('button');
             editBtn.className = 'p-1 text-gray-400 hover:text-blue-500 rounded-full';
             editBtn.title = "Sửa tiêu đề";
             editBtn.innerHTML = `<svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" /><path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd" /></svg>`;
             
             const saveBtnIcon = `<svg class="w-4 h-4 text-green-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" /></svg>`;
-            const editBtnIcon = editBtn.innerHTML;
+            const editBtnIcon = editBtn.innerHTML; // Store original icon
 
+            // Pin/Unpin button
             const pinBtn = document.createElement('button');
             pinBtn.className = 'p-1 text-gray-400 hover:text-yellow-500 rounded-full';
             pinBtn.title = chatItemData.isPinned ? "Bỏ ghim" : "Ghim";
@@ -1529,6 +1802,7 @@ Bạn là một người hướng dẫn học tập chuyên nghiệp. Khi ngư�
                 `<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-yellow-500" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5 2a1 1 0 011 1v1.586l4.707 4.707a1 1 0 010 1.414l-4.707 4.707V17a1 1 0 11-2 0v-1.586l-4.707-4.707a1 1 0 010-1.414L4 6.586V5a1 1 0 011-1zm10 0a1 1 0 011 1v1.586l4.707 4.707a1 1 0 010 1.414l-4.707 4.707V17a1 1 0 11-2 0v-1.586l-4.707-4.707a1 1 0 010-1.414L14 6.586V5a1 1 0 011-1z" clip-rule="evenodd" /></svg>` :
                 `<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.428a1 1 0 00.475 0l5 1.428a1 1 0 001.17-1.409l-7-14z" /></svg>`;
             
+            // Delete button
             const deleteBtn = document.createElement('button');
             deleteBtn.className = 'p-1 text-gray-400 hover:text-red-600 rounded-full';
             deleteBtn.title = "Xóa cuộc trò chuyện";
@@ -1539,32 +1813,35 @@ Bạn là một người hướng dẫn học tập chuyên nghiệp. Khi ngư�
             buttonsWrapper.appendChild(deleteBtn);
             li.appendChild(buttonsWrapper);
 
+            // Function to toggle between display and edit mode for chat title
             const toggleEditMode = (isEditing) => {
                 titleSpan.classList.toggle('hidden', isEditing);
                 titleInput.classList.toggle('hidden', !isEditing);
                 if (isEditing) {
-                    editBtn.innerHTML = saveBtnIcon;
+                    editBtn.innerHTML = saveBtnIcon; // Change icon to save
                     editBtn.title = 'Lưu';
-                    titleInput.focus();
-                    titleInput.select();
+                    titleInput.focus(); // Focus input
+                    titleInput.select(); // Select text
                 } else {
-                    editBtn.innerHTML = editBtnIcon;
+                    editBtn.innerHTML = editBtnIcon; // Change icon back to edit
                     editBtn.title = 'Sửa tiêu đề';
                 }
             };
 
+            // Function to save the new title
             const saveTitle = async () => {
                 const newTitle = titleInput.value.trim();
                 const originalTitle = chatItemData.title || 'Cuộc trò chuyện mới';
                 if (newTitle && newTitle !== originalTitle) {
-                    titleSpan.textContent = newTitle;
+                    titleSpan.textContent = newTitle; // Update displayed title immediately
                     await updateChatTitle(chatId, newTitle);
                 }
-                toggleEditMode(false);
+                toggleEditMode(false); // Exit edit mode
             };
             
+            // Event listener for edit button click
             editBtn.onclick = (e) => {
-                e.stopPropagation();
+                e.stopPropagation(); // Prevent loading chat when clicking edit
                 const isEditing = !titleInput.classList.contains('hidden');
                 if (isEditing) {
                     saveTitle();
@@ -1573,15 +1850,21 @@ Bạn là một người hướng dẫn học tập chuyên nghiệp. Khi ngư�
                 }
             };
 
+            // Event listener for Enter key in title input
             titleInput.onkeydown = (e) => {
-                if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); saveTitle(); } 
-                else if (e.key === 'Escape') {
+                if (e.key === 'Enter' && !e.shiftKey) { 
+                    e.preventDefault(); 
+                    saveTitle(); 
+                } else if (e.key === 'Escape') {
+                    // Revert to original title and exit edit mode on Escape
                     titleInput.value = chatItemData.title || 'Cuộc trò chuyện mới';
                     toggleEditMode(false);
                 }
             };
 
+            // Event listener for blur (losing focus) on title input
             titleInput.addEventListener('blur', () => {
+                 // Add a small delay to allow click event on save button to register first
                  setTimeout(()=> {
                      if(!titleInput.classList.contains('hidden')) {
                          saveTitle();
@@ -1589,11 +1872,14 @@ Bạn là một người hướng dẫn học tập chuyên nghiệp. Khi ngư�
                  }, 100);
             });
 
+            // Event listeners for pin and delete buttons
             pinBtn.onclick = (e) => { e.stopPropagation(); togglePinChat(chatId, chatItemData.isPinned || false); };
             deleteBtn.onclick = (e) => { e.stopPropagation(); deleteChat(chatId); };
             
+            // Event listener for clicking the chat item to load the chat
             li.onclick = (e) => {
-                if (e.target === titleInput || titleInput.classList.contains('hidden') === false) return;
+                // Prevent loading chat if clicking on the input field or if input field is active
+                if (e.target === titleInput || (titleInput.classList.contains('hidden') === false && e.target !== editBtn)) return;
                 loadChat(chatId);
             };
 
@@ -1601,29 +1887,41 @@ Bạn là một người hướng dẫn học tập chuyên nghiệp. Khi ngư�
         }
 
 
+        /**
+         * Toggles the pinned status of a chat conversation in Firestore.
+         * @param {string} chatId - The ID of the chat to toggle.
+         * @param {boolean} isCurrentlyPinned - The current pinned status.
+         */
         async function togglePinChat(chatId, isCurrentlyPinned) {
             if (!currentUserId) return;
             const docRef = doc(db, 'chats', currentUserId, 'conversations', chatId);
             try {
                 await updateDoc(docRef, { isPinned: !isCurrentlyPinned });
                 showToast(isCurrentlyPinned ? 'Đã bỏ ghim cuộc trò chuyện.' : 'Đã ghim cuộc trò chuyện.', 'info');
-                await renderAllChats(); 
+                await renderAllChats(); // Re-render chat list to reflect changes
             } catch(error) {
                 console.error("Lỗi khi ghim cuộc trò chuyện:", error);
                 showToast('Lỗi khi ghim/bỏ ghim.', 'error');
             }
         }
 
+        /**
+         * Deletes a chat conversation from Firestore.
+         * @param {string} chatId - The ID of the chat to delete.
+         */
         async function deleteChat(chatId) {
             if (!confirm("Bạn có chắc chắn muốn xóa cuộc trò chuyện này?")) return;
             if (!currentUserId) return;
             try {
                 await deleteDoc(doc(db, 'chats', currentUserId, 'conversations', chatId));
                 showToast('Cuộc trò chuyện đã được xóa.', 'success');
+                // If the currently active chat is deleted, go back to persona selection
                 if(chatId === currentChatId) {
+                    currentChatId = null; // Reset current chat ID
+                    localHistory = []; // Clear current history
                     await showPersonaSelectionScreen();
                 } else {
-                    await renderAllChats(); 
+                    await renderAllChats(); // Otherwise, just refresh the sidebar list
                 }
             } catch (error) {
                 console.error("Lỗi khi xóa cuộc trò chuyện:", error);
@@ -1632,24 +1930,37 @@ Bạn là một người hướng dẫn học tập chuyên nghiệp. Khi ngư�
         }
         
         // --- REFERENCE MODAL FUNCTIONS ---
+        /**
+         * Shows the reference (auxiliary assistant) modal.
+         * @param {string} title - The title for the modal header.
+         * @param {boolean} showInput - Whether to show the input area in the modal.
+         */
         function showReferenceModal(title, showInput) {
             referenceTitle.textContent = title;
             referenceInputArea.style.display = showInput ? 'block' : 'none';
             referenceModalOverlay.classList.remove('hidden');
             referenceModal.classList.remove('hidden');
+            // If input is shown, it's a new reference conversation
             if (showInput) {
-                referenceHistory = [];
-                referenceChat = fastModel.startChat({ history: [] });
-                referenceContent.innerHTML = '';
-                addMessageToReference('ai', 'Đây là trợ lý phụ. Bạn cần tra cứu nhanh gì không?');
+                referenceHistory = []; // Clear reference chat history
+                referenceChat = fastModel.startChat({ history: [] }); // Start new session
+                referenceContent.innerHTML = ''; // Clear display
+                addMessageToReference('ai', 'Đây là trợ lý phụ. Bạn cần tra cứu nhanh gì không?'); // Initial greeting
             }
         }
 
+        /** Closes the reference modal. */
         function closeReferenceModal() {
             referenceModalOverlay.classList.add('hidden');
             referenceModal.classList.add('hidden');
         }
 
+        /**
+         * Adds a message to the reference modal's chat display.
+         * @param {'user'|'ai'} role - The role of the message sender.
+         * @param {string} text - The content of the message.
+         * @returns {{messageWrapper: HTMLElement, contentElem: HTMLElement, statusElem?: HTMLElement}}
+         */
         function addMessageToReference(role, text) {
              const messageWrapper = document.createElement('div');
             let contentElem, statusElem;
@@ -1671,60 +1982,82 @@ Bạn là một người hướng dẫn học tập chuyên nghiệp. Khi ngư�
             return { messageWrapper, contentElem, statusElem };
         }
 
-        async function sendReferenceMessage() {
-            const userPrompt = referencePromptInput.value.trim();
+        /**
+         * Sends a message to the auxiliary assistant in the reference modal.
+         * @param {string} [userPromptOverride=null] - Optional text to use as the user's prompt.
+         */
+        async function sendReferenceMessage(userPromptOverride = null) {
+            const userPrompt = userPromptOverride || referencePromptInput.value.trim();
             if (!userPrompt) return;
+            
             referenceSendBtn.disabled = true;
-            referencePromptInput.value = '';
+            if (!userPromptOverride) { // Only clear input if it came from the textarea
+                referencePromptInput.value = '';
+            }
             addMessageToReference('user', userPrompt);
             const { messageWrapper, contentElem } = addMessageToReference('ai', '<span class="blinking-cursor"></span>');
 
             try {
+                // Use the dedicated reference chat session
                 const result = await referenceChat.sendMessageStream(userPrompt);
                 let fullResponseText = "";
                 for await (const chunk of result.stream) {
                     fullResponseText += chunk.text();
                     contentElem.innerHTML = DOMPurify.sanitize(marked.parse(fullResponseText)) + '<span class="blinking-cursor"></span>';
-                    messageWrapper.scrollIntoView({behavior: 'smooth', block: 'end'});
+                    referenceContent.scrollTop = referenceContent.scrollHeight; // Scroll to bottom
                 }
                 contentElem.innerHTML = DOMPurify.sanitize(marked.parse(fullResponseText));
 
+                // Add "Save Note" button if there's a valid response
                 const actionsContainer = messageWrapper.querySelector('.message-actions');
                 if (actionsContainer && fullResponseText.trim()) {
                     const saveNoteBtn = document.createElement('button');
                     saveNoteBtn.className = 'flex items-center gap-2 text-xs px-3 py-1 bg-yellow-200 dark:bg-slate-600 text-yellow-800 dark:text-yellow-200 rounded-full hover:bg-yellow-300 dark:hover:bg-slate-500 transition-colors';
-                    saveNoteBtn.innerHTML = `<svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M5.433 13.917l1.262-3.155A4 4 0 017.58 9.42l6.92-6.918a2.121 2.121 0 013 3l-6.92 6.918c-.383.383-.84.685-1.343.886l-3.154 1.262a.5.5 0 01-.65-.65z" /><path d="M3.5 5.75c0-.69.56-1.25 1.25-1.25H10A.75.75 0 0010 3H4.75A2.75 2.75 0 002 5.75v9.5A2.75 2.75 0 004.75 18h9.5A2.75 2.75 0 0017 15.25V10a.75.75 0 00-1.5 0v5.25c0 .69-.56 1.25-1.25 1.25h-9.5c-.69 0-1.25-.56-1.25-1.25v-9.5z" /></svg> <span>Lưu Ghi chú</span>`;
+                    saveNoteBtn.innerHTML = `<svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M5.433 13.917l1.262-3.155A4 0 017.58 9.42l6.92-6.918a2.121 2.121 0 013 3l-6.92 6.918c-.383.383-.84.685-1.343.886l-3.154 1.262a.5.5 0 01-.65-.65z" /><path d="M3.5 5.75c0-.69.56-1.25 1.25-1.25H10A.75.75 0 0010 3H4.75A2.75 2.75 0 002 5.75v9.5A2.75 2.75 0 004.75 18h9.5A2.75 2.75 0 0017 15.25V10a.75.75 0 00-1.5 0v5.25c0 .69-.56 1.25-1.25 1.25h-9.5c-.69 0-1.25-.56-1.25-1.25v-9.5z" /></svg> <span>Lưu Ghi chú</span>`;
                     saveNoteBtn.onclick = () => saveAsNote(userPrompt, fullResponseText);
                     actionsContainer.appendChild(saveNoteBtn);
                 }
                 
+                // Scroll to the top of the message after a small delay
                 setTimeout(() => {
                      messageWrapper.scrollIntoView({ behavior: "smooth", block: "start" });
                 }, 100);
 
             } catch (error) {
                 contentElem.innerHTML = `**Lỗi:** ${error.message}`;
+                showToast('Lỗi khi gửi tin nhắn cho trợ lý phụ.', 'error');
             } finally {
                 referenceSendBtn.disabled = false;
             }
         }
         
+        /**
+         * Saves a response from the reference modal as a 'note' in the main chat history.
+         * @param {string} prompt - The user's prompt to the reference assistant.
+         * @param {string} response - The reference assistant's response.
+         */
         async function saveAsNote(prompt, response) {
             if (!response.trim()) return;
             const fullNoteText = `**Hỏi:** ${prompt}\n\n<hr class="my-2 border-yellow-300 dark:border-slate-600"/>\n\n**Đáp:**\n${response}`;
             const noteMessage = { role: 'note', parts: [{ text: fullNoteText }] };
-            localHistory.push(noteMessage);
-            addMessage('note', fullNoteText);
-            await updateConversationInDb();
-            closeReferenceModal();
+            localHistory.push(noteMessage); // Add to local history
+            addMessage('note', fullNoteText); // Display in main chat
+            await updateConversationInDb(); // Save main chat history to DB
+            closeReferenceModal(); // Close reference modal
             showToast('Đã lưu ghi chú vào cuộc trò chuyện!', 'info');
         }
 
+        /**
+         * Explains a term, either briefly or in a deep dive, using the reference modal.
+         * @param {string} term - The term to explain.
+         * @param {string} context - The context in which the term appeared.
+         * @param {boolean} [isDeepDive=false] - Whether to provide a deep dive explanation.
+         */
         async function explainTerm(term, context, isDeepDive = false) {
             if (!isDeepDive) {
-                showReferenceModal(`Giải thích: ${term}`, false);
+                showReferenceModal(`Giải thích: ${term}`, false); // Show modal without input for quick explanation
             }
-            referenceContent.innerHTML = '';
+            referenceContent.innerHTML = ''; // Clear previous content in reference modal
             
             const prompt = isDeepDive 
                 ? `Hãy giải thích chuyên sâu về thuật ngữ "${term}", bao gồm định nghĩa đầy đủ, ví dụ cụ thể, và các ứng dụng chính của nó.`
@@ -1732,7 +2065,7 @@ Bạn là một người hướng dẫn học tập chuyên nghiệp. Khi ngư�
 
             const { contentElem, messageWrapper, statusElem } = addMessageToReference('ai', '<span class="blinking-cursor"></span>');
             if (statusElem) {
-                statusElem.textContent = isDeepDive ? 'Đang tìm hiểu sâu...' : 'Đang suy nghĩ...';
+                statusElem.textContent = 'Đang suy nghĩ...';
                 statusElem.classList.remove('hidden');
             }
             
@@ -1742,13 +2075,14 @@ Bạn là một người hướng dẫn học tập chuyên nghiệp. Khi ngư�
                 if(statusElem) statusElem.classList.add('hidden');
                 contentElem.innerHTML = DOMPurify.sanitize(marked.parse(responseText));
 
+                // Add "Deep Dive" button if not already in deep dive mode
                 if (!isDeepDive) {
                     const actionsContainer = messageWrapper.querySelector('.message-actions');
                     if(actionsContainer){
                         const deepDiveBtn = document.createElement('button');
                         deepDiveBtn.className = 'flex items-center gap-2 text-xs px-3 py-1 bg-blue-100 dark:bg-slate-600 text-blue-800 dark:text-blue-200 rounded-full hover:bg-blue-200 dark:hover:bg-slate-500 transition-colors';
                         deepDiveBtn.innerHTML = `<span>Tìm hiểu sâu hơn</span> 📖`;
-                        deepDiveBtn.onclick = () => explainTerm(term, context, true);
+                        deepDiveBtn.onclick = () => explainTerm(term, context, true); // Call again for deep dive
                         actionsContainer.appendChild(deepDiveBtn);
                     }
                 }
@@ -1756,9 +2090,11 @@ Bạn là một người hướng dẫn học tập chuyên nghiệp. Khi ngư�
             } catch (error) {
                  if(statusElem) statusElem.classList.add('hidden');
                 contentElem.innerHTML = `**Lỗi:** ${error.message}`;
+                showToast('Không thể giải thích thuật ngữ.', 'error');
             }
         }
 
+        /** Generates a system prompt for a custom persona using AI. */
         async function generateSystemPrompt() {
             const name = personaNameInput.value.trim();
             const description = personaDescriptionInput.value.trim();
@@ -1773,7 +2109,7 @@ Bạn là một người hướng dẫn học tập chuyên nghiệp. Khi ngư�
             generatePromptBtn.disabled = true;
 
             try {
-                // Modified prompt to include instruction for term highlighting
+                // Prompt the AI to generate a detailed system prompt for the persona
                 const prompt = `Dựa trên một chuyên gia có tên là '${name}' và mô tả '${description}', hãy viết một Chỉ thị Hệ thống (System Prompt) chi tiết và chuyên nghiệp bằng tiếng Việt. Chỉ thị này cần bao gồm: phong cách, quy tắc hoạt động, và các yêu cầu về định dạng đầu ra. **Yêu cầu bổ sung:** Trong quá trình trả lời, khi bạn đề cập đến một thuật ngữ kỹ thuật, một khái niệm quan trọng, hoặc một tên riêng, hãy bọc thuật ngữ đó trong cặp dấu ngoặc vuông để có thể nhấp để giải thích thêm. Ví dụ: 'sử dụng ngôn ngữ [Python] để phát triển [backend]'.`;
                 const result = await fastModel.generateContent(prompt);
                 personaPromptInput.value = result.response.text();
@@ -1787,6 +2123,11 @@ Bạn là một người hướng dẫn học tập chuyên nghiệp. Khi ngư�
             }
         }
         
+        /**
+         * Handles the click event on a learning mode interactive link.
+         * Sends the associated prompt to the main AI model.
+         * @param {HTMLElement} linkElement - The clicked `<a>` element.
+         */
         async function handleLearningPromptClick(linkElement) {
             const promptForAI = linkElement.dataset.prompt;
             if (!promptForAI) return;
@@ -1794,13 +2135,14 @@ Bạn là một người hướng dẫn học tập chuyên nghiệp. Khi ngư�
             // The user-facing text is the link's title
             const titleForDisplay = linkElement.textContent;
             
-            // Re-use the sendMessage function, passing the detailed prompt as an override
-            // This avoids code duplication. We pass the *title* as the first argument
-            // so it's what gets displayed as the "user" message.
-            await sendMessage(titleForDisplay, promptForAI);
+            // Re-use the sendMessage function, passing the detailed prompt as an override.
+            // The `titleForDisplay` is passed as the first argument, so it's what gets
+            // displayed as the "user" message in the main chat. The actual `promptForAI`
+            // is then used for the AI model call.
+            await sendMessage(titleForDisplay); // Send title to display as user message
         }
 
-        // EVENT LISTENERS
+        // --- GLOBAL EVENT LISTENERS ---
         createPersonaBtn.addEventListener('click', () => openPersonaModal());
         closePersonaModalBtn.addEventListener('click', closePersonaModal);
         cancelPersonaBtn.addEventListener('click', closePersonaModal);
@@ -1810,12 +2152,20 @@ Bạn là một người hướng dẫn học tập chuyên nghiệp. Khi ngư�
         newChatBtn.addEventListener('click', showPersonaSelectionScreen);
         newTopicBtn.addEventListener('click', () => {
             if (currentPersona) {
+                // Start a new chat with the *current* persona, detecting if it's custom
                 startNewChat(currentPersona.id, !!currentPersona.ownerId);
+            } else {
+                showPersonaSelectionScreen(); // If no persona selected, go to selection screen
             }
         });
         summarizeBtn.addEventListener('click', handleSummary);
         sendBtn.addEventListener('click', () => sendMessage());
-        promptInput.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } });
+        promptInput.addEventListener('keydown', e => { 
+            if (e.key === 'Enter' && !e.shiftKey) { 
+                e.preventDefault(); 
+                sendMessage(); 
+            } 
+        });
         promptInput.addEventListener('input', adjustInputHeight);
         menuBtn.addEventListener('click', openSidebar);
         closeSidebarBtn.addEventListener('click', closeSidebar);
@@ -1824,14 +2174,61 @@ Bạn là một người hướng dẫn học tập chuyên nghiệp. Khi ngư�
         referenceBtn.addEventListener('click', () => showReferenceModal('Trợ lý Phụ', true));
         closeReferenceModalBtn.addEventListener('click', closeReferenceModal);
         referenceModalOverlay.addEventListener('click', closeReferenceModal);
-        referenceSendBtn.addEventListener('click', sendReferenceMessage);
-        referencePromptInput.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendReferenceMessage(); } });
+        referenceSendBtn.addEventListener('click', () => sendReferenceMessage());
+        referencePromptInput.addEventListener('keydown', e => { 
+            if (e.key === 'Enter' && !e.shiftKey) { 
+                e.preventDefault(); 
+                sendReferenceMessage(); 
+            } 
+        });
         
-        learningModeToggle.addEventListener('change', (e) => {
+        /** Updates the visibility of the learning mode indicator in the chat header. */
+        function updateLearningModeIndicator() {
+            // Check if element exists before manipulating
+            if (learningModeIndicator) { 
+                if (isLearningMode) {
+                    learningModeIndicator.classList.remove('hidden');
+                } else {
+                    learningModeIndicator.classList.add('hidden');
+                }
+            }
+        }
+
+        learningModeToggle.addEventListener('change', async (e) => { 
             isLearningMode = e.target.checked;
             showToast(`Chế độ Học tập đã được ${isLearningMode ? 'bật' : 'tắt'}.`, 'info');
+            updateLearningModeIndicator(); // Update indicator state
+
+            if (isLearningMode) {
+                clearSuggestions(); // Always hide regular suggestions in learning mode
+                // If we are on the welcome screen, update welcome suggestions to show learning mode message
+                if (!chatContainer.classList.contains('hidden') && currentChatId === null) { 
+                    await generateWelcomeSuggestions(); 
+                } else if (chatContainer.classList.contains('hidden') && currentPersona) {
+                    // If on persona selection and a persona is implicitly active (e.g. going back to it)
+                    // refresh the persona's welcome screen
+                    await generateWelcomeSuggestions(); 
+                }
+            } else {
+                // When exiting learning mode, try to get suggestions for the last AI response
+                // Only if there's an existing chat and a previous AI response to get suggestions from
+                if (currentChatId) { 
+                    const lastModelMessage = localHistory.slice().reverse().find(msg => msg.role === 'model');
+                    if (lastModelMessage) {
+                        await getFollowUpSuggestions(lastModelMessage.parts[0].text);
+                    } else {
+                        clearSuggestions(); // No AI response yet, so clear suggestions
+                    }
+                } else if (currentPersona) {
+                    // If exiting learning mode on persona selection screen and a persona is active
+                    await generateWelcomeSuggestions(); 
+                } else {
+                    clearSuggestions(); // No active chat or persona, so just clear suggestions
+                }
+            }
         });
 
+        /** Resets the state of the active speech synthesis button. */
         function resetActiveSpeechButton() {
             if (activeSpeech && activeSpeech.button) {
                 activeSpeech.button.innerHTML = '🔊';
@@ -1840,7 +2237,7 @@ Bạn là một người hướng dẫn học tập chuyên nghiệp. Khi ngư�
             }
         }
 
-        // Main click handler for the chat container
+        // Main click handler for the chat container to handle dynamic links/buttons
         chatContainer.addEventListener('click', async (e) => {
             const link = e.target.closest('a');
             const button = e.target.closest('button');
@@ -1877,28 +2274,33 @@ Bạn là một người hướng dẫn học tập chuyên nghiệp. Khi ngư�
                                 return;
                             }
                         }
-                        speechSynthesis.cancel();
+                        speechSynthesis.cancel(); // Cancel any current speech if new button is clicked
                     }
 
                     const utterance = new SpeechSynthesisUtterance(button.dataset.text);
-                    utterance.lang = 'vi-VN';
+                    utterance.lang = 'vi-VN'; // Set language to Vietnamese
                     utterance.onstart = () => {
-                        resetActiveSpeechButton();
-                        activeSpeech = { utterance, button: button };
+                        resetActiveSpeechButton(); // Reset previous button state
+                        activeSpeech = { utterance, button: button }; // Set current active speech
                         button.innerHTML = '⏸️'; button.dataset.state = 'playing'; button.title = 'Tạm dừng';
                     };
                     utterance.onend = () => { resetActiveSpeechButton(); activeSpeech = null; };
-                    utterance.onerror = () => { resetActiveSpeechButton(); activeSpeech = null; };
+                    utterance.onerror = (event) => { 
+                        console.error("SpeechSynthesisUtterance error:", event);
+                        showToast(`Lỗi phát âm: ${event.error}`, 'error'); // Show error message
+                        resetActiveSpeechButton(); 
+                        activeSpeech = null; 
+                    };
                     speechSynthesis.speak(utterance);
                  }
             }
         });
 
-
+        // Event listener for infinite scrolling in sidebar
         sidebarContent.addEventListener('scroll', () => {
             const isNearBottom = sidebarContent.scrollHeight - sidebarContent.scrollTop - sidebarContent.clientHeight < 100;
             if (isNearBottom && !isFetchingChats && !allChatsLoaded) {
-                fetchRecentChats(true);
+                fetchRecentChats(true); // Load more chats if near bottom
             }
         });
 
@@ -1906,32 +2308,54 @@ Bạn là một người hướng dẫn học tập chuyên nghiệp. Khi ngư�
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         if(SpeechRecognition) {
             const recognition = new SpeechRecognition();
-            recognition.continuous = false; recognition.lang = 'vi-VN'; recognition.interimResults = false;
-            recognition.onstart = () => { isRecording = true; recordBtn.classList.add('recording'); promptInput.placeholder = 'Đang lắng nghe...'; };
-            recognition.onend = () => { isRecording = false; recordBtn.classList.remove('recording'); promptInput.placeholder = 'Nhập câu hỏi...'; };
-            recognition.onresult = (event) => { promptInput.value = event.results[event.results.length - 1][0].transcript.trim(); adjustInputHeight(); sendMessage(); };
-            recognition.onerror = (event) => { showToast(`Lỗi ghi âm: ${event.error}`, 'error'); };
-            recordBtn.addEventListener('click', () => { isRecording ? recognition.stop() : recognition.start(); });
-        } else { recordBtn.classList.add('hidden'); }
+            recognition.continuous = false; // Stop after a single utterance
+            recognition.lang = 'vi-VN'; // Vietnamese language
+            recognition.interimResults = false; // Only return final results
 
+            recognition.onstart = () => { 
+                isRecording = true; 
+                recordBtn.classList.add('recording'); 
+                promptInput.placeholder = 'Đang lắng nghe...'; 
+            };
+            recognition.onend = () => { 
+                isRecording = false; 
+                recordBtn.classList.remove('recording'); 
+                promptInput.placeholder = 'Nhập câu hỏi...'; 
+            };
+            recognition.onresult = (event) => { 
+                promptInput.value = event.results[event.results.length - 1][0].transcript.trim(); 
+                adjustInputHeight(); 
+                sendMessage(); 
+            };
+            recognition.onerror = (event) => { 
+                showToast(`Lỗi ghi âm: ${event.error}`, 'error'); 
+                console.error("Speech Recognition error:", event.error);
+            };
+            recordBtn.addEventListener('click', () => { 
+                isRecording ? recognition.stop() : recognition.start(); 
+            });
+        } else { 
+            recordBtn.classList.add('hidden'); // Hide record button if API not supported
+        }
 
-        // --- Scroll to Top Button Logic (New JavaScript) ---
-        // Get the chat container element instead of window
-        const chatScrollContainer = document.getElementById("chat-container");
-        const scrollToTopBtn = document.getElementById("scrollToTopBtn");
+        // --- Scroll to Top Button Logic ---
         const scrollThreshold = 300; // Show button after scrolling 300px
 
-        // Function to show/hide the button
+        /** Function to show/hide the scroll to top button. */
         function toggleScrollToTopButton() {
-            // Use scrollTop and scrollHeight of the chat container
-            if (chatScrollContainer && chatScrollContainer.scrollTop > scrollThreshold) {
+            // Ensure scrollToTopBtn is available. This check handles cases where DOMContentLoaded
+            // might fire before the element is fully processed or if the element is missing.
+            if (!scrollToTopBtn || !chatScrollContainer) return; 
+
+            // Show when scrolled down more than half the container's visible height
+            if (chatScrollContainer.scrollTop > chatScrollContainer.clientHeight * 0.5) { 
                 scrollToTopBtn.classList.add('show');
             } else {
                 scrollToTopBtn.classList.remove('show');
             }
         }
 
-        // Function to scroll to the top of the chat container
+        /** Function to scroll to the top of the chat container. */
         function scrollToTop() {
             if (chatScrollContainer) {
                 chatScrollContainer.scrollTo({
@@ -1942,14 +2366,15 @@ Bạn là một người hướng dẫn học tập chuyên nghiệp. Khi ngư�
         }
 
         // Event listeners for scroll and button click on the chat container
-        // These listeners are now added at the very end of the script to ensure all elements are loaded
         document.addEventListener('DOMContentLoaded', () => {
+            // Attach event listeners only if elements exist
             if (chatScrollContainer) {
                 chatScrollContainer.addEventListener("scroll", toggleScrollToTopButton);
             }
-            if (scrollToTopBtn) { // Ensure button exists before attaching listener
+            if (scrollToTopBtn) { 
                 scrollToTopBtn.addEventListener("click", scrollToTop);
             }
+            updateLearningModeIndicator(); // Initial update for the indicator state
         });
 
     </script>
